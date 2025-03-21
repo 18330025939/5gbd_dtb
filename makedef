@@ -1,0 +1,5 @@
+export OBJ_ROOT := $(shell pwd)
+export KT_5GBD_DTB := $(OBJ_ROOT)/kt_5gbd_dtb
+export CROSS_COMPILE =
+export KT_5GBD_DTB_INCLUDE = -I$(KT_5GBD_DTB)/include -I$(KT_5GBD_DTB)/lib -I$(KT_5GBD_DTB)/third_party
+export KT_5GBD_DTB_BUILD = -O3 -Wall
