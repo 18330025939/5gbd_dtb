@@ -1,5 +1,7 @@
+CFLAGS += $(KT_5GBD_DTB_INCLUDE)
 CFLAGS += $(KT_5GBD_DTB_BUILD)
-# CFLAGS += -O3
+
+CROSS_COMPILE ?= 
 CC=$(CROSS_COMPILE)gcc
 LDFLAGS += -fPIC
 LIBS += -L../lib -lpub -lusb-1.0 -lcurl -levent -levent_pthreads -lpthread -L../../lib/usr/local/lib/ -lpaho-mqtt3a

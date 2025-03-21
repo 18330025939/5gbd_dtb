@@ -59,20 +59,20 @@ int validate_nmea_checksum(const char *nmea_str) {
 }
 
 
-void sg_data_parse(void *data, const uint8_t *payload, size_t len)
+void sg_data_parse(void *data, const char *payload, size_t len)
 {
     SGData *sg = (SGData*)data;
 
-    char buffer[512];
-    strncpy(buffer, payload, len);
-    buffer[len] = '\0';
+    // char buffer[512];
+    // strncpy(buffer, payload, len);
+    // buffer[len] = '\0';
 
-    char *token = strtok(buffer, ",*"); // 分割到校验和前
-    if (!token || strncmp(token, SG_MSG_ID, 5) != 0) {
-        return ; // 非PBSOL消息
-    }
+    // char *token = strtok(buffer, ",*"); // 分割到校验和前
+    // if (!token || strncmp(token, SG_MSG_ID, 5) != 0) {
+    //     return ; // 非PBSOL消息
+    // }
 
-    sscanf(token, "%[^,],%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%lf,%lf,%f,%f,%d,%d,%d,"
+    sscanf((const char *)payload, "%[^,],%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%lf,%lf,%f,%f,%d,%d,%d,"
             "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu",
             sg->message_id,
             &sg->subid,
@@ -130,7 +130,7 @@ void sg_data_parse(void *data, const uint8_t *payload, size_t len)
 REGISTER_MESSAGE_PARSER(PBSOL, 1, &sg_data, sg_data_parse);
 
 
-void gngga_data_parse(void *data, const uint8_t *payload, size_t len)
+void gngga_data_parse(void *data, const char *payload, size_t len)
 {   
     GNGGAData *gngga = (GNGGAData*)data;
 
@@ -172,11 +172,11 @@ void gngga_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(GNGGA, 0, &gngga_data, gngga_data_parse);
 
-void gnrmc_data_parse(void *data, const uint8_t *payload, size_t len)
+void gnrmc_data_parse(void *data, const char *payload, size_t len)
 {
     GNRMCData *gnrmc = (GNRMCData*)data;
 
-    sscanf(payload, "%[^,],%lf,%c,%lf,%c,%lf,%c,%f,%f,%u",
+    sscanf((const char *)payload, "%[^,],%lf,%c,%lf,%c,%lf,%c,%f,%f,%u",
             gnrmc->talker_id,
             &gnrmc->time,
             &gnrmc->status,
@@ -191,11 +191,11 @@ void gnrmc_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(GNRMC, 0, &gnrmc_data, gnrmc_data_parse);
 
-void gnatt_data_parse(void *data, const uint8_t *payload, size_t len)
+void gnatt_data_parse(void *data, const char *payload, size_t len)
 {
     GNATTData *gnatt = (GNATTData*)data;
 
-    sscanf(payload, "%[^,],%lf,%c,%lf,%lf,%lf,%lf,%lf,%lf",
+    sscanf((const char *)payload, "%[^,],%lf,%c,%lf,%lf,%lf,%lf,%lf,%lf",
             gnatt->talker_id,
             &gnatt->time,
             &gnatt->status,
@@ -209,11 +209,11 @@ void gnatt_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(GNATT, 0, &gnatt_data, gnatt_data_parse);
 
-void pgnss3_data_parse(void *data, const uint8_t *payload, size_t len)
+void pgnss3_data_parse(void *data, const char *payload, size_t len)
 {
     PGNSS3Data *pgnss3 = (PGNSS3Data*)data;
 
-    sscanf(payload, "%[^,],%hhu,%hu,%lf,%lf,%f,%lf,%hhu,%hhu,%hu,%hu",
+    sscanf((const char *)payload, "%[^,],%hhu,%hu,%lf,%lf,%f,%lf,%hhu,%hhu,%hu,%hu",
             pgnss3->message_id,
             &pgnss3->subid,
             &pgnss3->svid,
@@ -229,11 +229,11 @@ void pgnss3_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PGNSS, 3, &pgnss3_data, pgnss3_data_parse);
 
-void pgnss4_data_parse(void *data, const uint8_t *payload, size_t len)
+void pgnss4_data_parse(void *data, const char *payload, size_t len)
 {
     PGNSS4Data *pgnss4 = (PGNSS4Data*)data;
 
-    sscanf(payload, "%[^,],%hhu,%hu,%lf,%lf,%lf,%hhu,%hhu,%hhu,%f",
+    sscanf((const char *)payload, "%[^,],%hhu,%hu,%lf,%lf,%lf,%hhu,%hhu,%hhu,%f",
             pgnss4->message_id,
             &pgnss4->subid,
             &pgnss4->svid,
@@ -248,11 +248,11 @@ void pgnss4_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PGNSS, 4, &pgnss4_data, pgnss4_data_parse);
 
-void pgnss5_data_parse(void *data, const uint8_t *payload, size_t len)
+void pgnss5_data_parse(void *data, const char *payload, size_t len)
 {
     PGNSS5Data *pgnss5 = (PGNSS5Data*)data;
 
-    sscanf(payload, "%[^,],%hhu,%hu,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%hhu,%hhu,%lf,%hhu,%hhu",
+    sscanf((const char *)payload, "%[^,],%hhu,%hu,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%hhu,%hhu,%lf,%hhu,%hhu",
             pgnss5->message_id,
             &pgnss5->subid,
             &pgnss5->svid,
@@ -272,11 +272,11 @@ void pgnss5_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PGNSS, 5, &pgnss5_data, pgnss5_data_parse);
 
-void pgnss9_data_parse(void *data, const uint8_t *payload, size_t len)
+void pgnss9_data_parse(void *data, const char *payload, size_t len)
 {
     PGNSS9Data *pgnss9 = (PGNSS9Data*)data;
 
-    sscanf(payload, "%[^,],%hhu,%hu,%lf,%lf,%lf,%lf",
+    sscanf((const char *)payload, "%[^,],%hhu,%hu,%lf,%lf,%lf,%lf",
             pgnss9->message_id,
             &pgnss9->subid,
             &pgnss9->station_id,
@@ -288,7 +288,7 @@ void pgnss9_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PGNSS, 9, &pgnss9_data, pgnss9_data_parse);
 
-void psnsr21_data_parse(void *data, const uint8_t *payload, size_t len)
+void psnsr21_data_parse(void *data, const char *payload, size_t len)
 {
     PSNSR21Data *psnsr21 = (PSNSR21Data*)data;
     const char *delimiters = ",";
@@ -359,7 +359,7 @@ void psnsr21_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PSNSR, 21, &psnsr21_data, psnsr21_data_parse);
 
-void psnsr23_data_parse(void *data, const uint8_t *payload, size_t len)
+void psnsr23_data_parse(void *data, const char *payload, size_t len)
 {
     PSNSR23Data *psnsr23 = (PSNSR23Data*)data;
 
@@ -377,7 +377,7 @@ void psnsr23_data_parse(void *data, const uint8_t *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PSNSR, 23, &psnsr23_data, psnsr23_data_parse);
 
-void pblkend_data_parse(void *data, const uint8_t *payload, size_t len)
+void pblkend_data_parse(void *data, const char *payload, size_t len)
 {
     PBLKENDData *pblkend = (PBLKENDData*)data;
 

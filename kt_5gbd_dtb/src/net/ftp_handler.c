@@ -165,7 +165,7 @@ int http_post_request(const char *url, const char *json_data, char **response)
 {
     CURL *curl;
     CURLcode res;
-    struct curl_slist *headers;
+    struct curl_slist *headers = NULL;
 
     curl = curl_easy_init();
     if (!curl) {

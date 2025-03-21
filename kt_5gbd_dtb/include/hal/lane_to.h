@@ -289,7 +289,7 @@ PBLKENDData pblkend_data;
 //     BaseParser base;
 //     GNGGAData data;
 // } GNRMCParser;
-typedef void (*MessageParseFunc)(void *data, const uint8_t *payload, size_t len);
+typedef void (*MessageParseFunc)(void *data, const char *payload, size_t len);
 
 typedef struct {
     const char *msg_id;     
@@ -299,7 +299,7 @@ typedef struct {
 typedef struct {
     MessageHeader hdr;
     void *data;
-    void (*func)(void *data, const uint8_t *payload, size_t len);
+    void (*func)(void *data, const char *payload, size_t len);
 } MessageParserEntry;
 
 
