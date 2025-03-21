@@ -33,7 +33,7 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 // 服务器消息回调函数
 static void tcp_client_read_cb(struct bufferevent* bev, void* arg)
 {
-    TcpClient* client = (TcpClient*)arg;
+    // TcpClient* client = (TcpClient*)arg;
     char msg[1024];
     size_t len = bufferevent_read(bev, msg, sizeof(msg));
     msg[len] = '\0';
@@ -81,7 +81,7 @@ int tcp_client_init(TcpClient* client)
     client->bev = bufferevent_socket_new(client->base, -1, BEV_OPT_CLOSE_ON_FREE);
     if (!client->bev) {
         perror("bufferevent_socket_new failed");
-        goto bev_failed;
+        goto base_failed;
     }
 
     // client->ev_cmd = event_new(client->base, STDIN_FILENO, EV_READ | EV_PERSIST, NULL, client);
@@ -108,11 +108,11 @@ int tcp_client_init(TcpClient* client)
     event_base_dispatch(client->base);
     return 0;
     
-// bev_failed:
-//     event_free(client->ev_cmd);
-event_failed:
-    bufferevent_free(client->bev);
 bev_failed:
+//     event_free(client->ev_cmd);
+// event_failed:
+    bufferevent_free(client->bev);
+base_failed:
     event_base_free(client->base);
     return -1;
 }

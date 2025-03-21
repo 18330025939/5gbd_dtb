@@ -98,7 +98,7 @@ static int can_device_open(CANDevice *dev, const char *ifname) {
         return -1;
     }
 
-    strncpy(dev->ifr.ifr_name, ifname, IFNAMSIZ);
+    strcpy(dev->ifr.ifr_name, ifname);
     if (ioctl(dev->sockfd, SIOCGIFINDEX, &dev->ifr) < 0) {
         perror("Ioctl SIOCGIFINDEX failed");
         close(dev->sockfd);
@@ -144,7 +144,7 @@ static int can_device_open(CANDevice *dev, const char *ifname) {
 
 static void can_device_send(CANDevice* dev, const uint8_t* data, size_t len, uint8_t number, uint16_t timeouts) 
 {
-    struct timespec now;
+    // struct timespec now;
 
     if (number && timeouts) {
         RetransHeader hdr = {
