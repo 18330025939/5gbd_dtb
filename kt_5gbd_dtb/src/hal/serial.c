@@ -211,9 +211,11 @@ UartPort *uart_port_create(void)
     UartPort *port = NULL;
     
     port = malloc(sizeof(UartPort));
-    memset(port, 0, sizeof(UartPort));
-    port->base.ops = &uart_ops;
-    port->base.is_open = 0;
+    if (port) { 
+        memset(port, 0, sizeof(UartPort));
+        port->base.ops = &uart_ops;
+        port->base.is_open = 0;
+    }
     return port;
 }
 
@@ -222,9 +224,12 @@ RS485Port *rs485_port_create(int rts_pin)
     RS485Port *port = NULL;
 
     port = malloc(sizeof(RS485Port));
-    port->base.ops = &rs485_ops;
-    port->base.is_open = 0;
-    port->rts_pin = rts_pin;
+    if (port) {
+        memset(port, 0, sizeof(UartPort));
+        port->base.ops = &rs485_ops;
+        port->base.is_open = 0;
+        port->rts_pin = rts_pin;
+    }
     return port;
 }
 

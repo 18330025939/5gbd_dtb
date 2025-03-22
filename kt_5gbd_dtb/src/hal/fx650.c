@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <dirent.h>
 #include "serial.h"
 #include "fx650.h"
 
@@ -111,11 +112,8 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
                                   uint32_t timeout_ms) 
 {
 
-    // 清空输入缓冲区
-    tcflush(ctx->uart->base.fd, TCIFLUSH);
-
     // 发送命令
-    write(ctx->uart->base.fd, cmd, strlen(cmd));
+    ctx->uart->base.ops->write(ctx->uart->base.fd, cmd, strlen(cmd));
     
     char* pos = resp;
     fd_set read_set;
@@ -132,7 +130,7 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
 			return FX650_ERR_AT_TIMEOUT;
 		}
 
-        ssize_t n = read(ctx->uart->base.fd, pos, remaining);
+        ssize_t n = ctx->uart->base.ops->read(ctx->uart->base.fd, pos, remaining);
         if (n <= 0) continue;
 
         pos += n;
@@ -238,7 +236,7 @@ FX650_Error fx650_connect_network(FX650_CTX* ctx)
         return FX650_ERR_PDP_ACTIVATE;
     }
 
-    run_dhcp_client();
+    run_dhcp_client(ctx->net_name);
     return FX650_OK;
 }
 
@@ -254,7 +252,7 @@ FX650_Error fx650_disconnect_network(FX650_CTX* ctx)
     return FX650_OK;
 }
 
-FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev,) 
+FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev) 
 {
     UartPort *fx650_port = NULL;
 

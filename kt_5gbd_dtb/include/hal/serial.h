@@ -1,6 +1,8 @@
 #ifndef __SERIAL_H
 #define __SERIAL_H
 
+#include <termios.h>
+
 typedef struct st_SerialPort SerialPort;
 
 typedef struct st_SerialPortInfo{
@@ -30,7 +32,6 @@ struct st_SerialPort {
 
 typedef struct st_UartPort {
 	SerialPort base;
-	struct termios tios;
 } UartPort;
 
 typedef struct st_RS485Port {
