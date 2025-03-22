@@ -78,20 +78,18 @@ static char* find_interface_by_vid_pid(const char *vid, const char *pid)
         }
 
         // 构建设备路径
-        char device_path[256];
-        snprintf(device_path, sizeof(device_path), 
-                "%s/%s/device", SYS_NET_PATH, entry->d_name);
+        char device_path[1024];
+        snprintf(device_path, sizeof(device_path), "%s/%s/device", SYS_NET_PATH, entry->d_name);
 
         // 解析符号链接获取真实路径
-        char real_device_path[256];
+        char real_device_path[1024];
         if (realpath(device_path, real_device_path) == NULL) {
             continue;
         }
 
         // 构建uevent文件路径
-        char uevent_path[256];
-        snprintf(uevent_path, sizeof(uevent_path), 
-                "%s/uevent", real_device_path);
+        char uevent_path[1024];
+        snprintf(uevent_path, sizeof(uevent_path), "%s/uevent", real_device_path);
 
         // 检查uevent文件
         if (access(uevent_path, R_OK) == 0) {
@@ -113,7 +111,7 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
 {
 
     // 发送命令
-    ctx->uart->base.ops->write(ctx->uart->base.fd, cmd, strlen(cmd));
+    ctx->uart->base.ops->write(&fx650_port->base, cmd, strlen(cmd));
     
     char* pos = resp;
     fd_set read_set;
@@ -130,7 +128,7 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
 			return FX650_ERR_AT_TIMEOUT;
 		}
 
-        ssize_t n = ctx->uart->base.ops->read(ctx->uart->base.fd, pos, remaining);
+        ssize_t n = ctx->uart->base.ops->read(&fx650_port->base, pos, remaining);
         if (n <= 0) continue;
 
         pos += n;
@@ -147,10 +145,10 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
 }
 
 // 检查SIM卡状态
-static int check_sim_status(int fd) 
+static int check_sim_status(FX650_CTX* ctx) 
 {
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(fd, "AT+CPIN?", resp, sizeof(resp), 1000) < 0) {
+    if (send_at_command(ctx, "AT+CPIN?", resp, sizeof(resp), 1000) < 0) {
         return -1;
     }
 
@@ -166,12 +164,12 @@ static int check_sim_status(int fd)
     3gnet：中国联通的3G、4G和5G网络。
     ctnet：中国电信的3G、4G和5G网络。
 */
-static int set_apn(int fd, const char *apn) 
+static int set_apn(FX650_CTX* ctx, const char *apn) 
 {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"", apn);
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(fd, cmd, resp, sizeof(resp), 1000) < 0) {
+    if (send_at_command(ctx, cmd, resp, sizeof(resp), 1000) < 0) {
         return -1;
     }
 
@@ -183,12 +181,12 @@ static int set_apn(int fd, const char *apn)
 }
 
 // 激活拨号
-static int activate_dia(int fd, uint8_t status) 
+static int activate_dia(FX650_CTX* ctx, uint8_t status) 
 {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=%s,1", status ? "1" : "0");
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(fd, cmd, resp, sizeof(resp), 1000) < 0) {
+    if (send_at_command(ctx, cmd, resp, sizeof(resp), 1000) < 0) {
         return -1;
     }
 
@@ -199,7 +197,7 @@ static int activate_dia(int fd, uint8_t status)
     }
     if (status) {
         // 查询IP分配状态
-        if (send_at_command(fd, "AT+GTRNDIS?", resp, sizeof(resp), 10000) < 0) {
+        if (send_at_command(ctx, "AT+GTRNDIS?", resp, sizeof(resp), 10000) < 0) {
             return -1;
         }
 
@@ -213,25 +211,30 @@ static int activate_dia(int fd, uint8_t status)
 }
 
 // 执行DHCP获取IP
-static void run_dhcp_client(const char* net) 
+static int run_dhcp_client(const char* net) 
 {
     char cmd[128];
+    int ret = 0;
+
     snprintf(cmd, sizeof(cmd), "udhcpc -i %s &", net);
-    system(cmd); 
+    if((ret = system(cmd)) == -1) {
+        return ret;
+    }
+    return 0;
 }
 
 FX650_Error fx650_connect_network(FX650_CTX* ctx) 
 {
     int ret = 0;
-    ret = check_sim_status(ctx->uart->base.fd);
+    ret = check_sim_status(ctx);
     if (ret) {
         return FX650_ERR_SIM_NOT_READY;
     }
-    ret = set_apn(ctx->uart->base.fd, "ctnet");
+    ret = set_apn(ctx, "ctnet");
     if(ret) {
         return FX650_ERR_APN_NOT_READY;
     }
-    ret = activate_dia(ctx->uart->base.fd, 1);
+    ret = activate_dia(ctx, 1);
     if (ret) {
         return FX650_ERR_PDP_ACTIVATE;
     }
