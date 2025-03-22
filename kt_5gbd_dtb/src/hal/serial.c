@@ -211,6 +211,7 @@ UartPort *uart_port_create(void)
     UartPort *port = NULL;
     
     port = malloc(sizeof(UartPort));
+    memset(port, 0, sizeof(UartPort));
     port->base.ops = &uart_ops;
     port->base.is_open = 0;
     return port;

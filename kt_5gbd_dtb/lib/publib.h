@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <sys/time.h>
 
-
+uint64_t get_timestamp_ms(void);
 int getCurrentTime(struct timeval *tv,  struct timezone *tz);
 int BeTimeOut(struct timeval *stv, int s);
 int BeTimeOutN(struct timeval stv, int s);

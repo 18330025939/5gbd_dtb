@@ -2,6 +2,15 @@
 #include <time.h>
 #include "publib.h"
 
+uint64_t get_timestamp_ms(void) 
+{
+    struct timespec ts;
+    if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
+        return (ts.tv_sec * 1000LL) + (ts.tv_nsec / 1000000LL);
+    }
+    return 0;
+}
+
 //获取系统开始运行时长信息, 放入第一个参数中.
 int getCurrentTime(struct timeval *tv, struct timezone *tz)
 {

@@ -1,5 +1,12 @@
-#ifndef __FM650_H
-#define __FM650_H
+#ifndef __FX650_H
+#define __FX650_H
+
+#define AT_TIMEOUT_MS   1000
+#define URC_BUFFER_SIZE 256
+#define AT_MAX_RESPONSE_LEN 1024
+
+#define FX650_PID "0A04"
+#define FX650_VID "2CB7"
 
 // 模组信息相关定义
 #define AT_CGMI "+CGMI"          // 获取制造商 ID
@@ -289,5 +296,62 @@ typedef struct {
     int cause;
     char description[64];
 } ErrorReport;
+
+typedef struct {
+    char at_buffer[256];
+    char resp_buffer[1024];
+    size_t resp_len;
+} AtCommandContext;
+
+// 网络状态结构体
+typedef struct {
+    int rssi;          // 信号强度
+    unsigned char reg_status; // 注册状态
+    char lac[8];       // 位置区码
+    char ci[8];        // 小区ID
+} NetworkStatus;
+
+typedef struct {
+    char apn[64];
+    char username[32];
+    char password[32];
+} APNConfig;
+
+// 回调函数类型定义
+typedef void (*DataReceivedCallback)(uint8_t* data, size_t len);
+typedef void (*NetworkEventCallback)(int event);
+
+typedef struct {
+    UartPort *uart;
+    char *net_name;
+    NetworkStatus net_status;
+    APNConfig apn_config;
+    DataReceivedCallback data_cb;
+    NetworkEventCallback event_cb;
+} FX650_CTX;
+
+// AT指令响应解析状态机
+typedef enum {
+    AT_STATE_IDLE,
+    AT_STATE_WAIT_OK,
+    AT_STATE_WAIT_CME_ERROR,
+    AT_STATE_PROCESS_DATA
+} AT_ParseState;
+
+// 错误码定义
+typedef enum {
+    FX650_OK = 0,
+    FX650_ERR_INIT,
+    FX650_ERR_AT_TIMEOUT,
+    FX650_ERR_SIM_NOT_READY,
+    FX650_ERR_APN_NOT_READY,
+    FX650_ERR_NET_REG,
+    FX650_ERR_PDP_ACTIVATE,
+    FX650_ERR_SOCKET,
+    FX650_ERR_TX
+} FX650_Error;
+
+FX650_Error fx650_connect_network(FX650_CTX* ctx);
+FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev); 
 
 #endif
