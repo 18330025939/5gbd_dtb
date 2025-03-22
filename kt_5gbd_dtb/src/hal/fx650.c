@@ -111,7 +111,7 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
 {
 
     // 发送命令
-    ctx->uart->base.ops->write(&fx650_port->base, cmd, strlen(cmd));
+    ctx->uart->base.ops->write(&ctx->uart->base, cmd, strlen(cmd));
     
     char* pos = resp;
     fd_set read_set;
@@ -128,7 +128,7 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
 			return FX650_ERR_AT_TIMEOUT;
 		}
 
-        ssize_t n = ctx->uart->base.ops->read(&fx650_port->base, pos, remaining);
+        ssize_t n = ctx->uart->base.ops->read(&ctx->uart->base, pos, remaining);
         if (n <= 0) continue;
 
         pos += n;
@@ -247,7 +247,7 @@ FX650_Error fx650_disconnect_network(FX650_CTX* ctx)
 {
     int ret = 0;
 
-    ret = activate_dia(ctx->uart->base.fd, 0);
+    ret = activate_dia(ctx, 0);
     if (ret) {
         return FX650_ERR_PDP_ACTIVATE;
     }
