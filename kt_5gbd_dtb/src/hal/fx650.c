@@ -78,11 +78,11 @@ static char* find_interface_by_vid_pid(const char *vid, const char *pid)
         }
 
         // 构建设备路径
-        char device_path[1024];
+        char device_path[300];
         snprintf(device_path, sizeof(device_path), "%s/%s/device", SYS_NET_PATH, entry->d_name);
 
         // 解析符号链接获取真实路径
-        char real_device_path[1024];
+        char real_device_path[512];
         if (realpath(device_path, real_device_path) == NULL) {
             continue;
         }
