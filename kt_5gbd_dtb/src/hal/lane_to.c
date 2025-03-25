@@ -413,17 +413,17 @@ void* serial_read_thread(void *arg) {
         if (bytes_read > 0) {
             buffer_index += bytes_read;
             
-            char *start = strstr(buffer, buffer_index, SG_MSG_ID);
-            char *end = strstr(buffer, buffer_index, PBLKEND_MSG_ID);
+            char *start = strstr(buffer + buffer_index, SG_MSG_ID);
+            char *end = strstr(buffer + buffer_index, PBLKEND_MSG_ID);
 
             if (start != NULL && end != NULL && end > start) {
-                size_t start_pos = start - buffer;
+                // size_t start_pos = start - buffer;
                 size_t end_pos = end - buffer;
 
                 char *token = strtok(buffer, "$");
                 while (token != NULL) {
                     message_parser_entry(token + 1);
-                    token = strok(NULL, "$");
+                    token = strtok(NULL, "$");
                 }
 
                 memmove(buffer, buffer + end_pos, buffer_index - end_pos);
