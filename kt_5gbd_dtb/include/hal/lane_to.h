@@ -296,10 +296,10 @@ typedef struct {
     }
 
 
-typedef struct {
-    UartPort *uart;
-    pthread_t recv_thread;
+// typedef struct {
+//     UartPort *uart;
+//     pthread_t recv_thread;
 
-} FX650_CTX;
+// } FX650_CTX;
 
 #endif
