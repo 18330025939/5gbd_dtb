@@ -14,6 +14,7 @@ SRC += $(KT_5GBD_DTB)/src/hal/iic.o
 SRC += $(KT_5GBD_DTB)/src/hal/usb.o
 SRC += $(KT_5GBD_DTB)/src/hal/lane_to.o
 SRC += $(KT_5GBD_DTB)/src/hal/fx650.o
+SRC += $(KT_5GBD_DTB)/src/hal/led.o
 SRC += $(KT_5GBD_DTB)/src/net/accept_client.o
 SRC += $(KT_5GBD_DTB)/src/net/tcp_server.o
 SRC += $(KT_5GBD_DTB)/src/net/mqtt_client.o

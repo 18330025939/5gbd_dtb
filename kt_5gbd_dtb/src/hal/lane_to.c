@@ -405,7 +405,7 @@ void message_parser_entry(const char *line)
 
 void* serial_read_thread(void *arg) {
     int fd = *(int*)arg;
-    uint8_t buffer[4096];
+    char buffer[4096];
     size_t buffer_index = 0;
     
     while (1) {
@@ -413,10 +413,13 @@ void* serial_read_thread(void *arg) {
         if (bytes_read > 0) {
             buffer_index += bytes_read;
             
-            char *start = memmem(buffer, buffer_index, SG_MSG_ID, strlen(SG_MSG_ID));
-            char *end = memmem(buffer, buffer_index, PBLKEND_MSG_ID, strlen(PBLKEND_MSG_ID));
+            char *start = strstr(buffer, buffer_index, SG_MSG_ID);
+            char *end = strstr(buffer, buffer_index, PBLKEND_MSG_ID);
 
             if (start != NULL && end != NULL && end > start) {
+                size_t start_pos = start - buffer;
+                size_t end_pos = end - buffer;
+
                 char *token = strtok(buffer, "$");
                 while (token != NULL) {
                     message_parser_entry(token + 1);
