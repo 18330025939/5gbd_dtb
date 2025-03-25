@@ -50,7 +50,7 @@ typedef enum {
     BAUD_9600 = 3
 } BaudRate;
 
-#define SG_MSG_ID        "PBSOL"
+#define SG_MSG_ID        "$PBSOL"
 #define GNGGA_MSG_ID     "GNGGA"
 #define GNRMC_MSG_ID     "GNRMC"
 #define GNATT_MSG_ID     "GNATT"
@@ -60,7 +60,7 @@ typedef enum {
 #define PGNSS9_MSG_ID    "PGNSS"
 #define PSNSR21_MSG_ID   "PSNSR"
 #define PSNSR23_MSG_ID   "PSNSR"
-#define PBLKEND_MSG_ID   "PBLKEND"
+#define PBLKEND_MSG_ID   "$PBEND"
 
 #define SG_MSG_SUBID        1
 #define PGNSS3_MSG_SUBID    3
@@ -275,21 +275,6 @@ typedef struct {
 PBLKENDData pblkend_data;
 #pragma pack(pop)
 
-// typedef struct {
-//     const char *sentence;
-//     void (*parse)(void *self);
-// } NMEAParser;
-
-// typedef struct {
-//     BaseParser base;
-//     GNGGAData data;
-// } GNRMCParser;
-
-// typedef struct {
-//     BaseParser base;
-//     GNGGAData data;
-// } GNRMCParser;
-typedef void (*MessageParseFunc)(void *data, const char *payload, size_t len);
 
 typedef struct {
     const char *msg_id;     
@@ -302,8 +287,6 @@ typedef struct {
     void (*func)(void *data, const char *payload, size_t len);
 } MessageParserEntry;
 
-
-
 #define REGISTER_MESSAGE_PARSER(msg_id_str, sub_id_val, msg_data, parse_func)\
     static const MessageParserEntry parser_##msg_id_str##sub_id_val \
     __attribute__((used, section("message_parsers"))) = { \
@@ -311,5 +294,12 @@ typedef struct {
         .data = msg_data, \
         .func = parse_func \
     }
+
+
+typedef struct {
+    UartPort *uart;
+    pthread_t recv_thread;
+
+} FX650_CTX;
 
 #endif

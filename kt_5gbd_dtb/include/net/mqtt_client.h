@@ -36,15 +36,12 @@ struct st_AsyncMQTTClient {
     AsyncClientConfig *config;      // 客户端配置
     AsyncClientOps *ops;
 
-    void (*on_message)(void* ctx,          // 消息到达回调
-                      const char* topic, 
-                      const void* payload, 
-                      size_t payload_len);
+    void (*on_message)(const char* topic, const void* payload, size_t payload_len);
     
     int is_conn;                 
     pthread_mutex_t lock;                
 } ;
 
-AsyncMQTTClient* mqtt_create(const char *addr, const char *id, const char *username, const char *password) ;
-void mqtt_destroy(AsyncMQTTClient* client);
+AsyncMQTTClient* mqtt_client_create(const char *addr, const char *id, const char *username, const char *password) ;
+void mqtt_client_destroy(AsyncMQTTClient* client);
 #endif

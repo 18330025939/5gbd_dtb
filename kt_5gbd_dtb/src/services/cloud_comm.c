@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include "tcp_client.h"
+#include "ftp_handler.h"
 #include "cloud_comm.h"
 
 

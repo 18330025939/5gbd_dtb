@@ -401,3 +401,40 @@ void message_parser_entry(const char *line)
         }
     }
 }
+
+
+void* serial_read_thread(void *arg) {
+    int fd = *(int*)arg;
+    uint8_t buffer[4096];
+    size_t buffer_index = 0;
+    
+    while (1) {
+        ssize_t bytes_read = read(fd, buffer + buffer_index, sizeof(buffer) - buffer_index);
+        if (bytes_read > 0) {
+            buffer_index += bytes_read;
+            
+            char *start = memmem(buffer, buffer_index, SG_MSG_ID, strlen(SG_MSG_ID));
+            char *end = memmem(buffer, buffer_index, PBLKEND_MSG_ID, strlen(PBLKEND_MSG_ID));
+
+            if (start != NULL && end != NULL && end > start) {
+                char *token = strtok(buffer, "$");
+                while (token != NULL) {
+                    message_parser_entry(token + 1);
+                    token = strok(NULL, "$");
+                }
+
+                memmove(buffer, buffer + end_pos, buffer_index - end_pos);
+                buffer_index = buffer_index - end_pos;
+            } else {
+                if (buffer_index >= (sizeof(buffer) -1)) {
+                    memmove(buffer, buffer + buffer_index - sizeof(buffer) + 1, 
+                    sizeof(buffer) - buffer_index + 1);
+                    buffer_index = sizeof(buffer) - buffer_index + 1;
+                }
+            }
+        }
+        usleep(100); 
+    }
+    return NULL;
+}
+

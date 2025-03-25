@@ -42,8 +42,10 @@ static int message_arrived_cb(void* context, char* topic, int topic_len, MQTTAsy
     AsyncMQTTClient* client = (AsyncMQTTClient*)context;
     pthread_mutex_lock(&client->lock);
     if (client->on_message) {
-        client->on_message(context, topic, msg->payload, msg->payloadlen);
+        client->on_message(topic, msg->payload, msg->payloadlen);
     }
+    MQTTAsync_freeMessage(&msg);
+    MQTTAsync_free(topic);
     pthread_mutex_unlock(&client->lock);
     return 1;
 }
@@ -126,7 +128,7 @@ static AsyncClientConfig client_config = {
 } ;
 
 /* 初始化 */
-AsyncMQTTClient* mqtt_create(const char *addr, const char *id, const char *username, const char *password) 
+AsyncMQTTClient* mqtt_client_create(const char *addr, const char *id, const char *username, const char *password) 
 {
     int rc;
     AsyncMQTTClient* client = calloc(1, sizeof(AsyncMQTTClient));
@@ -156,13 +158,12 @@ AsyncMQTTClient* mqtt_create(const char *addr, const char *id, const char *usern
     return client;
 
 exit:
-    pthread_mutex_destroy(&client->lock);
-    free(client);
+    mqtt_destroy(client);
     return NULL;
 }
 
 /* 销毁 */
-void mqtt_destroy(AsyncMQTTClient* client) 
+void mqtt_client_destroy(AsyncMQTTClient* client) 
 {
     if (!client) {
         return;

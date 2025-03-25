@@ -17,7 +17,7 @@ struct I2CDeviceOps {
 
 struct st_I2CDevice{
     uint8_t slave_addr;
-    uint32_t  speed;
+    uint32_t speed;
     int fd;
     char dev_path[64];
     struct I2CDeviceOps *ops;
