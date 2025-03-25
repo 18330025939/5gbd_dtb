@@ -11,7 +11,7 @@ typedef struct {
     int port;
     int recnt_att;
     int max_recnt_att;
-    void (*on_message)(char *buf, sizeof len);
+    void (*on_message)(char *buf, size_t len);
 } TcpClient;
 
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt);

@@ -158,7 +158,7 @@ AsyncMQTTClient* mqtt_client_create(const char *addr, const char *id, const char
     return client;
 
 exit:
-    mqtt_destroy(client);
+    mqtt_client_destroy(client);
     return NULL;
 }
 
