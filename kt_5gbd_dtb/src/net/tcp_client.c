@@ -60,8 +60,9 @@ static void tcp_client_event_cb(struct bufferevent* bev, short event, void* arg)
 }
 
 // 初始化客户端
-int tcp_client_init(TcpClient* client)
+int tcp_client_connect_entry(TcpClient* client)
 {
+    evthread_use_pthreads();
     client->base = event_base_new();
     if (!client->base) {
         perror("event_base_new failed");
