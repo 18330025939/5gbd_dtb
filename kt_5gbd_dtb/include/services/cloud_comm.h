@@ -5,6 +5,9 @@
 #define CLOUD_SERVER_IP "152.136.10.158"
 #define CLOUD_SERVER_PORT 3901
 
+#define OTA_HEARTBEAT_URL  "https://ota.cktt.com.cn/ota-server/heartbeat"
+#define OTA_REPORT_URL  "/ota-server/submitReport"
+
 #pragma pack(push, 1)
 typedef struct st_MsgFramHdr
 {
@@ -69,7 +72,32 @@ typedef struct st_MsgCommContext
 {
     TcpClient client;
     ThreadSafeQueue queue;
+    pthread_t 
 } MsgCommContext;
 
+
+
+
+typedef struct st_UnitInfo
+{
+    char unit_name[20];
+    char unit_ver[20];
+} UnitInfo;
+
+typedef struct st_PostRequest
+{
+    char dev_addr[20];
+    char usage_cpu[20];
+    uint32_t usage_mem;
+    uint32_t total_mem;
+    uint32_t usage_disk;
+    uint32_t total_disk;
+    char *up_time;
+    char *sys_time;
+    UnitInfo *hw_unit;
+    uint8_t sw_unit_num;
+    UnitInfo *sw_unit;
+    uint16_t hw_unit_num;
+} PostRequest;
 
 #endif

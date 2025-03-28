@@ -172,6 +172,7 @@ int http_post_request(const char *url, const char *json_data, char **response)
         fprintf(stderr, "Failed to initialize CURL\n");
         return -1;
     }
+    headers = curl_slist_append(headers, "accept: */*");
     headers = curl_slist_append(headers, "Content-Type: application/json");
 
     curl_easy_setopt(curl, CURLOPT_URL, url);

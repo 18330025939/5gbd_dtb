@@ -11,6 +11,7 @@
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 #include <event2/util.h>
+#include "queue.h"
 #include "tcp_client.h"
 
 
@@ -50,36 +51,37 @@ static void tcp_client_event_cb(struct bufferevent* bev, short event, void* arg)
     if (event & BEV_EVENT_CONNECTED) {
         printf("Connected to server.\n");
         client->recnt_att = 0;
+        client->is_connected = true;
+        pthread_create(&client->send_thread, NULL, tcp_client_send_entry, (void*)client);
     } else if (event & BEV_EVENT_EOF) {
         printf("Connection closed.\n");
+        client->is_connected = true;
+        pthread_create
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     } else if (event & BEV_EVENT_ERROR) {
         printf("Error on connection.\n");
+        client->is_connected = true;
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     }
 }
 
 // 初始化客户端
-int tcp_client_connect_entry(TcpClient* client)
+void *tcp_client_connect_entry(void *arg)
 {
+    TcpClient* client = (TcpClient*)arg;
     evthread_use_pthreads();
     client->base = event_base_new();
     if (!client->base) {
         perror("event_base_new failed");
-        return -1;
+        return ;
     }
 
     client->bev = bufferevent_socket_new(client->base, -1, BEV_OPT_CLOSE_ON_FREE);
     if (!client->bev) {
         perror("bufferevent_socket_new failed");
-        goto base_failed;
+        event_base_free(client->base);
+        return ;
     }
-
-    // client->ev_cmd = event_new(client->base, STDIN_FILENO, EV_READ | EV_PERSIST, NULL, client);
-    // if (!client->ev_cmd) {
-    //     perror("event_new failed");
-    //     goto event_failed;
-    // }
 
     bufferevent_setcb(client->bev, tcp_client_read_cb, NULL, tcp_client_event_cb, client);
 
@@ -91,28 +93,63 @@ int tcp_client_connect_entry(TcpClient* client)
 
     if (bufferevent_socket_connect(client->bev, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("bufferevent_socket_connect failed");
-        goto bev_failed;
+        bufferevent_free(client->bev);
+        event_base_free(client->base);
+        return;
     }
     
     bufferevent_enable(client->bev, EV_READ | EV_WRITE | EV_PERSIST);
 
     event_base_dispatch(client->base);
-    return 0;
-    
-bev_failed:
-//     event_free(client->ev_cmd);
-// event_failed:
-    bufferevent_free(client->bev);
-base_failed:
-    event_base_free(client->base);
-    return -1;
+    return ;
+}
+
+void *tcp_client_send_entry(void *arg)
+{
+    TcpClient* client = (TcpClient*)arg;
+    char buf[1024] = {0};
+    size_t len = 0;
+
+    while (client->is_connected) {
+        int ret = dequeue(&client->tx_queue, buf, &len);
+        if (ret) {
+            continue;
+        }
+        bufferevent_write(client->bev, buf, len);
+    }
+}
+
+void tcp_client_connect(TcpClient* client)
+{
+    pthread_create(client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
 }
 
 // 发送数据
 void tcp_client_send(TcpClient* client, const char* data, size_t len) 
 {
-    bufferevent_write(client->bev, data, len);
+    enqueue(&client->tx_queue, data, len);
+    // bufferevent_write(client->bev, data, len);
 }
+
+void tcp_client_disconnect(TcpClient* client) 
+{
+    client->is_connected = false;
+    event_base_loopbreak(client->base);
+    pthread_join(client->conn_thread, NULL);
+    pthread_join(client->send_thread, NULL);
+}
+
+void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 
+{
+    client->on_message = cb;
+}
+
+TcpClientOps tcp_client_ops = {
+    .connect = tcp_client_connect,
+    .disconnect = tcp_client_disconnect,
+    .register_cb = tcp_client_register_cb,
+    .send = tcp_client_send
+};
 
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 {
@@ -122,15 +159,14 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
     client->port = port;
     client->max_recnt_att = max_recnt;
     client->recnt_att = 0;
+    client->is_connected = false;
+    client->ops = &tcp_client_ops;
     return client;
 }
 
 // 销毁客户端
 void tcp_client_destroy(TcpClient* client) 
 {
-    // if (client->ev_cmd) {
-    //     event_free(client->ev_cmd);
-    // }
     if (client->bev) {
         bufferevent_free(client->bev);
     }

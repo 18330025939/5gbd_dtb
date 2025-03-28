@@ -1,6 +1,9 @@
 #ifndef __FKZ9_COMM_H
 #define __FKZ9_COMM_H
 
+#define FKZ9_SERVER_IP  "192.168.42.50"
+#define MAX_MSG_SIZE    1024
+
 #pragma pack(push, 1)
 typedef struct st_MsgFramHdr
 {
@@ -16,25 +19,28 @@ typedef struct st_MsgDataFramCrc
 #pragma pack(pop)
 
 
-// fkz9/设备地址/5G/CPU/0xE0
-// fkz9/设备地址/5G/file/0xE1
-// fkz9/设备地址/file/5G/0xE1
-// fkz9/设备地址/5G/file/0xE3
-// fkz9/设备地址/5G/OTA/0xE3
-// fkz9/设备地址/5G/OTA/0xE4
-// fkz9/fkz设备地址/OTA/5G/0xE5
-// fkz9/fkz设备地址/OTA/5G/0xE6
+// fkz9/设备地址/5G/file/0x15
+// fkz9/设备地址/file/5G/0x16
+// fkz9/设备地址/5G/file/0x17
+// fkz9/设备地址/5G/OTA/0x18
+// fkz9/设备地址/OTA/5G /0x19
+// fkz9/设备地址/5G/OTA/0x1A
+// fkz9/设备地址/OTA/5G/0x1B
+// fkz9/设备地址/OTA/5G/0x1C
+// fkz9/设备地址/5G/OTA/0x1D
 
-#define MSG_SIGN_USERNAME_PASSWORD      0xE0
-#define MSG_SIGN_VOD_FILE_REQUEST       0xE1
-#define MSG_SIGN_VOD_FILE_RESPONSE      0xE2
-#define MSG_SIGN_VOD_FILE_TRANS_FB      0xE3
-#define MSG_SIGN_VERSION_INFO_REQUEST   0xE4
-#define NSG_SIGN_TRANS_UPDATE_INSTR     0xE5
-#define MSG_SIGN_UPDATE_PACK_RESPONSE   0xE6
-#define MSG_SIGN_UPDATE_REPORT          0xE7
-#define MSG_SIGN_CONFIRMATION_MSG       0xE8
-#define MSG_SIGN_BREAKPOINT_RESUME      0xE9
+// #define MSG_SIGN_USERNAME_PASSWORD      0xE0
+#define MSG_SIGN_VOD_FILE_REQUEST       0x15
+#define MSG_SIGN_VOD_FILE_RESPONSE      0x16
+#define MSG_SIGN_VOD_FILE_TRANS_FB      0x17
+#define MSG_SIGN_VERSION_INFO_REQUEST   0x18
+#define MSG_SIGN_VERSION_INFO_RESPONSE  0x19
+#define NSG_SIGN_UPDATE_PACK_REQUEST    0x1A
+#define MSG_SIGN_UPDATE_PACK_RESPONSE   0x1B
+#define MSG_SIGN_UPDATE_REPORT_REQUEST  0x1C
+#define MSG_SIGN_UPDATE_REPORT_RESPONSE 0x1D
+// #define MSG_SIGN_CONFIRMATION_MSG       0xE8
+// #define MSG_SIGN_BREAKPOINT_RESUME      0xE9
 
 typedef enum em_DataType
 {
@@ -54,7 +60,7 @@ typedef enum em_UserPwdType
 } UPType;
 
 #pragma pack(push, 1)
-typedef struct st_UserPwdSegData
+typedef struct st_UserPwdDataSeg
 {
     DataType emDataType;
     uint16_t usDevAddr;     /* 0x0000 ～ 0x9999 */
@@ -62,7 +68,7 @@ typedef struct st_UserPwdSegData
     char     cUser[17];
     char     uPwd[17];
     uint8_t  ucRsvd[3];
-} UserPwdSegData;
+} UserPwdDataSeg;
 #pragma pack(pop)
 
 typedef enum em_TransMode
@@ -74,7 +80,7 @@ typedef enum em_TransMode
 } TransMode;
 
 #pragma pack(push, 1)
-typedef struct st_VODFileReq
+typedef struct st_VODFileReqDataSeg
 {
     DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
@@ -87,17 +93,17 @@ typedef struct st_VODFileReq
     char      cFilePath[17];
     uint8_t   ucVerMode;     /* 点播文件校验方法，0：MD5(默认值) */
     uint8_t   ucRsvd;
-} VODFileReq;
+} VODFileReqDataSeg;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct st_VODFileRsp 
+typedef struct st_VODFileRspDataSeg 
 {
     DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     uint8_t  ucIsExist;
     uint8_t  ucMD5[32];
-} VODFileRsp;
+} VODFileRspDataSeg;
 #pragma pack(pop)
 
 typedef enum em_ErrCode
@@ -114,7 +120,7 @@ typedef enum em_RetransFlag
 } ReFlag;
 
 #pragma pack(push, 1)
-typedef struct st_VODFileTFB
+typedef struct st_VODFileTFBDataSeg
 {
     DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
@@ -122,7 +128,7 @@ typedef struct st_VODFileTFB
     ErrCode  emCode;
     ReFlag   emReFlag;
     uint8_t  ucRsvd;
-} VODFileTFB;
+} VODFileTFBDataSeg;
 
 typedef struct st_Time
 {
@@ -134,7 +140,7 @@ typedef struct st_Time
     uint8_t  ucSecond;
 } Time;
 
-typedef struct st_VersionInfoReq
+typedef struct st_VersionInfoReqDataSeg
 {
     DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
@@ -158,7 +164,7 @@ typedef struct st_VersionInfoReq
     char     cHwPwBrdVer[9];
     char     cSwPwBrdVer[9];
     char     cRsvdBrd[18];    
-} VersionInfoReq;
+} VersionInfoReqDataSeg;
 #pragma pack(pop)
 
 typedef enum em_BoardType
@@ -176,7 +182,7 @@ typedef enum {
 } UpdateType;
 
 #pragma pack(push, 1)
-typedef struct st_UpdateInstr
+typedef struct st_UpdateInstrDataSeg
 {
     DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
@@ -191,22 +197,22 @@ typedef struct st_UpdateInstr
     uint16_t usFwVersion;    /* 主版本+次版本+测试版，例如V1.0.0 (0x030201=3.2.1版) */
     uint32_t ulSN;
     uint8_t  ucRsvd[6];
-} UpdateInstr;
+} UpdateInstrDataSeg;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct st_UpdateInstrRsq
+typedef struct st_UpdateInstrRsqDataSeg
 {
     DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     uint16_t usFileType;
     ErrCode  emCode;
     ReFlag   emReFlag;
-} UpdateInstrRsq;   
+} UpdateInstrRsqDataSeg;   
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct st_UpdateReport
+typedef struct st_UpdateReportDataSeg
 {
     DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
@@ -214,28 +220,36 @@ typedef struct st_UpdateReport
     Time     stUpdate;
     uint8_t  ucResultLen;
     char     cResult[64];
-} UpdateReport;
+} UpdateReportDataSeg;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct st_MsgConfirm
+typedef struct st_MsgConfirmDataSeg
 {
     uint8_t ucFlag;
     DataType emDataType;
     uint8_t ucConfirmFlag;
-} MsgConfirm;
+} MsgConfirmDataSeg;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct st_BreakPointRetrans
+typedef struct st_BreakPointRetransDataSeg
 {
     DataType emDataType;
     uint16_t usStartPos;
     uint8_t  ucDir;
     uint16_t usReqDataLen;
     uint8_t  ucRsvd[4];
-} BreakPointRetrans;
+} BreakPointRetransDataSeg;
 #pragma pack(pop)
 
+
+typedef struct st_CommContext
+{
+    AsyncMQTTClient mqtt_client;
+    ThreadSafeQueue tx_queue;
+    ThreadSafeQueue re_queue;
+
+} CommContext;
 
 #endif

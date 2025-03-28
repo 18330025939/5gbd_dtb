@@ -32,7 +32,7 @@ typedef struct {
 
 // 异步客户端结构体
 struct st_AsyncMQTTClient {
-    MQTTAsync handle;              // Paho异步客户端句柄
+    MQTTAsync handle;               // Paho异步客户端句柄
     AsyncClientConfig *config;      // 客户端配置
     AsyncClientOps *ops;
 

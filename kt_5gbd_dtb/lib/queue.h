@@ -2,7 +2,7 @@
 #ifndef __QUEUE_H
 #define __QUEUE_H
 
-#define MAX_SEGMENTS 32
+#define MAX_SEGMENTS 128
 
 typedef struct {
     pthread_mutex_t mutex;
