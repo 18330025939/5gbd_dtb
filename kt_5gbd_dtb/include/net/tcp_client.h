@@ -32,7 +32,7 @@ struct st_TcpClient
 
 
 // int tcp_client_init(TcpClient* client);
-void tcp_client_send(TcpClient* client, const char* data, size_t len);
+void tcp_client_send(TcpClient* client, const uint8_t* data, size_t len);
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt);
 void tcp_client_destroy(TcpClient* client);
 
