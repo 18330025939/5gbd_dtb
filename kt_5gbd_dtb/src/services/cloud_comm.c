@@ -197,7 +197,7 @@ int create_ota_report_data(char *data)
 
 void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 {
-    char buf[1024]];
+    char buf[1024];
     char *resp = NULL;
 
     int ret = create_heartbeat_data(buf);

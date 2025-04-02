@@ -98,7 +98,9 @@ static USBDeviceOps bulk_ops = {
     .open = usb_open,
     .close = usb_close,
     .bulk_write = usb_bulk_write,
-    .bulk_read = usb_bulk_read
+    .bulk_read = usb_bulk_read,
+    .register_cb = usb_register_callback
+};
 } ;
 
 USBDevice* usb_device_create(uint16_t vid, uint16_t pid) 

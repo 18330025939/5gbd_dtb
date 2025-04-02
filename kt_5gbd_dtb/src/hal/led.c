@@ -131,6 +131,9 @@ static void GpioController_Cleanup(GpioController *controller)
     if (fd_unexport >= 0) {
         snprintf(path, sizeof(path), "%d", controller->gpio_num);
         int ret = write(fd_unexport, path, strlen(path) + 1);
+        if(ret < 0) {
+            perror("Failed to unexport GPIO");
+        }
         close(fd_unexport);
     }
 }

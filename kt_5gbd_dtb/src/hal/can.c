@@ -146,7 +146,7 @@ static int can_device_open(CANDevice *dev, const char *ifname)
 }
 
 
-static void can_device_send(CANDevice* dev, const uint8_t* data, size_t len, uint8_t number, uint16_t timeouts) 
+static void can_device_send(CANDevice* dev, uint8_t* data, size_t len, uint8_t number, uint16_t timeouts) 
 {
     // struct timespec now;
 

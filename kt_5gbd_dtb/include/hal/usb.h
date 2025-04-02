@@ -13,6 +13,7 @@ typedef struct {
     //                        unsigned int timeout);
     int (*bulk_write)(USBDevice *self, uint8_t *buffer, int length, uint32_t timeout);
     int (*bulk_read)(USBDevice *self, uint8_t *buffer, int length, uint32_t timeout);
+    void (*register_cb)(uint8_t* buffer, size_t length);
     // void (*print_info)(struct USBDevice *self);
 } USBDeviceOps;
 
