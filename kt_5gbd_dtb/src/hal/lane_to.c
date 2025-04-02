@@ -408,7 +408,6 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     int fd = 0;
     char buffer[4096];
     size_t buffer_index = 0;
-    LaneToCtx *ctx = (LaneToCtx*)arg;
     
     while (1) {
         ssize_t bytes_read = ctx->uart->base.ops->read(ctx->uart->base.fd, buffer + buffer_index, sizeof(buffer) - buffer_index);
