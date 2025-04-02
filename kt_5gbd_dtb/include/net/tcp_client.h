@@ -3,7 +3,7 @@
 
 #define MAX_RECONNECT_ATTEMPTS 3
 
-struct st_TcpClient TcpClient;
+typedef struct st_TcpClient TcpClient;
 
 typedef struct st_TcpClientOps
 {
