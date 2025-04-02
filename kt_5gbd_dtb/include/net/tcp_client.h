@@ -8,7 +8,7 @@ typedef struct st_TcpClient TcpClient;
 typedef struct st_TcpClientOps
 {
     void (*connect)(TcpClient* client);
-    void (*send)(TcpClient* client, const uint8_t* data, size_t len);
+    void (*send)(TcpClient* client, uint8_t* data, size_t len);
     void (*disconnect)(TcpClient* client);
     void (*register_cb)(TcpClient* client, void (*cb)(char *buf, size_t len));
 } TcpClientOps;
@@ -32,7 +32,7 @@ struct st_TcpClient
 
 
 // int tcp_client_init(TcpClient* client);
-void tcp_client_send(TcpClient* client, const uint8_t* data, size_t len);
+void tcp_client_send(TcpClient* client, uint8_t* data, size_t len);
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt);
 void tcp_client_destroy(TcpClient* client);
 

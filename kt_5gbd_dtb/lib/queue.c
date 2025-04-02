@@ -22,7 +22,7 @@ int init_queue(ThreadSafeQueue* q, size_t size)
 }
 
 // 入队操作
-int enqueue(ThreadSafeQueue* q, const uint8_t* data, size_t len) 
+int enqueue(ThreadSafeQueue* q, uint8_t* data, size_t len) 
 {
     pthread_mutex_lock(&q->mutex);
     
