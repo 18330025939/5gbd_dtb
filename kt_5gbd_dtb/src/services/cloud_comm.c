@@ -53,23 +53,20 @@ void init_ota_heart_beat(OtaHeartBeat *heart_beat)
         return;
     }
 
-    heart_beat->dev_addr = strudp();
-    heart_beat->usage_cpu = strdup();
-    heart_beat->up_time = strdup();
-    heart_beat->sys_time = strdup();
+    // heart_beat->dev_addr = strudp();
+    // heart_beat->usage_cpu = strdup();
+    // heart_beat->up_time = strdup();
+    // heart_beat->sys_time = strdup();
 
 
 }
 
 void uninit_ota_heart_beat(OtaHeartBeat *heart_beat)
 {
-    size_t i = 0;
-
     if (heart_beat == NULL) {
         return;
     }
 
-    free(heart_beat->dev_addr);
     free(heart_beat->usage_cpu);
     free(heart_beat->up_time);
     free(heart_beat->sys_time);
@@ -83,13 +80,12 @@ void uninit_ota_heart_beat(OtaHeartBeat *heart_beat)
 }
 
 
-cJSON *create_unit_info_obj(UnitInfo * unit_info)
+cJSON *create_unit_info_object(UnitInfo * unit_info)
 {
     cJSON *obj = NULL;
 
     obj = cJSON_CreateObject();
-    cJSON_AddStringToObject(obj, unit_info->unit.key, unit_info->unit.val);
-    cJSON_AddStringToObject(obj, unit_info->version.key, unit_info->version.val);
+    cJSON_AddStringToObject(obj, unit_info->unit_name, unit_info->unit_ver);
     
     return obj;
 }
@@ -146,10 +142,22 @@ int create_heartbeat_data(char *data)
 }
 // http_post_request
 
+char *time_to_str(Time* t)
+{
+	char *p;
+
+	sprintf(p, "%04d-%02d-%02d %02d:%02d:%02d",
+				t->usYear, t->ucMonth, t->ucDay, t->ucHour, t->ucMinute, t->ucSecond);
+
+	return p;
+}
+
+
 int create_ota_report_data(char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
+    char buf[20];
 
     if (data == NULL) {
         return -1;
@@ -159,8 +167,10 @@ int create_ota_report_data(char *data)
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
     cJSON_AddStringToObject(root, "taskId", report.task_id);
-    cJSON_AddStringToObject(root, "executionTime", report.up_time);
-    cJSON_AddStringToObject(root, "executionReport", report.report_time);
+    TIME_TO_STR(&report.up_time, buf);
+    cJSON_AddStringToObject(root, "executionTime", buf);
+    TIME_TO_STR(&report.report_time, buf);
+    cJSON_AddStringToObject(root, "executionReport", buf);
     data = cJSON_Print(root);
     cJSON_Delete(root);
 
@@ -168,12 +178,12 @@ int create_ota_report_data(char *data)
 }
 
 
-int create_ota_update_data(char *data)
-{
+// int create_ota_update_data(char *data)
+// {
 
 
 
-}
+// }
 
 void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 {
@@ -228,10 +238,10 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     get_system_time(&t);
     nav_data->usDevAddr = 0;
     nav_data->usYear = t.usYear;
-    nav_data->usMonth = t.ucMonth;
+    nav_data->ucMonth = t.ucMonth;
     nav_data->ucDay = t.ucDay;
-    nav_data->usHour = t.ucHour;
-    nav_data->usMinute = t.ucMinute;
+    nav_data->ucHour = t.ucHour;
+    nav_data->ucMinute = t.ucMinute;
     nav_data->usMilSec = t.ucSecond; 
     nav_data->dLatitude = sg_data.latitude;
     nav_data->dLongitude = sg_data.longitude;
@@ -250,7 +260,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data->usVnSpeed = sg_data.vn_uncertainty;
     nav_data->usVeSpeed = sg_data.ve_uncertainty;
     nav_data->usVdSpeed = sg_data.vd_uncertainty;
-    nav_data->usRollAngle = sg_data.rool_uncertainty;
+    nav_data->usRollAngle = sg_data.roll_uncertainty;
     nav_data->usPitchAngle = sg_data.pitch_uncertainty;
     nav_data->usYawAngle = sg_data.yaw_uncertainty;
     nav_data->sRollMisAngle = sg_data.misalign_angle_roll;
@@ -271,7 +281,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
 void proc_message_cb(char *buf, size_t len)
 {
 
-    printf("proc_message_cb %s, %d\r\n", buf, len);
+    printf("proc_message_cb %s, %ld\r\n", buf, len);
 }
 
 void add_timer_task(struct event_base *base, task_cb cb, uint32_t ms)
@@ -281,13 +291,13 @@ void add_timer_task(struct event_base *base, task_cb cb, uint32_t ms)
     event_add(task, &tv);
 }
 
-void timer_task_entry(void *arg)
+void *timer_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     struct event_base *base = NULL;
     
     if (arg == NULL) {
-        return;
+        return NULL;
     }
 
     ctx = (CloundCommContext *)arg;
@@ -296,6 +306,8 @@ void timer_task_entry(void *arg)
     add_timer_task(base, ota_heartbeat_task_cb, 1000);
     ctx->base = base;
     event_base_dispatch(base);  // 启动事件循环
+    
+    return NULL;
 }
 
 // void send_msg_entry(void *arg)

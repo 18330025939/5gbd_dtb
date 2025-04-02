@@ -17,7 +17,7 @@ typedef struct st_CANDevice CANDevice;
 
 struct CANDeviceOps {
     int (*open)(CANDevice *dev, const char *ifname);
-    void (*send)(CANDevice *dev, const uint8_t *data, size_t len, uint8_t number, uint16_t timeouts);
+    void (*send)(CANDevice *dev, uint8_t *data, size_t len, uint8_t number, uint16_t timeouts);
     int (*set_filter)(CANDevice *dev, struct can_filter *rfilter);
     void (*close)(CANDevice *dev);
     void (*register_callback)(CANDevice *dev, void (*cb)(struct can_frame *));

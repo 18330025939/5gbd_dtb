@@ -35,6 +35,13 @@ typedef struct st_Time
     uint8_t  ucSecond;
 } Time;
 
+#define TIME_TO_STR(t, buffer) \
+    do { \
+        sprintf(buffer, "%04d-%02d-%02d %02d:%02d:%02d", \
+                (t)->usYear, (t)->ucMonth, (t)->ucDay, \
+                (t)->ucHour, (t)->ucMinute, (t)->ucSecond); \
+    } while (0)
+
 #define  MSG_SIGN_TRANS_NAV_DATA      0xF0
 // #define  MSG_SIGN_GNGGA_DATA   0xF1
 // #define  MSG_SIGN_GNRMC_DATA   0xF2
@@ -99,8 +106,8 @@ typedef struct st_UnitInfo
 
 typedef struct st_OtaHeartBeat
 {
-    char dev_addr[20];
-    char usage_cpu[20];
+    uint16_t dev_addr;
+    char *usage_cpu;
     uint32_t usage_mem;
     uint32_t total_mem;
     uint32_t usage_disk;
