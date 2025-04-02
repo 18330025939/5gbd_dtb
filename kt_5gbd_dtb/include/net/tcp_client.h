@@ -1,6 +1,9 @@
 #ifndef __TCP_CLIENT_H
 #define __TCP_CLIENT_H
 
+#include <stdbool.h>
+#include "queue.h"
+
 #define MAX_RECONNECT_ATTEMPTS 3
 
 typedef struct st_TcpClient TcpClient;
