@@ -14,18 +14,38 @@
 
 
 
-// uint16_t checkSum_8(uint8_t *buf, uint16_t len) //buf为数组，len为数组长度
-// {
-//     uint8_t i;
-//     uint16_t ret = 0;
-//     for(i=0; i<len; i++)
-//     {
-//         ret += *(buf++);
-//     }
-// //    ret = ~ret;
-//     return ret;
-// }
+uint16_t checkSum_8(uint8_t *buf, uint16_t len)
+{
+    uint8_t i;
+    uint16_t ret = 0;
+    for(i=0; i<len; i++)
+    {
+        ret += *(buf++);
+    }
+//    ret = ~ret;
+    return ret;
+}
 
+
+void get_system_time(Time *t)
+{
+    time_t rawtime;
+	struct tm *timeinfo;
+
+    if (t == NULL) {
+        return;
+    }
+
+	time (&rawtime);
+	timeinfo = localtime(&rawtime);
+
+    t->usYear = timeinfo->tm_year + 1900;
+    t->ucMonth = timeinfo->tm_mon + 1;
+    t->ucDay = timeinfo->tm_mday;
+    t->ucHour = timeinfo->tm_hour;
+    t->ucMinute = timeinfo->tm_min;
+    t->ucSecond = timeinfo->tm_sec;
+}
 
 void init_ota_heart_beat(OtaHeartBeat *heart_beat)
 {

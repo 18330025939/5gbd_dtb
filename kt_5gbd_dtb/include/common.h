@@ -21,31 +21,31 @@
 #define TRUE        1
 
 
-#define MSG_DATA_FRAM_HDR         0xAAAA
-#pragma pack(push, 1)
-typedef struct st_MsgFramHdr
-{
-    uint16_t usHdr;       /* 帧头 */
-    uint16_t usLen;       /* 长度 */
-    uint8_t ucSign;       /* 标识 */
-} MsgFramHdr; 
+// #define MSG_DATA_FRAM_HDR         0xAAAA
+// #pragma pack(push, 1)
+// typedef struct st_MsgFramHdr
+// {
+//     uint16_t usHdr;       /* 帧头 */
+//     uint16_t usLen;       /* 长度 */
+//     uint8_t ucSign;       /* 标识 */
+// } MsgFramHdr; 
 
-typedef struct st_MsgDataFramCrc
-{
-    uint16_t usCRC;      /* 校验 */
-} MsgDataFramCrc; 
-#pragma pack(pop)
+// typedef struct st_MsgDataFramCrc
+// {
+//     uint16_t usCRC;      /* 校验 */
+// } MsgDataFramCrc; 
+// #pragma pack(pop)
 
 
-typedef struct st_Time
-{
-    uint16_t usYear;
-    uint8_t  ucMonth;
-    uint8_t  ucDay;
-    uint8_t  ucHour;
-    uint8_t  ucMinute;
-    uint8_t  ucSecond;
-} Time;
+// typedef struct st_Time
+// {
+//     uint16_t usYear;
+//     uint8_t  ucMonth;
+//     uint8_t  ucDay;
+//     uint8_t  ucHour;
+//     uint8_t  ucMinute;
+//     uint8_t  ucSecond;
+// } Time;
 
 
 //#define _DEBUG_
