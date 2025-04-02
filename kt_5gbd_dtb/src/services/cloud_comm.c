@@ -233,64 +233,66 @@ void ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
 void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
 // int proc_nav_data_msg(void *arg)
 {
-    // MsgFramHdr *hdr = NULL;
-    // NAVDataSeg *nav_data = NULL;
-    // MsgDataFramCrc *crc = NULL;
-    // Time t;
-    // uint8_t buf[512];
+    MsgFramHdr *hdr = NULL;
+    NAVDataSeg *nav_data = NULL;
+    MsgDataFramCrc *crc = NULL;
+    Time t;
+    uint8_t buf[512];
+    char str[50];
 
-    // if (arg == NULL) {
-    //     return ;
-    // }
-    printf("nav_data_msg_task_cb\r\n");
-    // CloundCommContext *ctx = (CloundCommContext *)arg;
-    // // ThreadSafeQueue *send_queue = &ctx->queue;
-    // hdr = (MsgFramHdr *)buf;
-    // hdr->usHdr = MSG_DATA_FRAM_HDR;
-    // hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
-    // hdr->usLen = sizeof(MsgFramHdr) + sizeof(NAVDataSeg);
-    // nav_data = (NAVDataSeg *)(hdr + 1);
-    // get_system_time(&t);
-    // nav_data->usDevAddr = 0;
-    // nav_data->usYear = t.usYear;
-    // nav_data->ucMonth = t.ucMonth;
-    // nav_data->ucDay = t.ucDay;
-    // nav_data->ucHour = t.ucHour;
-    // nav_data->ucMinute = t.ucMinute;
-    // nav_data->usMilSec = t.ucSecond; 
-    // nav_data->dLatitude = sg_data.latitude;
-    // nav_data->dLongitude = sg_data.longitude;
-    // nav_data->fAltitude = sg_data.altitude_msl;
-    // nav_data->lVn = sg_data.vn;
-    // nav_data->lVe = sg_data.ve;
-    // nav_data->lVd = sg_data.vd;
-    // nav_data->ulSpeed = sg_data.ground_speed;
-    // nav_data->ulTraveDis = sg_data.traveled_distance;    
-    // nav_data->lRoll = sg_data.roll;
-    // nav_data->lPitch = sg_data.pitch;
-    // nav_data->lHeading = sg_data.heading;
-    // nav_data->usNorthPos = sg_data.north_uncertainty;
-    // nav_data->usEastPos = sg_data.east_uncertainty;
-    // nav_data->usDownPos = sg_data.down_uncertainty;
-    // nav_data->usVnSpeed = sg_data.vn_uncertainty;
-    // nav_data->usVeSpeed = sg_data.ve_uncertainty;
-    // nav_data->usVdSpeed = sg_data.vd_uncertainty;
-    // nav_data->usRollAngle = sg_data.roll_uncertainty;
-    // nav_data->usPitchAngle = sg_data.pitch_uncertainty;
-    // nav_data->usYawAngle = sg_data.yaw_uncertainty;
-    // nav_data->sRollMisAngle = sg_data.misalign_angle_roll;
-    // nav_data->sPitchMisAngle = sg_data.misalign_angle_pitch;
-    // nav_data->sYawMisAngle = sg_data.misalign_angle_yaw;
-    // nav_data->usStationID = sg_data.reference_station_id;
-    // nav_data->ucTimeDiff = sg_data.time_since_last_diff;
-    // crc = (MsgDataFramCrc *)(nav_data + 1);
-    // crc->usCRC = checkSum_8((uint8_t *)hdr, hdr->usLen);
-    // // enqueue(send_queue, buf, hdr->usLen);
-
-    // TcpClient *client = ctx->client;
-    // if (client->is_connected) {
-    //     client->ops->send(client, buf, hdr->usLen);
-    // }
+    if (arg == NULL) {
+        return ;
+    }
+    
+    CloundCommContext *ctx = (CloundCommContext *)arg;
+    // ThreadSafeQueue *send_queue = &ctx->queue;
+    hdr = (MsgFramHdr *)buf;
+    hdr->usHdr = MSG_DATA_FRAM_HDR;
+    hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
+    hdr->usLen = sizeof(MsgFramHdr) + sizeof(NAVDataSeg);
+    nav_data = (NAVDataSeg *)(hdr + 1);
+    get_system_time(&t);
+    nav_data->usDevAddr = 0;
+    nav_data->usYear = t.usYear;
+    nav_data->ucMonth = t.ucMonth;
+    nav_data->ucDay = t.ucDay;
+    nav_data->ucHour = t.ucHour;
+    nav_data->ucMinute = t.ucMinute;
+    nav_data->usMilSec = t.ucSecond; 
+    nav_data->dLatitude = sg_data.latitude;
+    nav_data->dLongitude = sg_data.longitude;
+    nav_data->fAltitude = sg_data.altitude_msl;
+    nav_data->lVn = sg_data.vn;
+    nav_data->lVe = sg_data.ve;
+    nav_data->lVd = sg_data.vd;
+    nav_data->ulSpeed = sg_data.ground_speed;
+    nav_data->ulTraveDis = sg_data.traveled_distance;    
+    nav_data->lRoll = sg_data.roll;
+    nav_data->lPitch = sg_data.pitch;
+    nav_data->lHeading = sg_data.heading;
+    nav_data->usNorthPos = sg_data.north_uncertainty;
+    nav_data->usEastPos = sg_data.east_uncertainty;
+    nav_data->usDownPos = sg_data.down_uncertainty;
+    nav_data->usVnSpeed = sg_data.vn_uncertainty;
+    nav_data->usVeSpeed = sg_data.ve_uncertainty;
+    nav_data->usVdSpeed = sg_data.vd_uncertainty;
+    nav_data->usRollAngle = sg_data.roll_uncertainty;
+    nav_data->usPitchAngle = sg_data.pitch_uncertainty;
+    nav_data->usYawAngle = sg_data.yaw_uncertainty;
+    nav_data->sRollMisAngle = sg_data.misalign_angle_roll;
+    nav_data->sPitchMisAngle = sg_data.misalign_angle_pitch;
+    nav_data->sYawMisAngle = sg_data.misalign_angle_yaw;
+    nav_data->usStationID = sg_data.reference_station_id;
+    nav_data->ucTimeDiff = sg_data.time_since_last_diff;
+    crc = (MsgDataFramCrc *)(nav_data + 1);
+    crc->usCRC = checkSum_8((uint8_t *)hdr, hdr->usLen);
+    // enqueue(send_queue, buf, hdr->usLen);
+    TIME_TO_STR(&t, str);
+    printf("nav_data_msg_task_cb %s\r\n", str);
+    TcpClient *client = ctx->client;
+    if (client->is_connected) {
+        client->ops->send(client, buf, hdr->usLen);
+    }
 
     return;
 }
