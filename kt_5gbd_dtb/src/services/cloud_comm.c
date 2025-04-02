@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -142,22 +143,22 @@ int create_heartbeat_data(char *data)
 }
 // http_post_request
 
-char *time_to_str(Time* t)
-{
-	char *p;
+// char *time_to_str(Time* t)
+// {
+// 	char *p;
 
-	sprintf(p, "%04d-%02d-%02d %02d:%02d:%02d",
-				t->usYear, t->ucMonth, t->ucDay, t->ucHour, t->ucMinute, t->ucSecond);
+// 	sprintf(p, "%04d-%02d-%02d %02d:%02d:%02d",
+// 				t->usYear, t->ucMonth, t->ucDay, t->ucHour, t->ucMinute, t->ucSecond);
 
-	return p;
-}
+// 	return p;
+// }
 
 
 int create_ota_report_data(char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
-    char buf[20];
+    char buf[40];
 
     if (data == NULL) {
         return -1;

@@ -6,6 +6,8 @@ CC=$(CROSS_COMPILE)gcc
 LDFLAGS += -fPIC
 LIBS += -L../lib -lpub -lusb-1.0 -lcurl -levent -levent_pthreads -lpthread -L$(KT_5GBD_DTB)/third_party/mqtt/lib -lpaho-mqtt3a
 EXEC = 5GBD_MODULE
+
+THIRD_PARTY = $(KT_5GBD_DTB)/third_party/json/obj/cJSON.o
 #KT_HOST_LIB = $(KT_5G_ROOT)/lib/crc/crc.o
 SRC = $(KT_5GBD_DTB)/src/main.o
 SRC += $(KT_5GBD_DTB)/src/hal/serial.o
@@ -28,7 +30,7 @@ OBJ = $(addprefix obj/,$(notdir $(SRC)))
 all: $(EXEC)
 
 $(EXEC): $(SRC)
-	$(CC) $(CFLAGS) -o $(EXEC) $(OBJ) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $(EXEC) $(THIRD_PARTY) $(OBJ) $(LDFLAGS) $(LIBS)
 	@if [ ! -d $(KT_5GBD_DTB)/bin ]; then mkdir -p $(KT_5GBD_DTB)/bin; fi
 	-@cp -r $(EXEC) $(KT_5GBD_DTB)/bin
 
