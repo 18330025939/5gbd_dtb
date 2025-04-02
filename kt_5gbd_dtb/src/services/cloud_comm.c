@@ -165,7 +165,7 @@ int create_ota_report_data(char *data)
 
     root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "lang", "zh_CN");
-    cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
+    cJSON_AddStringToObject(root, "deviceAddress", (const char*)report.dev_addr);
     cJSON_AddStringToObject(root, "taskId", report.task_id);
     TIME_TO_STR(&report.up_time, buf);
     cJSON_AddStringToObject(root, "executionTime", buf);
@@ -185,38 +185,42 @@ int create_ota_report_data(char *data)
 
 // }
 
-void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
+void *ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     char buf[512];
     char *resp = NULL;
 
     int ret = create_heartbeat_data(buf);
     if (ret) {
-        return;
+        return NULL;
     }
 
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
     printf("%s\r\n", resp);
 
     free(resp);
+
+    return NULL;
 }
 
 
-void ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
+void *ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     char buf[512];
     char *resp = NULL;
     int ret = create_ota_report_data(buf);
     if (ret) {
-        return;
+        return NULL;
     }
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
     printf("%s\r\n", resp);
 
     free(resp);
+
+    return NULL;
 }
 
-void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
+void *nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
 // int proc_nav_data_msg(void *arg)
 {
     MsgFramHdr *hdr = NULL;
@@ -226,10 +230,10 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     uint8_t buf[512];
 
     if (arg == NULL) {
-        return ;
+        return NULL;
     }
     CloundCommContext *ctx = (CloundCommContext *)arg;
-    ThreadSafeQueue *send_queue = &ctx->queue;
+    // ThreadSafeQueue *send_queue = &ctx->queue;
     hdr = (MsgFramHdr *)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR;
     hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
@@ -276,6 +280,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     if (client->is_connected) {
         client->ops->send(client, buf, hdr->usLen);
     }
+
+    return NULL;
 }
 
 void proc_message_cb(char *buf, size_t len)
@@ -284,9 +290,9 @@ void proc_message_cb(char *buf, size_t len)
     printf("proc_message_cb %s, %ld\r\n", buf, len);
 }
 
-void add_timer_task(struct event_base *base, task_cb cb, uint32_t ms)
+void add_timer_task(struct event_base *base, task_cb, uint32_t ms)
 {
-    struct event *task = event_new(base, -1, EV_PERSIST, cb, NULL);
+    struct event *task = event_new(base, -1, EV_PERSIST, task_cb, NULL);
     struct timeval tv = {ms / 1000, ms % 1000 * 1000}; 
     event_add(task, &tv);
 }
