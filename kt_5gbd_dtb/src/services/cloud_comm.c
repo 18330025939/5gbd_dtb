@@ -243,7 +243,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     if (arg == NULL) {
         return ;
     }
-    
+    printf("nav_data_msg_task_cb\n");
     CloundCommContext *ctx = (CloundCommContext *)arg;
     // ThreadSafeQueue *send_queue = &ctx->queue;
     hdr = (MsgFramHdr *)buf;
@@ -253,6 +253,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     printf("hdr->usLen %d\n", hdr->usLen);
     nav_data = (NAVDataSeg *)(hdr + 1);
     get_system_time(&t);
+    TIME_TO_STR(&t, str);
+    printf("time %s\r\n", str);
     nav_data->usDevAddr = 0;
     nav_data->usYear = t.usYear;
     nav_data->ucMonth = t.ucMonth;
@@ -288,8 +290,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     crc = (MsgDataFramCrc *)(nav_data + 1);
     crc->usCRC = checkSum_8((uint8_t *)hdr, hdr->usLen);
     // enqueue(send_queue, buf, hdr->usLen);
-    TIME_TO_STR(&t, str);
-    printf("nav_data_msg_task_cb %s\r\n", str);
+
     TcpClient *client = ctx->client;
     if (client->is_connected) {
         client->ops->send(client, buf, hdr->usLen);
