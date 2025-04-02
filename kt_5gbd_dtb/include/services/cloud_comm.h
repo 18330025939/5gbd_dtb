@@ -1,7 +1,8 @@
 #ifndef __CLOUD_COMM_H
 #define __CLOUD_COMM_H
 
-// #include "common.h"
+#include "tcp_client.h"
+#include "lane_to.h"
 
 #define CLOUD_SERVER_IP "152.136.10.158"
 #define CLOUD_SERVER_PORT 3901
