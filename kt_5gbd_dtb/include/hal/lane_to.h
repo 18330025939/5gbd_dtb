@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <stdbool.h>
+#include "serial.h"
 
 #pragma pack(push, 1)
 typedef struct {
