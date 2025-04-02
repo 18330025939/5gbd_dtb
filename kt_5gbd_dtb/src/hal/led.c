@@ -130,7 +130,7 @@ static void GpioController_Cleanup(GpioController *controller)
     fd_unexport = open("/sys/class/gpio/unexport", O_WRONLY);
     if (fd_unexport >= 0) {
         snprintf(path, sizeof(path), "%d", controller->gpio_num);
-        write(fd_unexport, path, strlen(path) + 1);
+        int ret = write(fd_unexport, path, strlen(path) + 1);
         close(fd_unexport);
     }
 }

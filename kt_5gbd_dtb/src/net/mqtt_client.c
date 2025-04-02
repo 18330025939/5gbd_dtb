@@ -124,7 +124,7 @@ static AsyncClientOps client_ops = {
     .connect = mqtt_connect,
     .publish = mqtt_publish,
     .subscribe = mqtt_subscribe,
-    .register_cb = mqtt_register_cb,
+    .register_cb = mqtt_register_cb
 } ;
 
 static AsyncClientConfig client_config = {
