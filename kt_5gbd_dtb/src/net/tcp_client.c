@@ -5,12 +5,16 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <event.h>
+#include <pthread.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 #include <event2/util.h>
+#include <event2/event.h>
+#include <event2/thread.h>
 #include "queue.h"
 #include "tcp_client.h"
 
@@ -73,14 +77,14 @@ void *tcp_client_connect_entry(void *arg)
     client->base = event_base_new();
     if (!client->base) {
         perror("event_base_new failed");
-        return ;
+        return NULL;
     }
 
     client->bev = bufferevent_socket_new(client->base, -1, BEV_OPT_CLOSE_ON_FREE);
     if (!client->bev) {
         perror("bufferevent_socket_new failed");
         event_base_free(client->base);
-        return ;
+        return NULL;
     }
 
     bufferevent_setcb(client->bev, tcp_client_read_cb, NULL, tcp_client_event_cb, client);
@@ -95,13 +99,13 @@ void *tcp_client_connect_entry(void *arg)
         perror("bufferevent_socket_connect failed");
         bufferevent_free(client->bev);
         event_base_free(client->base);
-        return;
+        return NULL;
     }
     
     bufferevent_enable(client->bev, EV_READ | EV_WRITE | EV_PERSIST);
 
     event_base_dispatch(client->base);
-    return ;
+    return NULL;
 }
 
 void *tcp_client_send_entry(void *arg)
@@ -111,27 +115,29 @@ void *tcp_client_send_entry(void *arg)
     size_t len = 0;
 
     while (client->is_connected) {
-        int ret = dequeue(&client->tx_queue, buf, &len);
+        int ret = dequeue(&client->tx_queue, (const char*)buf, &len);
         if (ret) {
             continue;
         }
         bufferevent_write(client->bev, buf, len);
     }
+
+    return NULL;
 }
 
-void tcp_client_connect(TcpClient* client)
+static void tcp_client_connect(TcpClient* client)
 {
     pthread_create(client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
 }
 
 // 发送数据
-void tcp_client_send(TcpClient* client, const char* data, size_t len) 
+static void tcp_client_send(TcpClient* client, const char* data, size_t len) 
 {
     enqueue(&client->tx_queue, data, len);
     // bufferevent_write(client->bev, data, len);
 }
 
-void tcp_client_disconnect(TcpClient* client) 
+static void tcp_client_disconnect(TcpClient* client) 
 {
     client->is_connected = false;
     event_base_loopbreak(client->base);
@@ -139,7 +145,7 @@ void tcp_client_disconnect(TcpClient* client)
     pthread_join(client->send_thread, NULL);
 }
 
-void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 
+static void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 
 {
     client->on_message = cb;
 }

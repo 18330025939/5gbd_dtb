@@ -3,6 +3,8 @@
 
 #define MAX_RECONNECT_ATTEMPTS 3
 
+struct st_TcpClient TcpClient;
+
 typedef struct st_TcpClientOps
 {
     void (*connect)(TcpClient* client);
@@ -11,7 +13,7 @@ typedef struct st_TcpClientOps
     void (*register_cb)(TcpClient* client, void (*cb)(char *buf, size_t len));
 } TcpClientOps;
 
-typedef struct st_TcpClient
+struct st_TcpClient
 {
     struct event_base* base;
     struct bufferevent* bev;
@@ -26,15 +28,11 @@ typedef struct st_TcpClient
     ThreadSafeQueue tx_queue;
     TcpClientOps *ops;
     void (*on_message)(char *buf, size_t len);
-} TcpClient;
+} ;
 
 
-
-
-int tcp_client_init(TcpClient* client);
+// int tcp_client_init(TcpClient* client);
 void tcp_client_send(TcpClient* client, const char* data, size_t len);
-
-
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt);
 void tcp_client_destroy(TcpClient* client);
 
