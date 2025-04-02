@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <signal.h>
 #include <termios.h>
 #include <event2/event.h>
 #include "cloud_comm.h"
