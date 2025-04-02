@@ -53,7 +53,7 @@ void init_ota_heart_beat(OtaHeartBeat *heart_beat)
     if (heart_beat == NULL) {
         return;
     }
-
+    memset(heart_beat, 0, sizeof(OtaHeartBeat));
     // heart_beat->dev_addr = strudp();
     // heart_beat->usage_cpu = strdup();
     // heart_beat->up_time = strdup();
@@ -112,6 +112,7 @@ int create_heartbeat_data(char *data)
     cJSON *unit_info = NULL;
     OtaHeartBeat heart_beat;
     char *buf = NULL;
+    char str[20];
 
     if (data == NULL) {
         return -1;
@@ -120,12 +121,17 @@ int create_heartbeat_data(char *data)
     root = cJSON_CreateObject();
     init_ota_heart_beat(&heart_beat);
     cJSON_AddStringToObject(root, "lang", "zh_CN");
-    cJSON_AddStringToObject(root, "deviceAddress", heart_beat.dev_addr);
+    sprintf(str, "%hu", heart_beat.dev_addr);
+    cJSON_AddStringToObject(root, "deviceAddress", str);
     cJSON_AddStringToObject(root, "usageCpu", heart_beat.usage_cpu);
-    cJSON_AddStringToObject(root, "usageMemory", heart_beat.usage_mem);
-    cJSON_AddStringToObject(root, "totalMemory", heart_beat.total_mem);
-    cJSON_AddStringToObject(root, "usageDisk", heart_beat.usage_disk);
-    cJSON_AddStringToObject(root, "totalDisk", heart_beat.total_disk);
+    sprintf(str, "%u", heart_beat.usage_mem);
+    cJSON_AddStringToObject(root, "usageMemory", str);
+    sprintf(str, "%u", heart_beat.total_mem);
+    cJSON_AddStringToObject(root, "totalMemory", str);
+    sprintf(str, "%u",heart_beat.usage_disk);
+    cJSON_AddStringToObject(root, "usageDisk", str);
+    sprintf(str, "%u", heart_beat.total_disk);
+    cJSON_AddStringToObject(root, "totalDisk", str);
     cJSON_AddStringToObject(root, "upTime", heart_beat.up_time);
     cJSON_AddStringToObject(root, "systemTime", heart_beat.sys_time);
     cJSON_AddStringToObject(root, "extendInfo", "");
@@ -163,11 +169,13 @@ int create_ota_report_data(char *data)
     if (data == NULL) {
         return -1;
     }
-
+    memset(&report, 0, sizeof(OtaReport));
     root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "lang", "zh_CN");
-    cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
-    cJSON_AddStringToObject(root, "taskId", report.task_id);
+    sprintf(buf, "%hu", report.dev_addr);
+    cJSON_AddStringToObject(root, "deviceAddress", buf);
+    sprintf(buf, "%hu", report.task_id);
+    cJSON_AddStringToObject(root, "taskId", buf);
     TIME_TO_STR(&report.up_time, buf);
     cJSON_AddStringToObject(root, "executionTime", buf);
     TIME_TO_STR(&report.report_time, buf);
