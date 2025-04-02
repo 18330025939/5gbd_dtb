@@ -137,7 +137,7 @@ typedef enum
     EVENT_TYPE_MAX
 } EventType;
 
-void (*task_cb)(evutil_socket_t, short, void*);
+// void (*task_cb)(evutil_socket_t, short, void*);
 
 uint16_t checkSum_8(uint8_t *buf, uint16_t len);
 void get_system_time(Time *t);

@@ -185,14 +185,14 @@ int create_ota_report_data(char *data)
 
 // }
 
-void *ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
+void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     char buf[512];
     char *resp = NULL;
 
     int ret = create_heartbeat_data(buf);
     if (ret) {
-        return NULL;
+        return;
     }
 
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
@@ -200,27 +200,27 @@ void *ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 
     free(resp);
 
-    return NULL;
+    return;
 }
 
 
-void *ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
+void ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     char buf[512];
     char *resp = NULL;
     int ret = create_ota_report_data(buf);
     if (ret) {
-        return NULL;
+        return ;
     }
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
     printf("%s\r\n", resp);
 
     free(resp);
 
-    return NULL;
+    return ;
 }
 
-void *nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
+void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
 // int proc_nav_data_msg(void *arg)
 {
     MsgFramHdr *hdr = NULL;
@@ -230,7 +230,7 @@ void *nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     uint8_t buf[512];
 
     if (arg == NULL) {
-        return NULL;
+        return ;
     }
     CloundCommContext *ctx = (CloundCommContext *)arg;
     // ThreadSafeQueue *send_queue = &ctx->queue;
@@ -281,7 +281,7 @@ void *nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
         client->ops->send(client, buf, hdr->usLen);
     }
 
-    return NULL;
+    return;
 }
 
 void proc_message_cb(char *buf, size_t len)
@@ -290,7 +290,7 @@ void proc_message_cb(char *buf, size_t len)
     printf("proc_message_cb %s, %ld\r\n", buf, len);
 }
 
-void add_timer_task(struct event_base *base, void (*task_cb)(evutil_socket_t, short, void*), uint32_t ms)
+void add_timer_task(struct event_base *base, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
 {
     struct event *task = event_new(base, -1, EV_PERSIST, task_cb, NULL);
     struct timeval tv = {ms / 1000, ms % 1000 * 1000}; 
