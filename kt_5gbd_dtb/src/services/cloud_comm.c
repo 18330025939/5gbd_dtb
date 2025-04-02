@@ -165,7 +165,7 @@ int create_ota_report_data(char *data)
 
     root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "lang", "zh_CN");
-    cJSON_AddStringToObject(root, "deviceAddress", (const char*)report.dev_addr);
+    cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
     cJSON_AddStringToObject(root, "taskId", report.task_id);
     TIME_TO_STR(&report.up_time, buf);
     cJSON_AddStringToObject(root, "executionTime", buf);
@@ -290,7 +290,7 @@ void proc_message_cb(char *buf, size_t len)
     printf("proc_message_cb %s, %ld\r\n", buf, len);
 }
 
-void add_timer_task(struct event_base *base, task_cb, uint32_t ms)
+void add_timer_task(struct event_base *base, void (*task_cb)(evutil_socket_t, short, void*), uint32_t ms)
 {
     struct event *task = event_new(base, -1, EV_PERSIST, task_cb, NULL);
     struct timeval tv = {ms / 1000, ms % 1000 * 1000}; 
