@@ -7,7 +7,7 @@
 #include <linux/can.h>
 #include "queue.h"
 
-#define MAX_SEGMENTS     32
+// #define MAX_SEGMENTS     32
 #define RETRY_TIMEOUT_MS 500
 #define MAX_RETRIES      3
 #define MAX_DATA_SIZE    256
@@ -23,13 +23,13 @@ struct CANDeviceOps {
     void (*register_callback)(CANDevice *dev, void (*cb)(struct can_frame *));
 } ;
 
-typedef struct {
-    pthread_mutex_t lock;
-    uint8_t* buffers[MAX_SEGMENTS];
-    size_t sizes[MAX_SEGMENTS];
-    uint8_t head;
-    uint8_t tail;
-} LockFreeBuffer;
+// typedef struct {
+//     pthread_mutex_t lock;
+//     uint8_t* buffers[MAX_SEGMENTS];
+//     size_t sizes[MAX_SEGMENTS];
+//     uint8_t head;
+//     uint8_t tail;
+// } LockFreeBuffer;
 
 #pragma pack(push, 1)
 // 重传管理
