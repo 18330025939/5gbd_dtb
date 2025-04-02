@@ -9,7 +9,7 @@ EXEC = 5GBD_MODULE
 
 THIRD_PARTY = $(KT_5GBD_DTB)/third_party/json/obj/cJSON.o
 #KT_HOST_LIB = $(KT_5G_ROOT)/lib/crc/crc.o
-SRC = $(KT_5GBD_DTB)/src/main.o
+SRC += $(KT_5GBD_DTB)/src/main.o
 SRC += $(KT_5GBD_DTB)/src/hal/serial.o
 SRC += $(KT_5GBD_DTB)/src/hal/can.o
 SRC += $(KT_5GBD_DTB)/src/hal/iic.o
