@@ -405,12 +405,12 @@ void message_parser_entry(const char *line)
 
 void laneTo_read_nav_data(LaneToCtx *ctx) 
 {
-    int fd = 0;
     char buffer[4096];
     size_t buffer_index = 0;
+    SerialPort *serial = &ctx->uart->base;
     
     while (1) {
-        ssize_t bytes_read = ctx->uart->base.ops->read(ctx->uart->base.fd, buffer + buffer_index, sizeof(buffer) - buffer_index);
+        ssize_t bytes_read = serial->ops->read(serial, buffer + buffer_index, sizeof(buffer) - buffer_index);
         if (bytes_read > 0) {
             buffer_index += bytes_read;
             
@@ -428,8 +428,8 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
                 }
                 break;
 
-                memmove(buffer, buffer + end_pos, buffer_index - end_pos);
-                buffer_index = buffer_index - end_pos;
+                // memmove(buffer, buffer + end_pos, buffer_index - end_pos);
+                // buffer_index = buffer_index - end_pos;
             } else {
                 if (buffer_index >= (sizeof(buffer) -1)) {
                     memmove(buffer, buffer + buffer_index - sizeof(buffer) + 1, 
@@ -446,7 +446,6 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
 
 int laneTo_init(LaneToCtx *ctx, const char *uart_dev)
 {   
-    LaneToCtx *ctx = NULL;//(LaneToCtx)malloc(sizeof(LaneToCtx));
     UartPort *laneTo_port = NULL;
     if (ctx == NULL) {
         return -1;
