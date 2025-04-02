@@ -16,7 +16,7 @@ void signal_handler(evutil_socket_t fd, short events, void *arg)
     event_base_loopexit(base, NULL);
 }
 
-int main()
+int main(int argc, char ** args)
 {
     // CloundCommContext *cloud_ctx = NULL;
 
