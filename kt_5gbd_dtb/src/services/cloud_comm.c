@@ -288,12 +288,12 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data->usStationID = sg_data.reference_station_id;
     nav_data->ucTimeDiff = sg_data.time_since_last_diff;
     crc = (MsgDataFramCrc *)(nav_data + 1);
-    crc->usCRC = checkSum_8((uint8_t *)hdr, hdr->usLen);
+    crc->usCRC = checkSum_8(buf, hdr->usLen);
     // enqueue(send_queue, buf, hdr->usLen);
-
+    printf("crc->usCRC 0x%x\n", crc->usCRC);
     TcpClient *client = ctx->client;
     if (client->is_connected) {
-        client->ops->send(client, buf, hdr->usLen);
+        client->ops->send(client, buf, hdr->usLen + sizeof(MsgDataFramCrc));
     }
 
     return;
@@ -380,7 +380,7 @@ void clound_comm_uninit(CloundCommContext *ctx)
     pthread_join(ctx->send_thread, NULL);
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
-
+    ctx->client->ops->disconnect(ctx->client);
     tcp_client_destroy(ctx->client);
     clean_queue(&ctx->queue);
 }

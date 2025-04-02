@@ -133,6 +133,10 @@ static void tcp_client_connect(TcpClient* client)
 // 发送数据
 static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len) 
 {
+    printf("tcp_client_send len %d\n", len);
+    for (int i = 0; i < len; i++) {
+
+    }
     enqueue(&client->tx_queue, data, len);
     // bufferevent_write(client->bev, data, len);
 }
@@ -167,6 +171,7 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
     client->recnt_att = 0;
     client->is_connected = false;
     client->ops = &tcp_client_ops;
+    init_queue(&client->tx_queue, 1024);
     return client;
 }
 
@@ -179,6 +184,7 @@ void tcp_client_destroy(TcpClient* client)
     if (client->base) {
         event_base_free(client->base);
     }
+    clean_queue(&client->tx_queue);
     free(client->server_ip);
     free(client);
 }
