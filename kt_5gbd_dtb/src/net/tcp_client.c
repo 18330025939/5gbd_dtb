@@ -18,7 +18,7 @@
 #include "queue.h"
 #include "tcp_client.h"
 
-
+void *tcp_client_send_entry(void *arg);
 // 重连机制
 void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 {
@@ -60,7 +60,6 @@ static void tcp_client_event_cb(struct bufferevent* bev, short event, void* arg)
     } else if (event & BEV_EVENT_EOF) {
         printf("Connection closed.\n");
         client->is_connected = true;
-        pthread_create
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     } else if (event & BEV_EVENT_ERROR) {
         printf("Error on connection.\n");
@@ -111,11 +110,11 @@ void *tcp_client_connect_entry(void *arg)
 void *tcp_client_send_entry(void *arg)
 {
     TcpClient* client = (TcpClient*)arg;
-    char buf[1024] = {0};
+    uint8_t buf[1024] = {0};
     size_t len = 0;
 
     while (client->is_connected) {
-        int ret = dequeue(&client->tx_queue, (const char*)buf, &len);
+        int ret = dequeue(&client->tx_queue, buf, &len);
         if (ret) {
             continue;
         }
@@ -127,11 +126,11 @@ void *tcp_client_send_entry(void *arg)
 
 static void tcp_client_connect(TcpClient* client)
 {
-    pthread_create(client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
+    pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
 }
 
 // 发送数据
-static void tcp_client_send(TcpClient* client, const char* data, size_t len) 
+static void tcp_client_send(TcpClient* client, const uint8_t* data, size_t len) 
 {
     enqueue(&client->tx_queue, data, len);
     // bufferevent_write(client->bev, data, len);
