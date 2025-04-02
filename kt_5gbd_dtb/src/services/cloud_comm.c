@@ -305,9 +305,9 @@ void proc_message_cb(char *buf, size_t len)
     printf("proc_message_cb %s, %ld\r\n", buf, len);
 }
 
-void add_timer_task(struct event_base *base, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
+void add_timer_task(struct event_base *base, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms, void *arg)
 {
-    struct event *task = event_new(base, -1, EV_PERSIST, task_cb, NULL);
+    struct event *task = event_new(base, -1, EV_PERSIST, task_cb, arg);
     struct timeval tv = {ms / 1000, ms % 1000 * 1000}; 
     event_add(task, &tv);
 }
@@ -323,7 +323,7 @@ void *timer_task_entry(void *arg)
     printf("timer_task_entry\n");
     ctx = (CloundCommContext *)arg;
     base = event_base_new();
-    add_timer_task(base, nav_data_msg_task_cb, 1000);
+    add_timer_task(base, nav_data_msg_task_cb, 1000, arg);
     // add_timer_task(base, ota_heartbeat_task_cb, 1000);
     ctx->base = base;
     event_base_dispatch(base);  // 启动事件循环
