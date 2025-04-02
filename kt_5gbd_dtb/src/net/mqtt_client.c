@@ -115,7 +115,7 @@ int mqtt_subscribe(AsyncMQTTClient* client, const char* topic)
     return rc;
 }
 
-static void mqtt_register_cb(AsyncMQTTClient* client, MqttMessageCallback cb)
+static void mqtt_register_cb(AsyncMQTTClient* client, MqttMessageCallback *cb)
 {
     client->on_message = cb;
 }
