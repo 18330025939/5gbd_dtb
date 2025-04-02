@@ -116,6 +116,7 @@ void *tcp_client_send_entry(void *arg)
     while (client->is_connected) {
         int ret = dequeue(&client->tx_queue, buf, &len);
         if (ret) {
+            sleep(100);
             continue;
         }
         bufferevent_write(client->bev, buf, len);

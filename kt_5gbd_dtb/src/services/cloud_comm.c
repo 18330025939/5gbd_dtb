@@ -239,11 +239,11 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     Time t;
     uint8_t buf[512];
     char str[50];
-
+    printf("nav_data_msg_task_cb\n");
     if (arg == NULL) {
         return ;
     }
-    printf("nav_data_msg_task_cb\n");
+    printf("nav_data_msg_task_cb...\n");
     CloundCommContext *ctx = (CloundCommContext *)arg;
     // ThreadSafeQueue *send_queue = &ctx->queue;
     hdr = (MsgFramHdr *)buf;
@@ -320,7 +320,7 @@ void *timer_task_entry(void *arg)
     if (arg == NULL) {
         return NULL;
     }
-
+    printf("timer_task_entry\n");
     ctx = (CloundCommContext *)arg;
     base = event_base_new();
     add_timer_task(base, nav_data_msg_task_cb, 1000);
@@ -360,6 +360,7 @@ void clound_comm_init(CloundCommContext *ctx)
     //     memset(ctx, 0, sizeof(CloundCommContext));
     // }
 
+
     ctx->running = true;
     init_queue(&ctx->queue, 512);
 
@@ -374,7 +375,7 @@ void clound_comm_init(CloundCommContext *ctx)
 void clound_comm_uninit(CloundCommContext *ctx)
 {
     // CloundCommContext *ctx;
-
+    printf("clound_comm_uninit\n");
     ctx->running = false;
     pthread_join(ctx->send_thread, NULL);
     event_base_loopbreak(ctx->base);
