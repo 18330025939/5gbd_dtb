@@ -145,5 +145,5 @@ typedef enum
 uint16_t checkSum_8(uint8_t *buf, uint16_t len);
 void get_system_time(Time *t);
 void clound_comm_init(CloundCommContext *ctx);
-void clound_comm_uninit(CloundCommContext *ctx)
+void clound_comm_uninit(CloundCommContext *ctx);
 #endif
