@@ -250,6 +250,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usHdr = MSG_DATA_FRAM_HDR;
     hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(NAVDataSeg);
+    printf("hdr->usLen %d\n", hdr->usLen);
     nav_data = (NAVDataSeg *)(hdr + 1);
     get_system_time(&t);
     nav_data->usDevAddr = 0;
