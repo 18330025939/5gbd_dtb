@@ -1,9 +1,21 @@
 #ifndef __FKZ9_COMM_H
 #define __FKZ9_COMM_H
 
-#define FKZ9_SERVER_IP  "192.168.42.50"
+#define MQTT_SERVER_IP  "192.168.42.50"
 #define MAX_MSG_SIZE    1024
 
+#define MQTT_SERVER_PORT 1883
+#define MQTT_SERVER_USERNAME "cktt"
+#define MQTT_SERVER_PASSWORD "cktt"
+
+#define FTP_USERNAME   "cktt"
+#define FTP_PASSWORD   "cktt"
+#define FTP_CTRL_PORT       21
+#define FTP_DATA_PORT       20
+
+
+
+#define MSG_DATA_FRAM_HDR         0xAAAA
 #pragma pack(push, 1)
 typedef struct st_MsgFramHdr
 {
@@ -59,17 +71,17 @@ typedef enum em_UserPwdType
     USER_PWD_TYPE_UNKN = 0xFF
 } UPType;
 
-#pragma pack(push, 1)
-typedef struct st_UserPwdDataSeg
-{
-    DataType emDataType;
-    uint16_t usDevAddr;     /* 0x0000 ～ 0x9999 */
-    UPType   emUPType;
-    char     cUser[17];
-    char     uPwd[17];
-    uint8_t  ucRsvd[3];
-} UserPwdDataSeg;
-#pragma pack(pop)
+// #pragma pack(push, 1)
+// typedef struct st_UserPwdDataSeg
+// {
+//     DataType emDataType;
+//     uint16_t usDevAddr;     /* 0x0000 ～ 0x9999 */
+//     UPType   emUPType;
+//     char     cUser[17];
+//     char     uPwd[17];
+//     uint8_t  ucRsvd[3];
+// } UserPwdDataSeg;
+// #pragma pack(pop)
 
 typedef enum em_TransMode
 {
@@ -82,7 +94,6 @@ typedef enum em_TransMode
 #pragma pack(push, 1)
 typedef struct st_VODFileReqDataSeg
 {
-    DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     TransMode emTransMode;
     uint16_t  usYear;
@@ -90,20 +101,21 @@ typedef struct st_VODFileReqDataSeg
     uint8_t   ucDay;
     uint8_t   ucHour;
     uint8_t   ucMinute; 
-    char      cFilePath[17];
+    char      cFilePath[41]; // /upload/cktt/wavedat/年月日/时/点播文件名称
     uint8_t   ucVerMode;     /* 点播文件校验方法，0：MD5(默认值) */
-    uint8_t   ucRsvd;
-} VODFileReqDataSeg;
+    uint8_t   ucRsvd[6];
+} VODFileReq;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct st_VODFileRspDataSeg 
+typedef struct st_VODFileRespDataSeg 
 {
-    DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     uint8_t  ucIsExist;
     uint8_t  ucMD5[32];
-} VODFileRspDataSeg;
+    char     cFilePath[81];
+    uint8_t  ucRsvd[5];
+} VODFileResp;
 #pragma pack(pop)
 
 typedef enum em_ErrCode
@@ -115,20 +127,19 @@ typedef enum em_ErrCode
 
 typedef enum em_RetransFlag
 {
-    RETRANS_NO_NEDD = 0,
+    RETRANS_NO_NEED = 0,
     RETRANS_NEED
 } ReFlag;
 
 #pragma pack(push, 1)
 typedef struct st_VODFileTFBDataSeg
 {
-    DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     uint16_t ucResult;
     ErrCode  emCode;
     ReFlag   emReFlag;
-    uint8_t  ucRsvd;
-} VODFileTFBDataSeg;
+    uint8_t  ucRsvd[3];
+} VODFileTFB;
 
 typedef struct st_Time
 {
@@ -142,8 +153,15 @@ typedef struct st_Time
 
 typedef struct st_VersionInfoReqDataSeg
 {
-    DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
+    Time stTime;
+} VersionInfoReq;
+
+typedef struct st_VersionInfoRespDataSeg
+{
+    uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
+    Time     stCurrTime;
+    Time     stUpTime;
     char     cHwDAUVer[9];
     char     cSwDAUVer[9];  
     char     cHwNUVer[9];
@@ -156,15 +174,8 @@ typedef struct st_VersionInfoReqDataSeg
     uint32_t ulTotalDiskSize;   /* 单位M */
     uint32_t ulAvailDiskSize;   /* 单位M */
     uint32_t ulTotalMemSize;
-    uint32_t ulAvailMemSize;    /* 单位kb*/
-    Time     stSwUpdata;
-    Time     stCurr;
-    uint16_t usManuCode;
-    uint32_t ulSN;
-    char     cHwPwBrdVer[9];
-    char     cSwPwBrdVer[9];
-    char     cRsvdBrd[18];    
-} VersionInfoReqDataSeg;
+    uint32_t ulAvailMemSize;    /* 单位kb*/ 
+} VersionInfoResp;
 #pragma pack(pop)
 
 typedef enum em_BoardType
@@ -182,66 +193,69 @@ typedef enum {
 } UpdateType;
 
 #pragma pack(push, 1)
-typedef struct st_UpdateInstrDataSeg
+typedef struct st_UpdatePackReqDataSeg
 {
-    DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     uint16_t usFileType;
     UpdateType emUpdateType;
-    TransMode ucTransMode;
+    TransMode emTransMode;
     uint8_t   ucVerMode; 
     uint8_t   ucMD5[32];
-    BoardType emBoardType;
-    uint16_t usManuCode;     /* 主版本+次版本，如V1.0=0x0100 */
-    uint16_t usHwVersion;
-    uint16_t usFwVersion;    /* 主版本+次版本+测试版，例如V1.0.0 (0x030201=3.2.1版) */
-    uint32_t ulSN;
-    uint8_t  ucRsvd[6];
-} UpdateInstrDataSeg;
+    char      cFilePath[65];  //FKZ9:/upgrade/task_id/filename  5g:/upgrade/cktt/task_id/filename
+} UpdatePackReq;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct st_UpdateInstrRsqDataSeg
+typedef struct st_UpdatePackRespDataSeg
 {
-    DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     uint16_t usFileType;
     ErrCode  emCode;
     ReFlag   emReFlag;
-} UpdateInstrRsqDataSeg;   
+    uint8_t  ucRsvd[2];
+} UpdatePackResp;   
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct st_UpdateReportDataSeg
+typedef struct st_UpdateReportReqDataSeg
 {
-    DataType emDataType;
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     uint16_t usFileType;
-    Time     stUpdate;
-    uint8_t  ucResultLen;
-    char     cResult[64];
-} UpdateReportDataSeg;
+    TransMode emTransMode;
+    uint8_t   ucMD5[32];
+    char      cFilePath[65];
+    uint8_t  ucRsvd[3];
+} UpdateReportReq;
+
+typedef struct st_UpdateReportRespDataSeg
+{
+    uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
+    uint16_t usFileType;
+    ErrCode  emCode;
+    ReFlag   emReFlag;
+    uint8_t  ucRsvd[2];
+} UpdateReportResp;
 #pragma pack(pop)
 
-#pragma pack(push, 1)
-typedef struct st_MsgConfirmDataSeg
-{
-    uint8_t ucFlag;
-    DataType emDataType;
-    uint8_t ucConfirmFlag;
-} MsgConfirmDataSeg;
-#pragma pack(pop)
+// #pragma pack(push, 1)
+// typedef struct st_MsgConfirmDataSeg
+// {
+//     uint8_t ucFlag;
+//     DataType emDataType;
+//     uint8_t ucConfirmFlag;
+// } MsgConfirmDataSeg;
+// #pragma pack(pop)
 
-#pragma pack(push, 1)
-typedef struct st_BreakPointRetransDataSeg
-{
-    DataType emDataType;
-    uint16_t usStartPos;
-    uint8_t  ucDir;
-    uint16_t usReqDataLen;
-    uint8_t  ucRsvd[4];
-} BreakPointRetransDataSeg;
-#pragma pack(pop)
+// #pragma pack(push, 1)
+// typedef struct st_BreakPointRetransDataSeg
+// {
+//     DataType emDataType;
+//     uint16_t usStartPos;
+//     uint8_t  ucDir;
+//     uint16_t usReqDataLen;
+//     uint8_t  ucRsvd[4];
+// } BreakPointRetransDataSeg;
+// #pragma pack(pop)
 
 
 typedef struct st_CommContext
@@ -249,7 +263,7 @@ typedef struct st_CommContext
     AsyncMQTTClient mqtt_client;
     ThreadSafeQueue tx_queue;
     ThreadSafeQueue re_queue;
-
+    pthread_t send_thread;
 } CommContext;
 
 #endif

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "serial.h"
 #include "lane_to.h"
 
 MessageParserEntry __start_message_parser;
@@ -402,14 +403,15 @@ void message_parser_entry(const char *line)
     }
 }
 
-
-void* serial_read_thread(void *arg) {
-    int fd = *(int*)arg;
+void laneTo_read_nav_data(LaneToCtx *ctx) 
+{
+    int fd = 0;
     char buffer[4096];
     size_t buffer_index = 0;
+    LaneToCtx *ctx = (LaneToCtx*)arg;
     
     while (1) {
-        ssize_t bytes_read = read(fd, buffer + buffer_index, sizeof(buffer) - buffer_index);
+        ssize_t bytes_read = ctx->uart->base.ops->read(ctx->uart->base.fd, buffer + buffer_index, sizeof(buffer) - buffer_index);
         if (bytes_read > 0) {
             buffer_index += bytes_read;
             
@@ -425,6 +427,7 @@ void* serial_read_thread(void *arg) {
                     message_parser_entry(token + 1);
                     token = strtok(NULL, "$");
                 }
+                break;
 
                 memmove(buffer, buffer + end_pos, buffer_index - end_pos);
                 buffer_index = buffer_index - end_pos;
@@ -436,8 +439,47 @@ void* serial_read_thread(void *arg) {
                 }
             }
         }
-        usleep(100); 
+        // usleep(100); 
     }
-    return NULL;
+    return ;
+}
+
+
+int laneTo_init(LaneToCtx *ctx, const char *uart_dev)
+{   
+    LaneToCtx *ctx = NULL;//(LaneToCtx)malloc(sizeof(LaneToCtx));
+    UartPort *laneTo_port = NULL;
+    if (ctx == NULL) {
+        return -1;
+    }
+
+    SerialPortInfo laneto_port_info = {
+        .speed = 115200, 
+        .data_bits = 8, 
+        .stop_bits = 1, 
+        .parity = 'N', 
+        .fctl = 0
+    };
+    laneTo_port = uart_port_create(&laneto_port_info);
+    // ctx->uart.ops.config(ctx->uart, &laneto_port_info);
+    ctx->uart = laneTo_port;
+    laneTo_port->base.ops->open(&laneTo_port->base, uart_dev);
+
+
+    return 0;
+}
+
+void laneTo_uninit(LaneToCtx *ctx)
+{
+    LaneToCtx *ctx = NULL;
+    UartPort *laneTo_port = NULL;
+    if (ctx == NULL) {
+        return -1;
+    }
+
+    laneTo_port = ctx->uart;
+    laneTo_port->base.ops->close(&laneTo_port->base);
+    free(laneTo_port);
+    free(ctx);
 }
 

@@ -39,7 +39,7 @@ typedef struct st_RS485Port {
 	int rts_pin;
 } RS485Port;
 
-UartPort *uart_port_create(void);
-RS485Port *rs485_port_create(int rts_pin);
+UartPort *uart_port_create(const SerialPortInfo *info);
+RS485Port *rs485_port_create(const SerialPortInfo *info, int rts_pin);
 
 #endif

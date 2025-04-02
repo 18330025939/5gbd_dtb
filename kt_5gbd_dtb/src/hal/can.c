@@ -15,7 +15,8 @@
 #include "publib.h"
 
 /*接收*/
-static void* rx_thread_func(void* arg) {
+static void* rx_thread_func(void* arg)
+{
     CANDevice* dev = (CANDevice*)arg;
     struct can_frame frame;
     
@@ -32,7 +33,8 @@ static void* rx_thread_func(void* arg) {
 }
 
 /*发送*/
-static void* tx_thread_func(void* arg) {
+static void* tx_thread_func(void* arg)
+{
     CANDevice* dev = (CANDevice*)arg;
     uint8_t* data = NULL;
     size_t len, data_len;
@@ -72,7 +74,8 @@ static void* tx_thread_func(void* arg) {
 }
 
 /* 重传管理 */
-static void check_retransmissions(CANDevice* dev) {
+static void check_retransmissions(CANDevice* dev)
+{
     uint8_t* data = NULL;
     size_t len;
     
@@ -92,7 +95,8 @@ static void check_retransmissions(CANDevice* dev) {
 
 
 /* 打开CAN设备 */
-static int can_device_open(CANDevice *dev, const char *ifname) {
+static int can_device_open(CANDevice *dev, const char *ifname)
+{
     if ((dev->sockfd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
         perror("Socket create failed");
         return -1;

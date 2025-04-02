@@ -296,10 +296,14 @@ typedef struct {
     }
 
 
-// typedef struct {
-//     UartPort *uart;
-//     pthread_t recv_thread;
+typedef struct {
+    UartPort *uart;
+    char dev_name[20];
+    pthread_t recv_thread;
+    bool running;
+} LaneToCtx;
 
-// } FX650_CTX;
-
+void laneTo_read_nav_data(LaneToCtx *ctx);
+int laneTo_init(LaneToCtx *ctx, const char *uart_dev);
+void laneTo_uninit(LaneToCtx *ctx);
 #endif

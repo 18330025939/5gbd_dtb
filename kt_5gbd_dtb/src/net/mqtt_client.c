@@ -115,10 +115,16 @@ int mqtt_subscribe(AsyncMQTTClient* client, const char* topic)
     return rc;
 }
 
+static void mqtt_register_cb(AsyncMQTTClient* client, MqttMessageCallback cb)
+{
+    client->on_message = cb;
+}
+
 static AsyncClientOps client_ops = {
     .connect = mqtt_connect,
     .publish = mqtt_publish,
-    .subscribe = mqtt_subscribe
+    .subscribe = mqtt_subscribe,
+    .register_cb = mqtt_register_cb,
 } ;
 
 static AsyncClientConfig client_config = {

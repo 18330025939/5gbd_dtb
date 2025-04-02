@@ -28,8 +28,10 @@ typedef struct {
     int (*connect)(AsyncMQTTClient* client);
     int (*publish)(AsyncMQTTClient* client, const char* topic, const void* payload, size_t len);
     int (*subscribe)(AsyncMQTTClient* client, const char* topic);
+    void (*register_cb)(AsyncMQTTClient* client, void (*cb)(const char*, const void*, size_t));
 } AsyncClientOps;
 
+void (*MqttMessageCallback)(const char*, const void*, size_t);
 // 异步客户端结构体
 struct st_AsyncMQTTClient {
     MQTTAsync handle;               // Paho异步客户端句柄

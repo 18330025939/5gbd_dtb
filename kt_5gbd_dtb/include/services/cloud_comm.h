@@ -1,6 +1,7 @@
 #ifndef __CLOUD_COMM_H
 #define __CLOUD_COMM_H
 
+#include "common.h"
 
 #define CLOUD_SERVER_IP "152.136.10.158"
 #define CLOUD_SERVER_PORT 3901
@@ -8,19 +9,19 @@
 #define OTA_HEARTBEAT_URL  "https://ota.cktt.com.cn/ota-server/heartbeat"
 #define OTA_REPORT_URL  "/ota-server/submitReport"
 
-#pragma pack(push, 1)
-typedef struct st_MsgFramHdr
-{
-    uint16_t usHdr;       /* 帧头 */
-    uint16_t usLen;       /* 长度 */
-    uint8_t ucSign;       /* 标识 */
-} MsgFramHdr; 
+// #pragma pack(push, 1)
+// typedef struct st_MsgFramHdr
+// {
+//     uint16_t usHdr;       /* 帧头 */
+//     uint16_t usLen;       /* 长度 */
+//     uint8_t ucSign;       /* 标识 */
+// } MsgFramHdr; 
 
-typedef struct st_MsgDataFramCrc
-{
-    uint16_t usCRC;      /* 校验 */
-} MsgDataFramCrc; 
-#pragma pack(pop)
+// typedef struct st_MsgDataFramCrc
+// {
+//     uint16_t usCRC;      /* 校验 */
+// } MsgDataFramCrc; 
+// #pragma pack(pop)
 
 #define  MSG_SIGN_TRANS_NAV_DATA      0xF0
 // #define  MSG_SIGN_GNGGA_DATA   0xF1
@@ -70,13 +71,13 @@ typedef struct st_NAVDataSeg
 
 typedef struct st_MsgCommContext
 {
-    TcpClient client;
+    TcpClient *client;
     ThreadSafeQueue queue;
-    pthread_t 
-} MsgCommContext;
-
-
-
+    pthread_t send_thread;
+    pthread_t timer_thread;
+    bool running;
+    struct event_base *base;
+} CloundCommContext;
 
 typedef struct st_UnitInfo
 {
@@ -84,7 +85,7 @@ typedef struct st_UnitInfo
     char unit_ver[20];
 } UnitInfo;
 
-typedef struct st_PostRequest
+typedef struct st_OtaHeartBeat
 {
     char dev_addr[20];
     char usage_cpu[20];
@@ -98,6 +99,26 @@ typedef struct st_PostRequest
     uint8_t sw_unit_num;
     UnitInfo *sw_unit;
     uint16_t hw_unit_num;
-} PostRequest;
+} OtaHeartBeat;
+
+typedef struct st_OtaReport
+{
+    uint16_t dev_addr;
+    uint16_t task_id;
+    Time up_time;
+    Time report_time;
+} OtaReport;
+
+typedef enum 
+{
+    EVENT_TYPE_MSG = 0,
+    EVENT_TYPE_TIMER,
+    EVENT_TYPE_UNEXP,
+    EVENT_TYPE_SIGNAL,
+    EVENT_TYPE_MAX
+} EventType;
+
+void (*task_cb)(evutil_socket_t, short, void*);
+
 
 #endif

@@ -263,16 +263,16 @@ FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev)
     if (ctx->net_name == NULL) {
         return FX650_ERR_INIT;
     }
-    fx650_port = uart_port_create();
-    fx650_port->base.ops->open(&fx650_port->base, uart_dev);
 
     SerialPortInfo fx650_port_info = {
         .speed = 115200, 
         .data_bits = 8, 
         .stop_bits = 1, 
         .parity = 'N', 
-        .fctl = 0};
-    fx650_port->base.ops->configure(&fx650_port->base, &fx650_port_info);
+        .fctl = 0
+    };
+    fx650_port = uart_port_create(&fx650_port_info);
+    fx650_port->base.ops->open(&fx650_port->base, uart_dev);
 
     ctx->uart = fx650_port;
 
@@ -289,7 +289,7 @@ FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev)
     return ret;
 }
 
-// void fx650_deinit(FX650_CTX* ctx)
+// void fx650_uninit(FX650_CTX* ctx)
 // {
 //     ctx->uart->base.ops->close();
 //     close(ctx->uart->base.fd);
