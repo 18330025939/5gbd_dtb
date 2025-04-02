@@ -419,7 +419,7 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
 
             if (start != NULL && end != NULL && end > start) {
                 // size_t start_pos = start - buffer;
-                size_t end_pos = end - buffer;
+                // size_t end_pos = end - buffer;
 
                 char *token = strtok(buffer, "$");
                 while (token != NULL) {
@@ -469,10 +469,10 @@ int laneTo_init(LaneToCtx *ctx, const char *uart_dev)
 
 void laneTo_uninit(LaneToCtx *ctx)
 {
-    LaneToCtx *ctx = NULL;
+    // LaneToCtx *ctx = NULL;
     UartPort *laneTo_port = NULL;
     if (ctx == NULL) {
-        return -1;
+        return ;
     }
 
     laneTo_port = ctx->uart;
