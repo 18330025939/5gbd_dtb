@@ -89,7 +89,7 @@ static int usb_bulk_write(USBDevice *self, uint8_t *buffer, int length, uint32_t
     return 0;
 }
 
-static void usb_register_callback(USBDevice *self, UsbDataCallback cb)
+static void usb_register_callback(USBDevice *self, void (*cb)(uint8_t*, size_t))
 {
     self->data_cb = cb;
 }
@@ -100,7 +100,6 @@ static USBDeviceOps bulk_ops = {
     .bulk_write = usb_bulk_write,
     .bulk_read = usb_bulk_read,
     .register_cb = usb_register_callback
-};
 } ;
 
 USBDevice* usb_device_create(uint16_t vid, uint16_t pid) 
