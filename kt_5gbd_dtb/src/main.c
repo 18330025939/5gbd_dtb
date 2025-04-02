@@ -36,13 +36,13 @@ int main(int argc, char ** args)
         perror("event_base_new");
         exit(1);
     }
-    struct event *signal = signal_new(SIGINT, signal_handler, base);
+    struct event *signal = evsignal_new(base, SIGINT, signal_handler, base);
     if (!signal) {
         perror("event_new");
         event_base_free(base);
         exit(1);
     }
-    signal_add(signal, NULL);
+    event_add(signal, NULL);
     printf("event start....\n");
     event_base_dispatch(base);
 
