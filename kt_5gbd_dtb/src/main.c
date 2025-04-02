@@ -21,11 +21,14 @@ int main(int argc, char ** args)
 {
     CloundCommContext *cloud_ctx = NULL;
 
+
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {
         exit(1);
     }
     memset(cloud_ctx, 0, sizeof(CloundCommContext));
+    
+    // signal(SIGINT, signal_handler);
     clound_comm_init(cloud_ctx);
 
     struct event_base *base = event_base_new();
@@ -33,14 +36,14 @@ int main(int argc, char ** args)
         perror("event_base_new");
         exit(1);
     }
-    struct event *signal = event_new(base, SIGINT, 0, signal_handler, base);
+    struct event *signal = signal_new(SIGINT, signal_handler, base);
     if (!signal) {
         perror("event_new");
         event_base_free(base);
         exit(1);
     }
-    event_add(signal, NULL);
-
+    signal_add(signal, NULL);
+    printf("event start....\n");
     event_base_dispatch(base);
 
     event_free(signal);
