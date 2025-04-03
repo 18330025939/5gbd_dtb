@@ -286,14 +286,14 @@ typedef struct {
 
 typedef void (*pfn_vp_cp_t)(void *, const char *, size_t);
 
-struct MessageParserEntry {
+struct message_parser {
     MessageHeader hdr;
     void *data;
     void (*func)(void *, const char *, size_t);
 } __attribute__((aligned(8)));
 
 #define REGISTER_MESSAGE_PARSER(msg_id_str, sub_id_val, msg_data, parse_func)\
-    __attribute__((used, __section__(".message_parsers"))) static struct MessageParserEntry parser_##msg_id_str##sub_id_val = { \
+    __attribute__((used, __section__("message_parsers"))) static struct message_parser parser_##msg_id_str##sub_id_val = { \
         .hdr = { .msg_id = #msg_id_str, .sub_id = sub_id_val }, \
         .data = msg_data, \
         .func = parse_func \
