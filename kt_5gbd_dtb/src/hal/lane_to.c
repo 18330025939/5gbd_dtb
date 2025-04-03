@@ -406,7 +406,7 @@ void message_parser_entry(const char *line)
 
 void laneTo_read_nav_data(LaneToCtx *ctx) 
 {
-    char buffer[4096];
+    char buffer[2048];
     size_t buffer_index = 0;
     SerialPort *serial = &ctx->uart->base;
     
@@ -414,14 +414,16 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
         return;
     }
 
-    while (1) {
-        ssize_t bytes_read = serial->ops->read(serial, buffer + buffer_index, sizeof(buffer) - buffer_index);
+    // while (1) {
+        ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer) - buffer_index);
         if (bytes_read > 0) {
-            buffer_index += bytes_read;
+            printf("bytes_read %d \n", bytes_read);
+            // buffer_index += bytes_read;
             
-            char *start = strstr(buffer + buffer_index, SG_MSG_ID);
-            char *end = strstr(buffer + buffer_index, SG_MSG_ID);
-
+            char *start = strstr(buffer, SG_MSG_ID);
+            if (start != NULL) {
+                char *end = strstr(buffer + (start - buffer) + strlen(SG_MSG_ID), SG_MSG_ID);
+            }
             if (start != NULL && end != NULL && end > start) {
                 // size_t start_pos = start - buffer;
                 // size_t end_pos = end - buffer;
@@ -429,23 +431,25 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
                 char *token = strtok(buffer, "$");
                 printf("token %s", token);
                 while ((token = strtok(NULL, "$")) != NULL) {
-                     printf("token %s", token);
+                    printf("token %s", token);
                     message_parser_entry(token + 1);
                 }
-                break;
+                // break;
 
                 // memmove(buffer, buffer + end_pos, buffer_index - end_pos);
                 // buffer_index = buffer_index - end_pos;
-            } else {
-                if (buffer_index >= (sizeof(buffer) -1)) {
-                    memmove(buffer, buffer + buffer_index - sizeof(buffer) + 1, 
-                    sizeof(buffer) - buffer_index + 1);
-                    buffer_index = sizeof(buffer) - buffer_index + 1;
-                }
-            }
+            } 
+            // else {
+            //     buffer_index += bytes_read;
+            //     if (buffer_index >= (sizeof(buffer) -1)) {
+            //         memmove(buffer, buffer + buffer_index - sizeof(buffer) + 1, 
+            //         sizeof(buffer) - buffer_index + 1);
+            //         buffer_index = sizeof(buffer) - buffer_index + 1;
+            //     }
+            // }
         }
         // usleep(100); 
-    }
+    // }
     return ;
 }
 
