@@ -6,8 +6,8 @@
 #include "serial.h"
 #include "lane_to.h"
 
-extern MessageParserEntry __start_message_parser[];
-extern MessageParserEntry __stop_message_parser[];
+extern MessageParserEntry __start_message_parser;
+extern MessageParserEntry __stop_message_parser;
 
 void calculate_checksum(const uint8_t *payload, uint16_t len, uint8_t *ckA, uint8_t *ckB) 
 {
