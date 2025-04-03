@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <termios.h>
 #include <fcntl.h>
@@ -12,24 +13,27 @@
 int serial_open(SerialPort *self, const char *path)
 {
     self->fd = open(path, O_RDWR | O_NOCTTY | O_NONBLOCK);
-    if (-1 == self->fd) 
+    if (-1 == self->fd) {
+        printf("serial open failed!\n");
         return -1;
+    }
 
     if (tcgetattr(self->fd, &self->origin_tios) < 0) {
+        printf("tcgetattr error!\n");
         close(self->fd);
         return -2;
     }
 
-    self->is_open = 1;
+    self->is_open = true;
     return 0;
 }
 
 int serial_close(SerialPort *self)
 {
-    if (self->is_open) {
+    if (self->is_open == true) {
         tcsetattr(self->fd, TCSANOW, &self->origin_tios);
         close(self->fd);
-        self->is_open = 0;
+        self->is_open = false;
     }
 
     return 0;
@@ -37,12 +41,18 @@ int serial_close(SerialPort *self)
 
 ssize_t serial_write(SerialPort *self, const void *buf, size_t count)
 {
+    if (self->is_open == false) {
+        return 0;
+    }
     return write(self->fd, buf, count);
 }
 
 ssize_t serial_read(SerialPort *self, void *buf, size_t count)
 {
-
+    if(self->is_open == false) {
+        return 0;
+    }
+    printf("serial_read\n");
     return read(self->fd, buf, count);
 }
 
@@ -153,7 +163,7 @@ static int uart_configure(SerialPort *self, const SerialPortInfo *info)//int nSp
 
     tcflush(self->fd, TCOFLUSH);
     if (tcsetattr(self->fd , TCSANOW, &tio) != 0) {
-        perror("com set error");
+        printf("com set error\n");
         return -1;
     }
 
@@ -165,7 +175,7 @@ static ssize_t rs485_write(SerialPort *self, const void *buf, size_t count)
     RS485Port *rs485 = (RS485Port*)self;
 
     // gpio_set(rs485->rts_pin, HIGH);
-    ssize_t ret = write (rs485->base.fd, buf, count);
+    ssize_t ret = write(rs485->base.fd, buf, count);
     // gpio_set(rs485->rts_pin, LOW);
 
     return ret;
@@ -214,7 +224,7 @@ UartPort *uart_port_create(void)
     if (port) { 
         memset(port, 0, sizeof(UartPort));
         port->base.ops = &uart_ops;
-        port->base.is_open = 0;
+        port->base.is_open = false;
         // uart_configure(&port->base, info);
     }
     return port;
@@ -228,7 +238,7 @@ RS485Port *rs485_port_create(int rts_pin)
     if (port) {
         memset(port, 0, sizeof(UartPort));
         port->base.ops = &rs485_ops;
-        port->base.is_open = 0;
+        port->base.is_open = false;
         port->rts_pin = rts_pin;
         // rs485_configure(&port->base, info);
     }

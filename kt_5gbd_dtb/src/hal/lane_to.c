@@ -469,6 +469,9 @@ int laneTo_init(LaneToCtx *ctx)
         .fctl = 0
     };
     laneTo_port = uart_port_create();
+    if (laneTo_port == NULL) {
+        return -1;
+    }
 
     ctx->uart = laneTo_port;
     int ret = laneTo_port->base.ops->open(&laneTo_port->base, LANETO_DEV_NAME);
@@ -477,6 +480,7 @@ int laneTo_init(LaneToCtx *ctx)
     }
     laneTo_port->base.ops->configure(&laneTo_port->base, &laneto_port_info);
     ctx->running = true;
+    prtint("laneTo_init ok!\n");
     return 0;
 }
 

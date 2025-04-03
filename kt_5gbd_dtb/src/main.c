@@ -45,7 +45,7 @@ int main(int argc, char ** args)
     event_add(signal, NULL);
     printf("event start....\n");
     event_base_dispatch(base);
-
+    printf("wait....\n");
     event_free(signal);
     event_base_free(base);
     clound_comm_init(cloud_ctx);
