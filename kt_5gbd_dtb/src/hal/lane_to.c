@@ -6,8 +6,8 @@
 #include "serial.h"
 #include "lane_to.h"
 
-MessageParserEntry __start_message_parser;
-MessageParserEntry __stop_message_parser;
+extern struct MessageParserEntry __start_message_parser;
+extern struct MessageParserEntry __stop_message_parser;
 
 void calculate_checksum(const uint8_t *payload, uint16_t len, uint8_t *ckA, uint8_t *ckB) 
 {
@@ -61,7 +61,7 @@ int validate_nmea_checksum(const char *nmea_str) {
 }
 
 
-void sg_data_parse(void *data, const char *payload, size_t len)
+static void sg_data_parse(void *data, const char *payload, size_t len)
 {
     SGData *sg = (SGData*)data;
 
@@ -133,7 +133,7 @@ void sg_data_parse(void *data, const char *payload, size_t len)
 REGISTER_MESSAGE_PARSER(PBSOL, 1, &sg_data, sg_data_parse);
 
 
-void gngga_data_parse(void *data, const char *payload, size_t len)
+static void gngga_data_parse(void *data, const char *payload, size_t len)
 {   
     GNGGAData *gngga = (GNGGAData*)data;
 
@@ -175,7 +175,7 @@ void gngga_data_parse(void *data, const char *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(GNGGA, 0, &gngga_data, gngga_data_parse);
 
-void gnrmc_data_parse(void *data, const char *payload, size_t len)
+static void gnrmc_data_parse(void *data, const char *payload, size_t len)
 {
     GNRMCData *gnrmc = (GNRMCData*)data;
 
@@ -194,7 +194,7 @@ void gnrmc_data_parse(void *data, const char *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(GNRMC, 0, &gnrmc_data, gnrmc_data_parse);
 
-void gnatt_data_parse(void *data, const char *payload, size_t len)
+static void gnatt_data_parse(void *data, const char *payload, size_t len)
 {
     GNATTData *gnatt = (GNATTData*)data;
 
@@ -212,7 +212,7 @@ void gnatt_data_parse(void *data, const char *payload, size_t len)
 }   
 REGISTER_MESSAGE_PARSER(GNATT, 0, &gnatt_data, gnatt_data_parse);
 
-void pgnss3_data_parse(void *data, const char *payload, size_t len)
+static void pgnss3_data_parse(void *data, const char *payload, size_t len)
 {
     PGNSS3Data *pgnss3 = (PGNSS3Data*)data;
 
@@ -232,7 +232,7 @@ void pgnss3_data_parse(void *data, const char *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PGNSS, 3, &pgnss3_data, pgnss3_data_parse);
 
-void pgnss4_data_parse(void *data, const char *payload, size_t len)
+static void pgnss4_data_parse(void *data, const char *payload, size_t len)
 {
     PGNSS4Data *pgnss4 = (PGNSS4Data*)data;
 
@@ -251,7 +251,7 @@ void pgnss4_data_parse(void *data, const char *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PGNSS, 4, &pgnss4_data, pgnss4_data_parse);
 
-void pgnss5_data_parse(void *data, const char *payload, size_t len)
+static void pgnss5_data_parse(void *data, const char *payload, size_t len)
 {
     PGNSS5Data *pgnss5 = (PGNSS5Data*)data;
 
@@ -275,7 +275,7 @@ void pgnss5_data_parse(void *data, const char *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PGNSS, 5, &pgnss5_data, pgnss5_data_parse);
 
-void pgnss9_data_parse(void *data, const char *payload, size_t len)
+static void pgnss9_data_parse(void *data, const char *payload, size_t len)
 {
     PGNSS9Data *pgnss9 = (PGNSS9Data*)data;
 
@@ -291,7 +291,7 @@ void pgnss9_data_parse(void *data, const char *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PGNSS, 9, &pgnss9_data, pgnss9_data_parse);
 
-void psnsr21_data_parse(void *data, const char *payload, size_t len)
+static void psnsr21_data_parse(void *data, const char *payload, size_t len)
 {
     PSNSR21Data *psnsr21 = (PSNSR21Data*)data;
     const char *delimiters = ",";
@@ -363,7 +363,7 @@ void psnsr21_data_parse(void *data, const char *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PSNSR, 21, &psnsr21_data, psnsr21_data_parse);
 
-void psnsr23_data_parse(void *data, const char *payload, size_t len)
+static void psnsr23_data_parse(void *data, const char *payload, size_t len)
 {
     PSNSR23Data *psnsr23 = (PSNSR23Data*)data;
 
@@ -381,7 +381,7 @@ void psnsr23_data_parse(void *data, const char *payload, size_t len)
 }   
 REGISTER_MESSAGE_PARSER(PSNSR, 23, &psnsr23_data, psnsr23_data_parse);
 
-void pblkend_data_parse(void *data, const char *payload, size_t len)
+static void pblkend_data_parse(void *data, const char *payload, size_t len)
 {
     PBLKENDData *pblkend = (PBLKENDData*)data;
 
@@ -396,20 +396,21 @@ REGISTER_MESSAGE_PARSER(PBEND, 255, &pblkend_data, pblkend_data_parse);
 
 void message_parser_entry(const char *line)
 {
-    for (MessageParserEntry *p = &__start_message_parser; 
-            p != &__stop_message_parser; p++) {
-        if (p == NULL) {
+    struct MessageParserEntry *start = &__start_message_parser;
+    struct MessageParserEntry *end = &__stop_message_parser;
+    for (start; start != end; start++) {
+        if (start == NULL) {
             printf("p is null\n");
         }
         else {
-            if (p->func == NULL) {
+            if (start->func == NULL) {
                 printf("p->func is null\n");
             }
         }
-        if (p != NULL && p->func != NULL) {
-            printf("p->hdr.msg_id %s--%ld\n", p->hdr.msg_id, strlen(p->hdr.msg_id));
-            if (strncmp(line, p->hdr.msg_id, strlen(p->hdr.msg_id)) == 0) {
-                p->func(p->data, line, strlen(line));
+        if (start != NULL && start->func != NULL) {
+            printf("p->hdr.msg_id %s--%ld\n", start->hdr.msg_id, strlen(start->hdr.msg_id));
+            if (strncmp(line, start->hdr.msg_id, strlen(start->hdr.msg_id)) == 0) {
+                start->func(start->data, line, strlen(line));
                 break;
             }
         }
