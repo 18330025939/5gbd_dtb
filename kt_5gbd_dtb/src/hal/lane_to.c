@@ -480,7 +480,7 @@ int laneTo_init(LaneToCtx *ctx)
     }
     laneTo_port->base.ops->configure(&laneTo_port->base, &laneto_port_info);
     ctx->running = true;
-    prtint("laneTo_init ok!\n");
+    printf("laneTo_init ok!\n");
     return 0;
 }
 
