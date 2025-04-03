@@ -408,9 +408,9 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
 {
     char buffer[4096];
     size_t buffer_index = 0;
-    SerialPort *serial = &ctx->uart.base;
+    SerialPort *serial = &ctx->uart->base;
     
-    if (ctx->running == flase) {
+    if (ctx->running == false) {
         return;
     }
 
@@ -469,14 +469,13 @@ int laneTo_init(LaneToCtx *ctx)
     if (ret) {
         return -1;
     }
-    laneTo_port->base.ops->config(&laneTo_port->base, &laneto_port_info);
+    laneTo_port->base.ops->configure(&laneTo_port->base, &laneto_port_info);
     ctx->running = true;
     return 0;
 }
 
 void laneTo_uninit(LaneToCtx *ctx)
 {
-    LaneToCtx *ctx = NULL;
     UartPort *laneTo_port = NULL;
     if (ctx == NULL) {
         return ;
