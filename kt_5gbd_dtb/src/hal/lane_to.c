@@ -397,6 +397,7 @@ void message_parser_entry(const char *line)
     for (MessageParserEntry *p = &__start_message_parser; 
             p != &__stop_message_parser; p++) {
         if (p != NULL && p->func != NULL) {
+            printf("p->hdr.msg_id\n", p->hdr.msg_id);
             if (strncmp(line + 1, p->hdr.msg_id, strlen(p->hdr.msg_id)) == 0) {
                 p->func(p->data, line + 1, strlen(line));
                 break;
@@ -434,9 +435,10 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
                 // size_t end_pos = end - buffer;
                 
                 char *token = strtok(buffer, "$");
-                while ((token = strtok(NULL, "$")) != NULL) {
-                    printf("token %s len %ld", token, strlen(token));
+                while (token != NULL) {
+                    printf("%s---%ld\n", token, strlen(token));
                     message_parser_entry(token);
+                    token = strtok(NULL, "$")
                 }
                 // break;
 
