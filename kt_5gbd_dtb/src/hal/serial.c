@@ -12,6 +12,11 @@
 
 int serial_open(SerialPort *self, const char *path)
 {
+    printf("serial_open %s\n", path);
+    if (chmod(path, 0666) == -1) {
+        printf("chmod error\n");
+        return -1;
+    }
     self->fd = open(path, O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (-1 == self->fd) {
         printf("serial open failed!\n");

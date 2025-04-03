@@ -48,7 +48,7 @@ int main(int argc, char ** args)
     printf("wait....\n");
     event_free(signal);
     event_base_free(base);
-    clound_comm_init(cloud_ctx);
+    clound_comm_uninit(cloud_ctx);
 
     return 0;
 }
