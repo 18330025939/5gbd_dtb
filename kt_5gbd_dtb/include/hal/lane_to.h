@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include "serial.h"
 
+#define LANETO_DEV_NAME "/dev/ttys4"
+
 #pragma pack(push, 1)
 typedef struct {
     uint8_t sync1;        // 固定为0x50
@@ -296,15 +298,16 @@ typedef struct {
         .func = parse_func \
     }
 
-
 typedef struct {
     UartPort *uart;
-    char dev_name[20];
-    pthread_t recv_thread;
-    bool running;
+    // char dev_name[20];
+    // pthread_t recv_thread;
+    // bool running;
 } LaneToCtx;
 
+UartPort *laneTo_port;
+
 void laneTo_read_nav_data(LaneToCtx *ctx);
-int laneTo_init(LaneToCtx *ctx, const char *uart_dev);
-void laneTo_uninit(LaneToCtx *ctx);
+int laneTo_init(const char *uart_dev);
+void laneTo_uninit(void);
 #endif

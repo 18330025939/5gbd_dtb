@@ -403,11 +403,11 @@ void message_parser_entry(const char *line)
     }
 }
 
-void laneTo_read_nav_data(LaneToCtx *ctx) 
+void laneTo_read_nav_data(void) 
 {
     char buffer[4096];
     size_t buffer_index = 0;
-    SerialPort *serial = &ctx->uart->base;
+    SerialPort *serial = laneTo_port->base;
     
     while (1) {
         ssize_t bytes_read = serial->ops->read(serial, buffer + buffer_index, sizeof(buffer) - buffer_index);
@@ -415,16 +415,17 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
             buffer_index += bytes_read;
             
             char *start = strstr(buffer + buffer_index, SG_MSG_ID);
-            char *end = strstr(buffer + buffer_index, PBLKEND_MSG_ID);
+            char *end = strstr(buffer + buffer_index, SG_MSG_ID);
 
             if (start != NULL && end != NULL && end > start) {
                 // size_t start_pos = start - buffer;
                 // size_t end_pos = end - buffer;
-
+                
                 char *token = strtok(buffer, "$");
-                while (token != NULL) {
+                printf("token %s", token);
+                while ((token = strtok(NULL, "$")) != NULL) {
+                     printf("token %s", token);
                     message_parser_entry(token + 1);
-                    token = strtok(NULL, "$");
                 }
                 break;
 
@@ -443,10 +444,8 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     return ;
 }
 
-
-int laneTo_init(LaneToCtx *ctx, const char *uart_dev)
+int laneTo_init(const char *uart_dev)
 {   
-    UartPort *laneTo_port = NULL;
     if (ctx == NULL) {
         return -1;
     }
@@ -460,24 +459,23 @@ int laneTo_init(LaneToCtx *ctx, const char *uart_dev)
     };
     laneTo_port = uart_port_create(&laneto_port_info);
     // ctx->uart.ops.config(ctx->uart, &laneto_port_info);
-    ctx->uart = laneTo_port;
+    // ctx->uart = laneTo_port;
     laneTo_port->base.ops->open(&laneTo_port->base, uart_dev);
-
 
     return 0;
 }
 
-void laneTo_uninit(LaneToCtx *ctx)
+void laneTo_uninit(void)
 {
     // LaneToCtx *ctx = NULL;
-    UartPort *laneTo_port = NULL;
+    // UartPort *laneTo_port = NULL;
     if (ctx == NULL) {
         return ;
     }
 
-    laneTo_port = ctx->uart;
+    // laneTo_port = ctx->uart;
     laneTo_port->base.ops->close(&laneTo_port->base);
     free(laneTo_port);
-    free(ctx);
+    // free(ctx);
 }
 

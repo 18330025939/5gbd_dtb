@@ -239,11 +239,12 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     Time t;
     uint8_t buf[512];
     char str[50];
-    printf("nav_data_msg_task_cb\n");
+
     if (arg == NULL) {
         return ;
     }
     printf("nav_data_msg_task_cb...\n");
+    laneTo_read_nav_data();
     CloundCommContext *ctx = (CloundCommContext *)arg;
     // ThreadSafeQueue *send_queue = &ctx->queue;
     hdr = (MsgFramHdr *)buf;
@@ -369,6 +370,7 @@ void clound_comm_init(CloundCommContext *ctx)
     ctx->client = client;
     client->ops->connect(client);
     // pthread_create(&ctx->send_thread, NULL, send_msg_entry, ctx);
+    laneTo_init(LANETO_DEV_NAME);
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
 }
 
@@ -379,6 +381,7 @@ void clound_comm_uninit(CloundCommContext *ctx)
     ctx->running = false;
     pthread_join(ctx->send_thread, NULL);
     event_base_loopbreak(ctx->base);
+    laneTo_uninit();
     pthread_join(ctx->timer_thread, NULL);
     ctx->client->ops->disconnect(ctx->client);
     tcp_client_destroy(ctx->client);
