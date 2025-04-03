@@ -417,7 +417,7 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     }
 
     // while (1) {
-        ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer) - buffer_index);
+        ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
         if (bytes_read > 0) {
             printf("bytes_read %ld \n", bytes_read);
             // buffer_index += bytes_read;
