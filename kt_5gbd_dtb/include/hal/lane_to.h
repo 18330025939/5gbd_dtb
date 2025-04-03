@@ -284,10 +284,12 @@ typedef struct {
     uint8_t sub_id;        
 } MessageHeader;
 
+typedef void (*pfn_vp_cp_t)(void *, const char *, size_t);
+
 typedef struct {
     MessageHeader hdr;
     void *data;
-    void (*func)(void *data, const char *payload, size_t len);
+    pfn_vp_cp_t func;
 } MessageParserEntry;
 
 #define REGISTER_MESSAGE_PARSER(msg_id_str, sub_id_val, msg_data, parse_func)\
