@@ -405,7 +405,7 @@ void message_parser_entry(const char *line)
             }
         }
         if (p != NULL && p->func != NULL) {
-            printf("p->hdr.msg_id %s--%d\n", p->hdr.msg_id, strlen(p->hdr.msg_id));
+            printf("p->hdr.msg_id %s--%ld\n", p->hdr.msg_id, strlen(p->hdr.msg_id));
             if (strncmp(line, p->hdr.msg_id, strlen(p->hdr.msg_id)) == 0) {
                 p->func(p->data, line, strlen(line));
                 break;
