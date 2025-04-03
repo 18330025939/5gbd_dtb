@@ -6,8 +6,8 @@
 #include "serial.h"
 #include "lane_to.h"
 
-MessageParserEntry __start_message_parser;
-MessageParserEntry __stop_message_parser;
+extern MessageParserEntry __start_message_parser;
+extern MessageParserEntry __stop_message_parser;
 
 void calculate_checksum(const uint8_t *payload, uint16_t len, uint8_t *ckA, uint8_t *ckB) 
 {
@@ -397,7 +397,7 @@ REGISTER_MESSAGE_PARSER(PBEND, 255, &pblkend_data, pblkend_data_parse);
 void message_parser_entry(const char *line)
 {
     for (MessageParserEntry *p = &__start_message_parser; 
-            p != &__stop_message_parser; p++) {
+            p < &__stop_message_parser; p++) {
         if (p == NULL) {
             printf("p is null\n");
         }
