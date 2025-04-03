@@ -396,10 +396,18 @@ void message_parser_entry(const char *line)
 {
     for (MessageParserEntry *p = &__start_message_parser; 
             p != &__stop_message_parser; p++) {
+        if (p == NULL) {
+            printf("p is null\n");
+        }
+        else {
+            if (p->func == NULL) {
+                printf("p->func is null\n");
+            }
+        }
         if (p != NULL && p->func != NULL) {
             printf("p->hdr.msg_id %s--%d\n", p->hdr.msg_id, strlen(p->hdr.msg_id));
-            if (strncmp(line + 1, p->hdr.msg_id, strlen(p->hdr.msg_id)) == 0) {
-                p->func(p->data, line + 1, strlen(line));
+            if (strncmp(line, p->hdr.msg_id, strlen(p->hdr.msg_id)) == 0) {
+                p->func(p->data, line, strlen(line));
                 break;
             }
         }
