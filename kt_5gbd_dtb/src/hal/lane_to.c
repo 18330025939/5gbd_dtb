@@ -73,7 +73,7 @@ void sg_data_parse(void *data, const char *payload, size_t len)
     // if (!token || strncmp(token, SG_MSG_ID, 5) != 0) {
     //     return ; // 非PBSOL消息
     // }
-
+    printf("sg_data_parse %s\n", payload);
     sscanf((const char *)payload, "%[^,],%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%lf,%lf,%f,%f,%d,%d,%d,"
             "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu",
             sg->message_id,
@@ -383,13 +383,14 @@ void pblkend_data_parse(void *data, const char *payload, size_t len)
 {
     PBLKENDData *pblkend = (PBLKENDData*)data;
 
+    printf("pblkend_data_parse %s    len  %ld\n", payload, len);
     sscanf((const char *)payload, "%[^,],%hhu,%u",
             pblkend->message_id,
             &pblkend->end_flag,
             &pblkend->unix_time);
 
 }
-REGISTER_MESSAGE_PARSER(PBLKEND, 255, &pblkend_data, pblkend_data_parse);
+REGISTER_MESSAGE_PARSER(PBEND, 255, &pblkend_data, pblkend_data_parse);
 
 void message_parser_entry(const char *line)
 {
@@ -427,16 +428,15 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
             //     end = strstr(buffer + (start - buffer) + strlen(SG_MSG_ID), SG_MSG_ID);
             // }
             end = strstr(buffer, PBLKEND_MSG_ID);
-            printf("start %s len %d\n", start, end - start);
+            // printf("start %s len %d\n", start, end - start);
             if (start != NULL && end != NULL && end > start) {
                 // size_t start_pos = start - buffer;
                 // size_t end_pos = end - buffer;
                 
                 char *token = strtok(buffer, "$");
-                printf("token %s", token);
                 while ((token = strtok(NULL, "$")) != NULL) {
-                    printf("token %s", token);
-                    message_parser_entry(token + 1);
+                    printf("token %s len %ld", token, strlen(token));
+                    message_parser_entry(token);
                 }
                 // break;
 
