@@ -293,7 +293,8 @@ typedef struct {
 } MessageParserEntry;
 
 #define REGISTER_MESSAGE_PARSER(msg_id_str, sub_id_val, msg_data, parse_func)\
-    __attribute__((used, section("message_parsers"))) static const MessageParserEntry parser_##msg_id_str##sub_id_val = { \
+    static const MessageParserEntry parser_##msg_id_str##sub_id_val \
+    __attribute__((used, section("message_parsers"))) = { \
         .hdr = { .msg_id = #msg_id_str, .sub_id = sub_id_val }, \
         .data = msg_data, \
         .func = parse_func \
