@@ -407,8 +407,10 @@ void message_parser_entry(const char *line)
 void laneTo_read_nav_data(LaneToCtx *ctx) 
 {
     char buffer[2048];
-    size_t buffer_index = 0;
+    // size_t buffer_index = 0;
     SerialPort *serial = &ctx->uart->base;
+    char *end = NULL;
+    char *start = NULL;
     
     if (ctx->running == false) {
         return;
@@ -417,12 +419,12 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     // while (1) {
         ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer) - buffer_index);
         if (bytes_read > 0) {
-            printf("bytes_read %d \n", bytes_read);
+            printf("bytes_read %ld \n", bytes_read);
             // buffer_index += bytes_read;
             
-            char *start = strstr(buffer, SG_MSG_ID);
+            start = strstr(buffer, SG_MSG_ID);
             if (start != NULL) {
-                char *end = strstr(buffer + (start - buffer) + strlen(SG_MSG_ID), SG_MSG_ID);
+                end = strstr(buffer + (start - buffer) + strlen(SG_MSG_ID), SG_MSG_ID);
             }
             if (start != NULL && end != NULL && end > start) {
                 // size_t start_pos = start - buffer;
