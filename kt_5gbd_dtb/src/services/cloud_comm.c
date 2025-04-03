@@ -380,7 +380,7 @@ void clound_comm_uninit(CloundCommContext *ctx)
     // CloundCommContext *ctx;
     printf("clound_comm_uninit\n");
     ctx->running = false;
-    pthread_join(ctx->send_thread, NULL);
+    // pthread_join(ctx->send_thread, NULL);
     event_base_loopbreak(ctx->base);
     laneTo_uninit(ctx->laneTo);
     pthread_join(ctx->timer_thread, NULL);
