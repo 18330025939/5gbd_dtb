@@ -135,7 +135,7 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
         remaining -= n;
         
         // 检查是否收到OK或ERROR
-        if (strstr(resp, "\r\nOK\r\n")) {
+        if (strstr(resp, "OK\r\n")) {
             return FX650_OK;
         }
         if (strstr(resp, "\r\nERROR\r\n") || strstr(resp, "+CME ERROR:")) {
@@ -271,8 +271,12 @@ FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev)
         .parity = 'N', 
         .fctl = 0
     };
-    fx650_port = uart_port_create(&fx650_port_info);
-    fx650_port->base.ops->open(&fx650_port->base, uart_dev);
+    fx650_port = uart_port_create();
+    int code = fx650_port->base.ops->open(&fx650_port->base, uart_dev);
+    if (code) {
+        return FX650_ERR_INIT;
+    }
+    fx650_port->base.ops->configure(&fx650_port->base, &fx650_port_info);
 
     ctx->uart = fx650_port;
 

@@ -206,7 +206,7 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
     }
 
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
-    printf("%s\r\n", resp);
+    printf("%s\n", resp);
 
     free(resp);
 
@@ -223,7 +223,7 @@ void ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
         return ;
     }
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
-    printf("%s\r\n", resp);
+    printf("%s\n", resp);
 
     free(resp);
 
@@ -255,7 +255,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data = (NAVDataSeg *)(hdr + 1);
     get_system_time(&t);
     TIME_TO_STR(&t, str);
-    printf("time %s\r\n", str);
+    printf("time %s\n", str);
     nav_data->usDevAddr = 0;
     nav_data->usYear = t.usYear;
     nav_data->ucMonth = t.ucMonth;
@@ -303,7 +303,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
 void proc_message_cb(char *buf, size_t len)
 {
 
-    printf("proc_message_cb %s, %ld\r\n", buf, len);
+    printf("proc_message_cb %s, %ld\n", buf, len);
 }
 
 void add_timer_task(struct event_base *base, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms, void *arg)
@@ -370,7 +370,8 @@ void clound_comm_init(CloundCommContext *ctx)
     ctx->client = client;
     client->ops->connect(client);
     // pthread_create(&ctx->send_thread, NULL, send_msg_entry, ctx);
-    laneTo_init(LANETO_DEV_NAME);
+    ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
+    laneTo_init(ctx->laneTo);
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
 }
 
@@ -381,7 +382,7 @@ void clound_comm_uninit(CloundCommContext *ctx)
     ctx->running = false;
     pthread_join(ctx->send_thread, NULL);
     event_base_loopbreak(ctx->base);
-    laneTo_uninit();
+    laneTo_uninit(ctx->laneTo);
     pthread_join(ctx->timer_thread, NULL);
     ctx->client->ops->disconnect(ctx->client);
     tcp_client_destroy(ctx->client);

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "serial.h"
 #include "lane_to.h"
 
@@ -403,12 +404,16 @@ void message_parser_entry(const char *line)
     }
 }
 
-void laneTo_read_nav_data(void) 
+void laneTo_read_nav_data(LaneToCtx *ctx) 
 {
     char buffer[4096];
     size_t buffer_index = 0;
-    SerialPort *serial = &laneTo_port->base;
+    SerialPort *serial = &ctx->uart.base;
     
+    if (ctx->running == flase) {
+        return;
+    }
+
     while (1) {
         ssize_t bytes_read = serial->ops->read(serial, buffer + buffer_index, sizeof(buffer) - buffer_index);
         if (bytes_read > 0) {
@@ -444,11 +449,11 @@ void laneTo_read_nav_data(void)
     return ;
 }
 
-int laneTo_init(const char *uart_dev)
+int laneTo_init(LaneToCtx *ctx)
 {   
-    // if (ctx == NULL) {
-    //     return -1;
-    // }
+    if (ctx == NULL) {
+        return -1;
+    }
 
     SerialPortInfo laneto_port_info = {
         .speed = 115200, 
@@ -457,25 +462,29 @@ int laneTo_init(const char *uart_dev)
         .parity = 'N', 
         .fctl = 0
     };
-    laneTo_port = uart_port_create(&laneto_port_info);
-    // ctx->uart.ops.config(ctx->uart, &laneto_port_info);
-    // ctx->uart = laneTo_port;
-    laneTo_port->base.ops->open(&laneTo_port->base, uart_dev);
+    laneTo_port = uart_port_create();
 
+    ctx->uart = laneTo_port;
+    int ret = laneTo_port->base.ops->open(&laneTo_port->base, LANETO_DEV_NAME);
+    if (ret) {
+        return -1;
+    }
+    laneTo_port->base.ops->config(&laneTo_port->base, &laneto_port_info);
+    ctx->running = true;
     return 0;
 }
 
-void laneTo_uninit(void)
+void laneTo_uninit(LaneToCtx *ctx)
 {
-    // LaneToCtx *ctx = NULL;
-    // UartPort *laneTo_port = NULL;
-    // if (ctx == NULL) {
-    //     return ;
-    // }
-
-    // laneTo_port = ctx->uart;
+    LaneToCtx *ctx = NULL;
+    UartPort *laneTo_port = NULL;
+    if (ctx == NULL) {
+        return ;
+    }
+    ctx->running = false;
+    laneTo_port = ctx->uart;
     laneTo_port->base.ops->close(&laneTo_port->base);
     free(laneTo_port);
-    // free(ctx);
+    free(ctx);
 }
 

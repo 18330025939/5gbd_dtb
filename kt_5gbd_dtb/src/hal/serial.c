@@ -206,7 +206,7 @@ static struct SerialOps rs485_ops = {
     .configure = rs485_configure
 };
 
-UartPort *uart_port_create(const SerialPortInfo *info)
+UartPort *uart_port_create(void)
 {
     UartPort *port = NULL;
     
@@ -215,12 +215,12 @@ UartPort *uart_port_create(const SerialPortInfo *info)
         memset(port, 0, sizeof(UartPort));
         port->base.ops = &uart_ops;
         port->base.is_open = 0;
-        uart_configure(&port->base, info);
+        // uart_configure(&port->base, info);
     }
     return port;
 }
 
-RS485Port *rs485_port_create(const SerialPortInfo *info, int rts_pin)
+RS485Port *rs485_port_create(int rts_pin)
 {
     RS485Port *port = NULL;
 
@@ -230,7 +230,7 @@ RS485Port *rs485_port_create(const SerialPortInfo *info, int rts_pin)
         port->base.ops = &rs485_ops;
         port->base.is_open = 0;
         port->rts_pin = rts_pin;
-        rs485_configure(&port->base, info);
+        // rs485_configure(&port->base, info);
     }
     return port;
 }

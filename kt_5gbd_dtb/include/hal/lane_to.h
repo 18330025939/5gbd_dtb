@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include "serial.h"
 
-#define LANETO_DEV_NAME "/dev/ttys4"
+#define LANETO_DEV_NAME "/dev/ttyS4"
 
 #pragma pack(push, 1)
 typedef struct {
@@ -302,12 +302,12 @@ typedef struct {
     UartPort *uart;
     // char dev_name[20];
     // pthread_t recv_thread;
-    // bool running;
+    bool running;
 } LaneToCtx;
 
 UartPort *laneTo_port;
 
-void laneTo_read_nav_data(void);
-int laneTo_init(const char *uart_dev);
-void laneTo_uninit(void);
+void laneTo_read_nav_data(LaneToCtx *ctx);
+int laneTo_init(LaneToCtx *ctx);
+void laneTo_uninit(LaneToCtx *ctx);
 #endif

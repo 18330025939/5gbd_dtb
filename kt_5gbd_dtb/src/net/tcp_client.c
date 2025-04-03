@@ -133,7 +133,7 @@ static void tcp_client_connect(TcpClient* client)
 // 发送数据
 static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len) 
 {
-    printf("tcp_client_send len %d\n", len);
+    printf("tcp_client_send len %ld\n", len);
     for (int i = 0; i < len; i++) {
         printf("%02x ", data[i]);
     }
