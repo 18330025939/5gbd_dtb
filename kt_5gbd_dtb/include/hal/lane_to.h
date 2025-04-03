@@ -307,7 +307,7 @@ typedef struct {
 
 UartPort *laneTo_port;
 
-void laneTo_read_nav_data(LaneToCtx *ctx);
+void laneTo_read_nav_data(void);
 int laneTo_init(const char *uart_dev);
 void laneTo_uninit(void);
 #endif

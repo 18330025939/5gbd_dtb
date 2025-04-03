@@ -407,7 +407,7 @@ void laneTo_read_nav_data(void)
 {
     char buffer[4096];
     size_t buffer_index = 0;
-    SerialPort *serial = laneTo_port->base;
+    SerialPort *serial = &laneTo_port->base;
     
     while (1) {
         ssize_t bytes_read = serial->ops->read(serial, buffer + buffer_index, sizeof(buffer) - buffer_index);
@@ -446,9 +446,9 @@ void laneTo_read_nav_data(void)
 
 int laneTo_init(const char *uart_dev)
 {   
-    if (ctx == NULL) {
-        return -1;
-    }
+    // if (ctx == NULL) {
+    //     return -1;
+    // }
 
     SerialPortInfo laneto_port_info = {
         .speed = 115200, 
@@ -469,9 +469,9 @@ void laneTo_uninit(void)
 {
     // LaneToCtx *ctx = NULL;
     // UartPort *laneTo_port = NULL;
-    if (ctx == NULL) {
-        return ;
-    }
+    // if (ctx == NULL) {
+    //     return ;
+    // }
 
     // laneTo_port = ctx->uart;
     laneTo_port->base.ops->close(&laneTo_port->base);
