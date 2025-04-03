@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <linux/serial.h>
 #include "serial.h"
 
