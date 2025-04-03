@@ -244,8 +244,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
         return ;
     }
     printf("nav_data_msg_task_cb...\n");
-    laneTo_read_nav_data();
     CloundCommContext *ctx = (CloundCommContext *)arg;
+    laneTo_read_nav_data(ctx->laneTo);
     // ThreadSafeQueue *send_queue = &ctx->queue;
     hdr = (MsgFramHdr *)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR;
