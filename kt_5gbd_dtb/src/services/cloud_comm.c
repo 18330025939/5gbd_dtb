@@ -264,7 +264,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data->ucHour = sg_data.utc_hour;
     nav_data->ucMinute = sg_data.utc_minutes;
     nav_data->usMilSec = sg_data.utc_millisecond; 
-    nav_data->dLatitude = sg_data.latitude;
+    // nav_data->dLatitude = sg_data.latitude;
+    memccpy(&nav_data->dLatitude, &sg_data.latitude, sizeof(nav_data->dLatitude));
     nav_data->dLongitude = sg_data.longitude;
     nav_data->fAltitude = sg_data.altitude_msl;
     nav_data->lVn = sg_data.vn;

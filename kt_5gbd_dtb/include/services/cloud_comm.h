@@ -61,7 +61,7 @@ typedef struct st_NAVDataSeg
     uint8_t  ucHour;
     uint8_t  ucMinute;
     uint16_t usMilSec;
-    double   dLatitude;
+    uint64_t   dLatitude;
     double   dLongitude;
     float    fAltitude;
     int32_t  lVn;
