@@ -6,8 +6,8 @@
 #include "serial.h"
 #include "lane_to.h"
 
-extern struct message_parser __start_message_parsers;
-extern struct message_parser __stop_message_parsers;
+extern struct MessageParser __start_message_parsers;
+extern struct MessageParser __stop_message_parsers;
 
 void calculate_checksum(const uint8_t *payload, uint16_t len, uint8_t *ckA, uint8_t *ckB) 
 {
@@ -396,19 +396,11 @@ REGISTER_MESSAGE_PARSER(PBEND, 255, &pblkend_data, pblkend_data_parse);
 
 void message_parser_entry(const char *line)
 {
-    struct message_parser *start = &__start_message_parsers;
-    struct message_parser *end = &__stop_message_parsers;
+    struct MessageParser *start = &__start_message_parsers;
+    struct MessageParser *end = &__stop_message_parsers;
     for (; start != end; start++) {
-        if (start == NULL) {
-            printf("p is null\n");
-        }
-        else {
-            if (start->func == NULL) {
-                printf("p->func is null\n");
-            }
-        }
         if (start != NULL && start->func != NULL) {
-            printf("p->hdr.msg_id %s--%ld\n", start->hdr.msg_id, strlen(start->hdr.msg_id));
+ //           printf("p->hdr.msg_id %s--%ld\n", start->hdr.msg_id, strlen(start->hdr.msg_id));
             if (strncmp(line, start->hdr.msg_id, strlen(start->hdr.msg_id)) == 0) {
                 start->func(start->data, line, strlen(line));
                 break;
@@ -432,7 +424,6 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     // while (1) {
         ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
         if (bytes_read > 0) {
-            // printf("bytes_read %ld \n", bytes_read);
             // buffer_index += bytes_read;
             
             start = strstr(buffer, SG_MSG_ID);
@@ -440,7 +431,6 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
             //     end = strstr(buffer + (start - buffer) + strlen(SG_MSG_ID), SG_MSG_ID);
             // }
             end = strstr(buffer, PBLKEND_MSG_ID);
-            // printf("start %s len %d\n", start, end - start);
             if (start != NULL && end != NULL && end > start) {
                 // size_t start_pos = start - buffer;
                 // size_t end_pos = end - buffer;
