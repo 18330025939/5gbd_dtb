@@ -243,7 +243,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     if (arg == NULL) {
         return ;
     }
-    printf("nav_data_msg_task_cb...\n");
+    // printf("nav_data_msg_task_cb...\n");
     CloundCommContext *ctx = (CloundCommContext *)arg;
     laneTo_read_nav_data(ctx->laneTo);
     // ThreadSafeQueue *send_queue = &ctx->queue;
@@ -251,11 +251,11 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usHdr = MSG_DATA_FRAM_HDR;
     hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(NAVDataSeg);
-    printf("hdr->usLen %d, sizeof(NAVDataSeg) %ld\n", hdr->usLen, sizeof(NAVDataSeg));
+    // printf("hdr->usLen %d, sizeof(NAVDataSeg) %ld\n", hdr->usLen, sizeof(NAVDataSeg));
     nav_data = (NAVDataSeg *)(buf + sizeof(MsgFramHdr));
     get_system_time(&t);
     TIME_TO_STR(&t, str);
-    printf("time %s, sg_data.message_id %s, sg_data addr 0x%x\n", str, sg_data.message_id, &sg_data);
+    printf("time %s, sg_data.message_id %s\n", str, sg_data.message_id);
     nav_data->usDevAddr = 0;
     nav_data->usYear = sg_data.utc_year;
     nav_data->ucMonth = sg_data.utc_month;
@@ -291,7 +291,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     crc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(NAVDataSeg));
     crc->usCRC = checkSum_8(buf, hdr->usLen);
     // enqueue(send_queue, buf, hdr->usLen);
-    printf("crc->usCRC 0x%x\n", crc->usCRC);
+    // printf("crc->usCRC 0x%x\n", crc->usCRC);
     TcpClient *client = ctx->client;
     if (client->is_connected) {
         client->ops->send(client, buf, hdr->usLen + sizeof(MsgDataFramCrc));
@@ -324,7 +324,7 @@ void *timer_task_entry(void *arg)
     printf("timer_task_entry\n");
     ctx = (CloundCommContext *)arg;
     base = event_base_new();
-    add_timer_task(base, nav_data_msg_task_cb, 1000, arg);
+    add_timer_task(base, nav_data_msg_task_cb, 2000, arg);
     // add_timer_task(base, ota_heartbeat_task_cb, 1000);
     ctx->base = base;
     event_base_dispatch(base);  // 启动事件循环

@@ -456,7 +456,7 @@ void message_parser_entry(const char *line)
 
 void laneTo_read_nav_data(LaneToCtx *ctx) 
 {
-    char buffer[2048];
+    char buffer[4096];
     // size_t buffer_index = 0;
     SerialPort *serial = &ctx->uart->base;
     char *end = NULL;
@@ -469,14 +469,14 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
 
     ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
     if (bytes_read > 0) {
-        printf("laneTo read byte %ld\n", bytes_read);
-        printf("%s\n", buffer);
+        // printf("laneTo read byte %ld\n", bytes_read);
+        // printf("%s\n", buffer);
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);
         if (start != NULL && end != NULL && end > start) {
             char *token = strtok(buffer, "$");
             while (token != NULL) {
-                printf("%s---%ld\n", token, strlen(token));
+                // printf("%s---%ld\n", token, strlen(token));
                 message_parser_entry(token);
                 token = strtok(NULL, "$");
             }
