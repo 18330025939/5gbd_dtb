@@ -120,7 +120,7 @@ static void sg_data_parse(void *data, const char *payload, size_t len)
             &sg->reserved[1]);
     printf("sg_data_parse: sg_data addr 0x%x, %s,%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%lf,%lf,%f,%f,%d,%d,%d,"
            "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu\n",
-            (uint32_t*)data,
+            (uint32_t)data,
             sg->message_id,
             sg->subid,
             sg->utc_year,
@@ -476,7 +476,7 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
         if (start != NULL && end != NULL && end > start) {
             char *token = strtok(buffer, "$");
             while (token != NULL) {
-                // printf("%s---%ld\n", token, strlen(token));
+                printf("%s---%ld\n", token, strlen(token));
                 message_parser_entry(token);
                 token = strtok(NULL, "$");
             }
