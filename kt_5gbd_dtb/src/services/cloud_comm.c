@@ -251,8 +251,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usHdr = MSG_DATA_FRAM_HDR;
     hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(NAVDataSeg);
-    printf("hdr->usLen %d\n", hdr->usLen);
-    nav_data = (NAVDataSeg *)(hdr + 1);
+    printf("hdr->usLen %d, sizeof(NAVDataSeg) %ld\n", hdr->usLen, sizeof(NAVDataSeg));
+    nav_data = (NAVDataSeg *)(buf + sizeof(MsgFramHdr));
     get_system_time(&t);
     TIME_TO_STR(&t, str);
     printf("time %s, sg_data.message_id %s, sg_data addr 0x%x\n", str, sg_data.message_id, &sg_data);
@@ -288,7 +288,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data->sYawMisAngle = sg_data.misalign_angle_yaw;
     nav_data->usStationID = sg_data.reference_station_id;
     nav_data->ucTimeDiff = sg_data.time_since_last_diff;
-    crc = (MsgDataFramCrc *)(nav_data + 1);
+    crc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(NAVDataSeg));
     crc->usCRC = checkSum_8(buf, hdr->usLen);
     // enqueue(send_queue, buf, hdr->usLen);
     printf("crc->usCRC 0x%x\n", crc->usCRC);
