@@ -118,7 +118,7 @@ static void sg_data_parse(void *data, const char *payload, size_t len)
             &sg->time_since_last_diff,
             &sg->reserved[0],
             &sg->reserved[1]);
-    printf("sg_data_parse: %s,%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%.8lf,%lf,%f,%f,%d,%d,%d,"
+    printf("sg_data_parse: %s,%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%.15lf,%.15lf,%f,%f,%d,%d,%d,"
            "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu\n",
             sg->message_id,
             sg->subid,
