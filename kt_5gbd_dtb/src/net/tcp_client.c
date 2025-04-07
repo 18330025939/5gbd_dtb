@@ -104,9 +104,10 @@ void *tcp_client_connect_entry(void *arg)
     bufferevent_enable(client->bev, EV_READ | EV_WRITE | EV_PERSIST);
 
     event_base_dispatch(client->base);
-
+    printf("client event_base_dispatch\n");
     bufferevent_free(client->bev);
     event_base_free(client->base);
+    printf("client exit\n");
     return NULL;
 }
 

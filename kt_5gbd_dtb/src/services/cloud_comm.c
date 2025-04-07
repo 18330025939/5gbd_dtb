@@ -257,12 +257,12 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     TIME_TO_STR(&t, str);
     printf("time %s\n", str);
     nav_data->usDevAddr = 0;
-    nav_data->usYear = t.usYear;
-    nav_data->ucMonth = t.ucMonth;
-    nav_data->ucDay = t.ucDay;
-    nav_data->ucHour = t.ucHour;
-    nav_data->ucMinute = t.ucMinute;
-    nav_data->usMilSec = t.ucSecond; 
+    nav_data->usYear = sg_data.utc_year;
+    nav_data->ucMonth = sg_data.utc_month;
+    nav_data->ucDay = sg_data.utc_day;
+    nav_data->ucHour = sg_data.utc_hour;
+    nav_data->ucMinute = sg_data.utc_minutes;
+    nav_data->usMilSec = sg_data.utc_millisecond; 
     nav_data->dLatitude = sg_data.latitude;
     nav_data->dLongitude = sg_data.longitude;
     nav_data->fAltitude = sg_data.altitude_msl;
