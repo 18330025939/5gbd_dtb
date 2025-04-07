@@ -462,45 +462,26 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     char *start = NULL;
     
     if (ctx->running == false) {
+        printf("laneTo not running\n");
         return;
     }
 
-    // while (1) {
-        ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
-        if (bytes_read > 0) {
-            // buffer_index += bytes_read;
-            
-            start = strstr(buffer, SG_MSG_ID);
-            // if (start != NULL) {
-            //     end = strstr(buffer + (start - buffer) + strlen(SG_MSG_ID), SG_MSG_ID);
-            // }
-            end = strstr(buffer, PBLKEND_MSG_ID);
-            if (start != NULL && end != NULL && end > start) {
-                // size_t start_pos = start - buffer;
-                // size_t end_pos = end - buffer;
-                
-                char *token = strtok(buffer, "$");
-                while (token != NULL) {
-                    printf("%s---%ld\n", token, strlen(token));
-                    message_parser_entry(token);
-                    token = strtok(NULL, "$");
-                }
-                // break;
+    ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
+    if (bytes_read > 0) {
+        printf("laneTo read byte %ld\n", bytes_read);
+        
+        start = strstr(buffer, SG_MSG_ID);
+        end = strstr(buffer, PBLKEND_MSG_ID);
+        if (start != NULL && end != NULL && end > start) {
+            char *token = strtok(buffer, "$");
+            while (token != NULL) {
+                printf("%s---%ld\n", token, strlen(token));
+                message_parser_entry(token);
+                token = strtok(NULL, "$");
+            }
+        } 
+    }
 
-                // memmove(buffer, buffer + end_pos, buffer_index - end_pos);
-                // buffer_index = buffer_index - end_pos;
-            } 
-            // else {
-            //     buffer_index += bytes_read;
-            //     if (buffer_index >= (sizeof(buffer) -1)) {
-            //         memmove(buffer, buffer + buffer_index - sizeof(buffer) + 1, 
-            //         sizeof(buffer) - buffer_index + 1);
-            //         buffer_index = sizeof(buffer) - buffer_index + 1;
-            //     }
-            // }
-        }
-        // usleep(100); 
-    // }
     return ;
 }
 

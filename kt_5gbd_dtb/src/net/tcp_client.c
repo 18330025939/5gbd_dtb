@@ -104,6 +104,9 @@ void *tcp_client_connect_entry(void *arg)
     bufferevent_enable(client->bev, EV_READ | EV_WRITE | EV_PERSIST);
 
     event_base_dispatch(client->base);
+
+    bufferevent_free(client->bev);
+    event_base_free(client->base);
     return NULL;
 }
 
@@ -144,9 +147,9 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
 static void tcp_client_disconnect(TcpClient* client) 
 {
     client->is_connected = false;
+    pthread_join(client->send_thread, NULL);
     event_base_loopbreak(client->base);
     pthread_join(client->conn_thread, NULL);
-    pthread_join(client->send_thread, NULL);
 }
 
 static void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 
@@ -178,12 +181,12 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 // 销毁客户端
 void tcp_client_destroy(TcpClient* client) 
 {
-    if (client->bev) {
-        bufferevent_free(client->bev);
-    }
-    if (client->base) {
-        event_base_free(client->base);
-    }
+    // if (client->bev) {
+    //     bufferevent_free(client->bev);
+    // }
+    // if (client->base) {
+    //     event_base_free(client->base);
+    // }
     clean_queue(&client->tx_queue);
     free(client->server_ip);
     free(client);
