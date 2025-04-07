@@ -293,7 +293,7 @@ struct MessageParser {
 } __attribute__((aligned(8)));
 
 #define REGISTER_MESSAGE_PARSER(msg_id_str, sub_id_val, msg_data, parse_func)\
-    __attribute__((used, __section__(".message_parsers"))) static struct MessageParser parser_##msg_id_str##sub_id_val = { \
+    __attribute__((used, __section__("message_parsers"))) static struct MessageParser parser_##msg_id_str##sub_id_val = { \
         .hdr = { .msg_id = #msg_id_str, .sub_id = sub_id_val }, \
         .data = msg_data, \
         .func = parse_func \
