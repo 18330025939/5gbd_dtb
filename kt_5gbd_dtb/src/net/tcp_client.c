@@ -148,8 +148,8 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
 static void tcp_client_disconnect(TcpClient* client) 
 {
     client->is_connected = false;
-    pthread_join(client->send_thread, NULL);
     event_base_loopbreak(client->base);
+    pthread_join(client->send_thread, NULL);
     pthread_join(client->conn_thread, NULL);
 }
 

@@ -13,7 +13,7 @@
 #include "ftp_handler.h"
 #include "cloud_comm.h"
 
-
+extern SGData sg_data;
 
 uint16_t checkSum_8(uint8_t *buf, uint16_t len)
 {
@@ -255,7 +255,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data = (NAVDataSeg *)(hdr + 1);
     get_system_time(&t);
     TIME_TO_STR(&t, str);
-    printf("time %s\n", str);
+    printf("time %s, sg_data.message_id %s, sg_data addr 0x%x\n", str, sg_data.message_id, &sg_data);
     nav_data->usDevAddr = 0;
     nav_data->usYear = sg_data.utc_year;
     nav_data->ucMonth = sg_data.utc_month;
