@@ -256,7 +256,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data = (NAVDataSeg *)(buf + sizeof(MsgFramHdr));
     get_system_time(&t);
     TIME_TO_STR(&t, str);
-    printf("time %s, sg_data.message_id %s, sg_data.latitude %.15lf\n", str, sg_data.message_id, sg_data.latitude);
+    printf("time %s, sg_data.message_id %s, sg_data.latitude %.8lf\n", str, sg_data.message_id, sg_data.latitude);
     nav_data->usDevAddr = 0;
     nav_data->usYear = sg_data.utc_year;
     nav_data->ucMonth = sg_data.utc_month;
@@ -264,8 +264,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data->ucHour = sg_data.utc_hour;
     nav_data->ucMinute = sg_data.utc_minutes;
     nav_data->usMilSec = sg_data.utc_millisecond; 
-    // nav_data->dLatitude = sg_data.latitude;
-    memcpy(&(nav_data->dLatitude[0]), &(sg_data.latitude), sizeof(nav_data->dLatitude));
+    nav_data->dLatitude = sg_data.latitude;
+    // memcpy(&(nav_data->dLatitude[0]), &(sg_data.latitude), sizeof(nav_data->dLatitude));
     nav_data->dLongitude = sg_data.longitude;
     nav_data->fAltitude = sg_data.altitude_msl;
     nav_data->lVn = sg_data.vn;
