@@ -19,6 +19,7 @@
 #include "tcp_client.h"
 
 void *tcp_client_send_entry(void *arg);
+static void tcp_client_disconnect(TcpClient* client);
 // 重连机制
 void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 {
