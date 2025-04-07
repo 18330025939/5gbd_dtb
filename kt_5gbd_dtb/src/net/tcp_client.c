@@ -149,10 +149,10 @@ static void tcp_client_disconnect(TcpClient* client)
 {
     client->is_connected = false;
     event_base_loopbreak(client->base);
-    pthread_join(client->send_thread, NULL);
-    printf("client->send_thread\n");
     pthread_join(client->conn_thread, NULL);
     printf("client->conn_thread\n");
+    pthread_join(client->send_thread, NULL);
+    printf("client->send_thread\n");
 }
 
 static void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 
