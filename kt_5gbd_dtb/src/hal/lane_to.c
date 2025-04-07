@@ -119,7 +119,7 @@ static void sg_data_parse(void *data, const char *payload, size_t len)
             &sg->reserved[0],
             &sg->reserved[1]);
     printf("%s,%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%lf,%lf,%f,%f,%d,%d,%d,"
-            "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu\n",
+           "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu\n",
             sg->message_id,
             sg->subid,
             sg->utc_year,
