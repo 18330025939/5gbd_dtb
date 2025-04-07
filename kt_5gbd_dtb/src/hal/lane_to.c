@@ -73,7 +73,7 @@ static void sg_data_parse(void *data, const char *payload, size_t len)
     // if (!token || strncmp(token, SG_MSG_ID, 5) != 0) {
     //     return ; // 非PBSOL消息
     // }
-    printf("sg_data_parse %s\n", payload);
+
     sscanf((const char *)payload, "%[^,],%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%lf,%lf,%f,%f,%d,%d,%d,"
             "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu",
             sg->message_id,
@@ -118,6 +118,50 @@ static void sg_data_parse(void *data, const char *payload, size_t len)
             &sg->time_since_last_diff,
             &sg->reserved[0],
             &sg->reserved[1]);
+    printf("%s,%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%lf,%lf,%f,%f,%d,%d,%d,"
+            "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu\n",
+            sg->message_id,
+            sg->subid,
+            sg->utc_year,
+            sg->utc_month,
+            sg->utc_day,
+            sg->utc_hour,
+            sg->utc_minutes,
+            sg->utc_millisecond,
+            sg->sensor_time,
+            sg->gps_week_number,
+            sg->tow,
+            sg->nav_mode_info,
+            sg->latitude,
+            sg->longitude,
+            sg->altitude_ellipsoid,
+            sg->altitude_msl,
+            sg->vn,
+            sg->ve,
+            sg->vd,
+            sg->ground_speed,
+            sg->traveled_distance,
+            sg->roll,
+            sg->pitch,
+            sg->heading,
+            sg->reserved1,
+            sg->reserved2,
+            sg->north_uncertainty,
+            sg->east_uncertainty,
+            sg->down_uncertainty,
+            sg->vn_uncertainty,
+            sg->ve_uncertainty,
+            sg->vd_uncertainty,
+            sg->roll_uncertainty,
+            sg->pitch_uncertainty,
+            sg->yaw_uncertainty,
+            sg->misalign_angle_roll,
+            sg->misalign_angle_pitch,
+            sg->misalign_angle_yaw,
+            sg->reference_station_id,
+            sg->time_since_last_diff,
+            sg->reserved[0],
+            sg->reserved[1]);
 
     // char *checksum_str = strrchr(buffer, '*');
     // if (checksum_str) {
