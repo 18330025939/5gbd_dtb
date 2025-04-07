@@ -30,8 +30,8 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
         event_base_once(client->base, -1, EV_TIMEOUT, tcp_client_reconnect, client, &timeout);
     } else {
         printf("Max reconnect attempts reached. Exiting.\n");
+        tcp_client_disconnect(client);
         tcp_client_destroy(client);
-        exit(1);
     }
 }
 
@@ -59,11 +59,11 @@ static void tcp_client_event_cb(struct bufferevent* bev, short event, void* arg)
         pthread_create(&client->send_thread, NULL, tcp_client_send_entry, (void*)client);
     } else if (event & BEV_EVENT_EOF) {
         printf("Connection closed.\n");
-        client->is_connected = true;
+        client->is_connected = false;
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     } else if (event & BEV_EVENT_ERROR) {
         printf("Error on connection.\n");
-        client->is_connected = true;
+        client->is_connected = false;
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     }
 }
@@ -104,10 +104,10 @@ void *tcp_client_connect_entry(void *arg)
     bufferevent_enable(client->bev, EV_READ | EV_WRITE | EV_PERSIST);
 
     event_base_dispatch(client->base);
-    printf("client event_base_dispatch\n");
+
     bufferevent_free(client->bev);
     event_base_free(client->base);
-    printf("client exit\n");
+
     return NULL;
 }
 
@@ -149,7 +149,9 @@ static void tcp_client_disconnect(TcpClient* client)
     client->is_connected = false;
     event_base_loopbreak(client->base);
     pthread_join(client->send_thread, NULL);
+    printf("client->send_thread\n");
     pthread_join(client->conn_thread, NULL);
+    printf("client->conn_thread\n");
 }
 
 static void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 

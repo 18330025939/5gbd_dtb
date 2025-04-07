@@ -324,11 +324,12 @@ void *timer_task_entry(void *arg)
     printf("timer_task_entry\n");
     ctx = (CloundCommContext *)arg;
     base = event_base_new();
-    add_timer_task(base, nav_data_msg_task_cb, 2000, arg);
+    add_timer_task(base, nav_data_msg_task_cb, 1000, arg);
     // add_timer_task(base, ota_heartbeat_task_cb, 1000);
     ctx->base = base;
     event_base_dispatch(base);  // 启动事件循环
     
+    event_base_free(base);
     return NULL;
 }
 
@@ -382,14 +383,10 @@ void clound_comm_uninit(CloundCommContext *ctx)
     ctx->running = false;
     // pthread_join(ctx->send_thread, NULL);
     event_base_loopbreak(ctx->base);
-    printf("clound_comm_uninit--\n");
     laneTo_uninit(ctx->laneTo);
-    printf("clound_comm_uninit++\n");
     pthread_join(ctx->timer_thread, NULL);
-    printf("clound_comm_uninit===\n");
     ctx->client->ops->disconnect(ctx->client);
     printf("clound_comm_uninit....\n");
     tcp_client_destroy(ctx->client);
-    printf("clound_comm_uninit,,,,,\n");
     clean_queue(&ctx->queue);
 }
