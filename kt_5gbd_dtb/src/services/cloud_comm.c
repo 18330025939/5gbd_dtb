@@ -382,9 +382,14 @@ void clound_comm_uninit(CloundCommContext *ctx)
     ctx->running = false;
     // pthread_join(ctx->send_thread, NULL);
     event_base_loopbreak(ctx->base);
+    printf("clound_comm_uninit--\n");
     laneTo_uninit(ctx->laneTo);
+    printf("clound_comm_uninit++\n");
     pthread_join(ctx->timer_thread, NULL);
+    printf("clound_comm_uninit===\n");
     ctx->client->ops->disconnect(ctx->client);
+    printf("clound_comm_uninit....\n");
     tcp_client_destroy(ctx->client);
+    printf("clound_comm_uninit,,,,,\n");
     clean_queue(&ctx->queue);
 }
