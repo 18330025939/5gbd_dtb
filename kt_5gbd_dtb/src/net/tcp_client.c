@@ -69,7 +69,7 @@ static void tcp_client_event_cb(struct bufferevent* bev, short event, void* arg)
     }
 }
 
-// 初始化客户端
+// 客户端连接线程
 void *tcp_client_connect_entry(void *arg)
 {
     TcpClient* client = (TcpClient*)arg;
@@ -107,8 +107,9 @@ void *tcp_client_connect_entry(void *arg)
     event_base_dispatch(client->base);
 
     bufferevent_free(client->bev);
+    client->bev = NULL;
     event_base_free(client->base);
-
+    client->base = NULL;    
     return NULL;
 }
 
@@ -121,10 +122,10 @@ void *tcp_client_send_entry(void *arg)
     while (client->is_connected) {
         int ret = dequeue(&client->tx_queue, buf, &len);
         if (ret) {
-            sleep(100);
             continue;
         }
         bufferevent_write(client->bev, buf, len);
+        sleep(100);
     }
 
     return NULL;
@@ -142,9 +143,9 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
         printf("%02x ", data[i]);
     }
     enqueue(&client->tx_queue, data, len);
-    // bufferevent_write(client->bev, data, len);
 }
 
+// 断开连接
 static void tcp_client_disconnect(TcpClient* client) 
 {
     client->is_connected = false;
@@ -184,12 +185,6 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 // 销毁客户端
 void tcp_client_destroy(TcpClient* client) 
 {
-    // if (client->bev) {
-    //     bufferevent_free(client->bev);
-    // }
-    // if (client->base) {
-    //     event_base_free(client->base);
-    // }
     clean_queue(&client->tx_queue);
     free(client->server_ip);
     free(client);

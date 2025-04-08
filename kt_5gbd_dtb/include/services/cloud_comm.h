@@ -90,6 +90,11 @@ typedef struct st_NAVDataSeg
 } NAVDataSeg;
 #pragma pack(pop)
 
+struct EventList {
+    struct event *ev;
+    struct EventList *next;
+} ;
+
 typedef struct st_MsgCommContext
 {
     TcpClient *client;
@@ -98,6 +103,8 @@ typedef struct st_MsgCommContext
     pthread_t timer_thread;
     bool running;
     struct event_base *base;
+    struct List ev_list;
+    // struct EventList *ev_list;
     LaneToCtx *laneTo;
 } CloundCommContext;
 

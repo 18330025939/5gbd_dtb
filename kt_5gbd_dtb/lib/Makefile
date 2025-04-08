@@ -11,6 +11,7 @@ LIB_NAME = libpub.a
 
 SRC = $(KT_5GBD_DTB)/lib/queue.o 
 SRC += $(KT_5GBD_DTB)/lib/publib.o
+SRC += $(KT_5GBD_DTB)/lib/list.o
 
 OBJS = $(addprefix obj/,$(notdir $(SRC)))
 

@@ -43,7 +43,7 @@ int main(int argc, char ** args)
         exit(1);
     }
     event_add(signal, NULL);
-    printf("event start....\n");
+
     event_base_dispatch(base);
     printf("wait....\n");
     event_free(signal);

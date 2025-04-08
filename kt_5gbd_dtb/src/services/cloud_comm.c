@@ -8,6 +8,7 @@
 #include <event2/event.h>
 #include "cJSON.h"
 #include "queue.h"
+#include "list.h"
 #include "lane_to.h"
 #include "tcp_client.h"
 #include "ftp_handler.h"
@@ -170,6 +171,7 @@ int create_ota_report_data(char *data)
     if (data == NULL) {
         return -1;
     }
+
     memset(&report, 0, sizeof(OtaReport));
     root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "lang", "zh_CN");
@@ -236,17 +238,16 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     MsgFramHdr *hdr = NULL;
     NAVDataSeg *nav_data = NULL;
     MsgDataFramCrc *crc = NULL;
-    Time t;
+    // Time t;
     uint8_t buf[512];
-    char str[50];
+    // char str[50];
 
     if (arg == NULL) {
         return ;
     }
-    // printf("nav_data_msg_task_cb...\n");
+
     CloundCommContext *ctx = (CloundCommContext *)arg;
     laneTo_read_nav_data(ctx->laneTo);
-    // ThreadSafeQueue *send_queue = &ctx->queue;
     memset(buf, 0, sizeof(buf));
     hdr = (MsgFramHdr *)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR;
@@ -254,8 +255,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(NAVDataSeg);
     // printf("hdr->usLen %d, sizeof(NAVDataSeg) %ld\n", hdr->usLen, sizeof(NAVDataSeg));
     nav_data = (NAVDataSeg *)(buf + sizeof(MsgFramHdr));
-    get_system_time(&t);
-    TIME_TO_STR(&t, str);
+    // get_system_time(&t);
+    // TIME_TO_STR(&t, str);
     printf("time %s, sg_data.message_id %s, sg_data.latitude %.8lf\n", str, sg_data.message_id, sg_data.latitude);
     nav_data->usDevAddr = 0;
     nav_data->usYear = sg_data.utc_year;
@@ -265,7 +266,6 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data->ucMinute = sg_data.utc_minutes;
     nav_data->usMilSec = sg_data.utc_millisecond; 
     nav_data->dLatitude = sg_data.latitude;
-    // memcpy(&(nav_data->dLatitude[0]), &(sg_data.latitude), sizeof(nav_data->dLatitude));
     nav_data->dLongitude = sg_data.longitude;
     nav_data->fAltitude = sg_data.altitude_msl;
     nav_data->lVn = sg_data.vn;
@@ -292,7 +292,6 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     nav_data->ucTimeDiff = sg_data.time_since_last_diff;
     crc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(NAVDataSeg));
     crc->usCRC = checkSum_8(buf, hdr->usLen);
-    // enqueue(send_queue, buf, hdr->usLen);
     // printf("crc->usCRC 0x%x\n", crc->usCRC);
     TcpClient *client = ctx->client;
     if (client->is_connected) {
@@ -308,9 +307,17 @@ void proc_message_cb(char *buf, size_t len)
     printf("proc_message_cb %s, %ld\n", buf, len);
 }
 
-void add_timer_task(struct event_base *base, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms, void *arg)
+void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
 {
-    struct event *task = event_new(base, -1, EV_PERSIST, task_cb, arg);
+    CloundCommContext *ctx = NULL;
+    
+    if (arg == NULL) {
+        return ;
+    }
+    
+    ctx = (CloundCommContext *)arg;
+    struct event *task = event_new(ctx->base, -1, EV_PERSIST, task_cb, arg);
+    List_Insert(&ctx->ev_list, (void*)task);
     struct timeval tv = {ms / 1000, ms % 1000 * 1000}; 
     event_add(task, &tv);
 }
@@ -319,19 +326,28 @@ void *timer_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     struct event_base *base = NULL;
+    struct ListNode *pNode = NULL;
     
     if (arg == NULL) {
         return NULL;
     }
-    printf("timer_task_entry\n");
+
     ctx = (CloundCommContext *)arg;
     base = event_base_new();
-    add_timer_task(base, nav_data_msg_task_cb, 1000, arg);
-    // add_timer_task(base, ota_heartbeat_task_cb, 1000);
     ctx->base = base;
+    add_timer_task(arg, nav_data_msg_task_cb, 1000);
+    // add_timer_task(base, ota_heartbeat_task_cb, 1000);
+
     event_base_dispatch(base);  // 启动事件循环
     
+    if (ctx->ev_list.count > 0) {
+        while((pNode = List_GetHead(&ctx->ev_list)) != NULL) {
+            event_free((struct event *)pNode->arg);
+            List_DelHead(&ctx->ev_list);
+        }
+    }
     event_base_free(base);
+
     return NULL;
 }
 
@@ -356,17 +372,11 @@ void *timer_task_entry(void *arg)
 
 void clound_comm_init(CloundCommContext *ctx)
 {
-    // CloundCommContext *ctx = NULL;
     TcpClient *client = NULL;
-
-    // ctx = (CloundCommContext *)malloc(sizeof(CloundCommContext));
-    // if (ctx) {
-    //     memset(ctx, 0, sizeof(CloundCommContext));
-    // }
-
 
     ctx->running = true;
     init_queue(&ctx->queue, 512);
+    List_Init_Thread(&ctx->ev_list);
 
     client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
     client->ops->register_cb(client, proc_message_cb);
