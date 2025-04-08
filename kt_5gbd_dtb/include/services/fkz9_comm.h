@@ -155,15 +155,15 @@ typedef struct st_VODFileTFBDataSeg
     uint8_t  ucRsvd[3];
 } VODFileTFB;
 
-typedef struct st_Time
-{
-    uint16_t usYear;
-    uint8_t  ucMonth;
-    uint8_t  ucDay;
-    uint8_t  ucHour;
-    uint8_t  ucMinute;
-    uint8_t  ucSecond;
-} Time;
+// typedef struct st_Time
+// {
+//     uint16_t usYear;
+//     uint8_t  ucMonth;
+//     uint8_t  ucDay;
+//     uint8_t  ucHour;
+//     uint8_t  ucMinute;
+//     uint8_t  ucSecond;
+// } Time;
 
 typedef struct st_VersionInfoReqDataSeg
 {
