@@ -393,7 +393,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     // init_queue(ctx->re_queue, MAX_MSG_SIZE);
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
     mqtt_client = mqtt_client_create(url, MQTT_CLIENT_ID, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
-    mqtt_client->ops->set_message_callback(mqtt_client, on_message_cb);
+    mqtt_client->ops->register_cb(mqtt_client, on_message_cb);
     int ret = mqtt_client->ops->connect(mqtt_client);
     if(ret) {
         printf("mqtt connect failed\n");
@@ -415,7 +415,7 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     mqtt_client = ctx->mqtt_client;
-    mqtt_client->ops->disconnect(mqtt_client);
+    // mqtt_client->ops->disconnect(mqtt_client);
     mqtt_client_destroy(mqtt_client);
 
     clean_queue(&ctx->tx_queue);
