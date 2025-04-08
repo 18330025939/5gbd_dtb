@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <event2/event.h>
 #include "cloud_comm.h"
+#include "fkz9_comm.h"
 
 void signal_handler(evutil_socket_t fd, short events, void *arg)
 {
@@ -20,7 +21,7 @@ void signal_handler(evutil_socket_t fd, short events, void *arg)
 int main(int argc, char ** args)
 {
     CloundCommContext *cloud_ctx = NULL;
-
+    Fkz9CommContext *fkz9_ctx = NULL;
 
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {
@@ -28,8 +29,14 @@ int main(int argc, char ** args)
     }
     memset(cloud_ctx, 0, sizeof(CloundCommContext));
     
+    fkz9_ctx = (Fkz9CommContext*)malloc(sizeof(Fkz9CommContext));
+    if (fkz9_ctx == NULL) {
+        free(cloud_ctx);
+        exit(1);
+    }
     // signal(SIGINT, signal_handler);
     clound_comm_init(cloud_ctx);
+    fkz9_comm_init(fkz9_ctx);
 
     struct event_base *base = event_base_new();
     if (!base) {
@@ -49,6 +56,7 @@ int main(int argc, char ** args)
     event_free(signal);
     event_base_free(base);
     clound_comm_uninit(cloud_ctx);
+    fkz9_comm_uninit(fkz9_ctx);
 
     return 0;
 }

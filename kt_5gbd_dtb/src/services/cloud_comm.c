@@ -238,9 +238,9 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     MsgFramHdr *hdr = NULL;
     NAVDataSeg *nav_data = NULL;
     MsgDataFramCrc *crc = NULL;
-    // Time t;
+    Time t;
     uint8_t buf[512];
-    // char str[50];
+    char str[50];
 
     if (arg == NULL) {
         return ;
@@ -255,8 +255,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(NAVDataSeg);
     // printf("hdr->usLen %d, sizeof(NAVDataSeg) %ld\n", hdr->usLen, sizeof(NAVDataSeg));
     nav_data = (NAVDataSeg *)(buf + sizeof(MsgFramHdr));
-    // get_system_time(&t);
-    // TIME_TO_STR(&t, str);
+    get_system_time(&t);
+    TIME_TO_STR(&t, str);
     printf("time %s, sg_data.message_id %s, sg_data.latitude %.8lf\n", str, sg_data.message_id, sg_data.latitude);
     nav_data->usDevAddr = 0;
     nav_data->usYear = sg_data.utc_year;

@@ -1,12 +1,14 @@
 #ifndef __FKZ9_COMM_H
 #define __FKZ9_COMM_H
 
-#define MQTT_SERVER_IP  "192.168.42.50"
 #define MAX_MSG_SIZE    1024
 
+#define MQTT_SERVER_IP  "192.168.42.50"
 #define MQTT_SERVER_PORT 1883
 #define MQTT_SERVER_USERNAME "cktt"
 #define MQTT_SERVER_PASSWORD "cktt"
+
+#define MQTT_CLIENT_ID  "bd_box"
 
 #define FTP_USERNAME   "cktt"
 #define FTP_PASSWORD   "cktt"
@@ -41,7 +43,6 @@ typedef struct st_MsgDataFramCrc
 // fkz9/设备地址/OTA/5G/0x1C
 // fkz9/设备地址/5G/OTA/0x1D
 
-// #define MSG_SIGN_USERNAME_PASSWORD      0xE0
 #define MSG_SIGN_VOD_FILE_REQUEST       0x15
 #define MSG_SIGN_VOD_FILE_RESPONSE      0x16
 #define MSG_SIGN_VOD_FILE_TRANS_FB      0x17
@@ -51,8 +52,22 @@ typedef struct st_MsgDataFramCrc
 #define MSG_SIGN_UPDATE_PACK_RESPONSE   0x1B
 #define MSG_SIGN_UPDATE_REPORT_REQUEST  0x1C
 #define MSG_SIGN_UPDATE_REPORT_RESPONSE 0x1D
-// #define MSG_SIGN_CONFIRMATION_MSG       0xE8
-// #define MSG_SIGN_BREAKPOINT_RESUME      0xE9
+
+#define MQTT_HEARTBEAT_REQUEST_TOPIC "/fkz9/%d/4G/CPU/0x15"
+#define MQTT_HEARTBEAT_RESPONSE_TOPIC "/fkz9/%d/4G/CPU/0x16"
+
+#define MSG_SIGN_HEARTBEAT_REQUEST      0x15
+#define MSG_SIGN_HEARTBEAT_RESPONSE     0x16
+
+#pragma pack(push, 1)
+typedef struct st_HeartBeatDataSeg
+{
+    uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
+    Time     stTime;
+    uint8_t  ucRsvd[8];
+} HeartBeatDataSeg;
+#pragma pack(pop)
+
 
 typedef enum em_DataType
 {
@@ -258,12 +273,19 @@ typedef struct st_UpdateReportRespDataSeg
 // #pragma pack(pop)
 
 
-typedef struct st_CommContext
+typedef struct st_Fkz9CommContext
 {
-    AsyncMQTTClient mqtt_client;
+    AsyncMQTTClient *mqtt_client;
     ThreadSafeQueue tx_queue;
     ThreadSafeQueue re_queue;
     pthread_t send_thread;
-} CommContext;
+    uint16_t fkz9_dev_addr;
+    pthread_t timer_thread;
+    struct event_base *base;
+    struct List ev_list;
+} Fkz9CommContext;
+
+void fkz9_comm_init(Fkz9CommContext *ctx);
+void fkz9_comm_uninit(Fkz9CommContext *ctx);
 
 #endif
