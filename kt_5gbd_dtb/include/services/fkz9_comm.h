@@ -3,7 +3,7 @@
 
 #include "mqtt_client.h"
 
-#define MAX_MSG_SIZE    1024
+#define MAX_MSG_SIZE    200
 
 #define MQTT_SERVER_IP  "192.168.42.50"
 #define MQTT_SERVER_PORT 1883
