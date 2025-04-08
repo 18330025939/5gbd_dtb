@@ -23,6 +23,7 @@ SRC += $(KT_5GBD_DTB)/src/net/mqtt_client.o
 SRC += $(KT_5GBD_DTB)/src/net/ftp_handler.o
 SRC += $(KT_5GBD_DTB)/src/net/tcp_client.o
 SRC += $(KT_5GBD_DTB)/src/services/cloud_comm.o
+SRC += $(KT_5GBD_DTB)/src/services/fkz9_comm.o
 
 
 OBJ = $(addprefix obj/,$(notdir $(SRC)))
