@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <event2/event.h>
 #include "queue.h"
+#include "list.h"
 #include "mqtt_client.h"
 #include "ftp_handler.h"
 #include "cloud_comm.h"
@@ -40,7 +42,7 @@ static int _system_(const char *cmd, char *pRetMsg, int msg_len)
 }
 
 
-
+#if 0
 /* 数据终端盒到FKZ9 */
 int proc_vod_file_req(void *arg)
 {
@@ -65,7 +67,7 @@ int proc_vod_file_req(void *arg)
     req->ucHour = 0;
     req->ucMinute = 0;
     strncpy(req->cFilePath, WAVEDAT_FILE_PATH, strlen(WAVEDAT_FILE_PATH));
-    req->cFilePath[strlen(WAVEDAT_FILE_PATH)] = "\0";
+    req->cFilePath[strlen(WAVEDAT_FILE_PATH)] = '\0';
     req->ucVerMode = 0;
     memset(req->ucRsvd, 0, sizeof(req->ucRsvd));
 
@@ -255,6 +257,7 @@ int proc_update_report_resp(void *arg)
     return 0;
 }
 
+#endif
 static void on_message_cb(const char* topic, const void* payload, size_t payload_len)
 {
     // AsyncMQTTClient *mqtt_client= (AsyncMQTTClient*)ctx;
@@ -266,9 +269,6 @@ static void on_message_cb(const char* topic, const void* payload, size_t payload
     for () {
 
     }
-
-
-
 }
 
 static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
@@ -320,16 +320,16 @@ static void heartbeat_resp_task_cb(evutil_socket_t fd, short event, void *arg)
     return 0;
 }
 
-void *send_msg_entry(void *arg)
-{
-    Fkz9CommContext *ctx = (Fkz9CommContext*)arg;
-    while (1) {
-        ctx->mqtt_client.publish(&ctx->mqtt_client, topic, payload, payload_len);
-    }
+// void *send_msg_entry(void *arg)
+// {
+//     Fkz9CommContext *ctx = (Fkz9CommContext*)arg;
+//     while (1) {
+//         ctx->mqtt_client.publish(&ctx->mqtt_client, topic, payload, payload_len);
+//     }
 
-}
+// }
 
-void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
+static void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
 {
     Fkz9CommContext *ctx = NULL;
     
@@ -344,7 +344,7 @@ void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), ui
     event_add(task, &tv);
 }
 
-void *timer_task_entry(void *arg)
+static void *timer_task_entry(void *arg)
 {
     Fkz9CommContext *ctx = NULL;
     struct event_base *base = NULL;
