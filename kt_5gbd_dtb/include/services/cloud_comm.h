@@ -4,6 +4,7 @@
 #include "tcp_client.h"
 #include "lane_to.h"
 #include "queue.h"
+#include "list.h"
 
 
 #define CLOUD_SERVER_IP "152.136.10.158"
@@ -91,10 +92,10 @@ typedef struct st_NAVDataSeg
 } NAVDataSeg;
 #pragma pack(pop)
 
-struct EventList {
-    struct event *ev;
-    struct EventList *next;
-} ;
+// struct EventList {
+//     struct event *ev;
+//     struct EventList *next;
+// } ;
 
 typedef struct st_MsgCommContext
 {
