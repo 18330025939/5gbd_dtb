@@ -17,7 +17,7 @@ struct List
 	int mutexOpt;
 	pthread_mutex_t mutex;  
 } ;
-
+extern struct List;
 int List_Init(struct List *pRootList);
 int List_Init_Thread(struct List *pRootList);
 int List_Insert(struct List *pRootList, void *arg);
