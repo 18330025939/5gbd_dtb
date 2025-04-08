@@ -1,6 +1,8 @@
 #ifndef __FKZ9_COMM_H
 #define __FKZ9_COMM_H
 
+#include "mqtt_client.h"
+
 #define MAX_MSG_SIZE    1024
 
 #define MQTT_SERVER_IP  "192.168.42.50"
