@@ -8,7 +8,7 @@ struct ListNode
 	void *arg;
 } ;
 
-struct List
+typedef struct List
 {
 	struct ListNode *p_Head;
 	struct ListNode *p_Tail;
@@ -16,8 +16,8 @@ struct List
 	
 	int mutexOpt;
 	pthread_mutex_t mutex;  
-} ;
-extern struct List;
+} List;
+
 int List_Init(struct List *pRootList);
 int List_Init_Thread(struct List *pRootList);
 int List_Insert(struct List *pRootList, void *arg);
