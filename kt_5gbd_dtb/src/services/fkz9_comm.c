@@ -15,34 +15,34 @@
 
 #define WAVEDAT_FILE_PATH  "/upload/cktt/wavedat/"
 
-// static int _system_(const char *cmd, char *pRetMsg, int msg_len)
-// {
+static int _system_(const char *cmd, char *pRetMsg, int msg_len)
+{
 
-// 	FILE *fp;
-// 	int ret = -1;
+	FILE *fp;
+	int ret = -1;
 
-// 	if (cmd == NULL || pRetMsg == NULL || msg_len <= 0)
-// 		return -1;
+	if (cmd == NULL || pRetMsg == NULL || msg_len <= 0)
+		return -1;
 
-// 	if ((fp = popen(cmd, "r")) == NULL)
-// 		return -2;
-// 	else {
-// 		memset(pRetMsg, 0, msg_len);
-// 		do{}
-// 		while (fgets(pRetMsg, msg_len, fp) != NULL);
-// 	}
+	if ((fp = popen(cmd, "r")) == NULL)
+		return -2;
+	else {
+		memset(pRetMsg, 0, msg_len);
+		do{}
+		while (fgets(pRetMsg, msg_len, fp) != NULL);
+	}
 
-// 	if ((ret = pclose(fp)) == -1)
-// 		return -3;
+	if ((ret = pclose(fp)) == -1)
+		return -3;
 
-// 	pRetMsg[strlen(pRetMsg)-1] = '\0';
+	pRetMsg[strlen(pRetMsg)-1] = '\0';
 
-// 	return 0;
+	return 0;
 
-// }
+}
 
 
-#if 0
+#if 0 //就协议产生,暂不使用
 /* 数据终端盒到FKZ9 */
 int proc_vod_file_req(void *arg)
 {
@@ -375,12 +375,6 @@ static void *timer_task_entry(void *arg)
 
 void fkz9_comm_init(Fkz9CommContext *ctx)
 {
-    // Fkz9CommContext *ctx = malloc(sizeof(Fkz9CommContext));
-    
-    // if (malloc == NULL) {
-    //     return ;
-    // }
-    // memset(ctx, 0, sizeof(Fkz9CommContext));
     AsyncMQTTClient *mqtt_client = NULL;
     char url[50] = {0};
 

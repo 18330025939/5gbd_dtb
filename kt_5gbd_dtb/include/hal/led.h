@@ -13,7 +13,7 @@ typedef struct {
     GpioController gpio_controller; // GPIO控制器
 } LedController;
 
-
+int led_init(LedController *controller, int gpio_num);
 int led_set_high(LedController *controller);
 int led_set_low(LedController *controller);
 int led_toggle(LedController *controller);

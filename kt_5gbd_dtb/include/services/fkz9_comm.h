@@ -17,42 +17,23 @@
 #define FTP_CTRL_PORT       21
 #define FTP_DATA_PORT       20
 
+#if 0 //在其他头文件有定义
+#define MSG_DATA_FRAM_HDR         0xAAAA
+#pragma pack(push, 1)
+typedef struct st_MsgFramHdr
+{
+    uint16_t usHdr;       /* 帧头 */
+    uint16_t usLen;       /* 长度 */
+    uint8_t ucSign;       /* 标识 */
+} MsgFramHdr; 
 
-// #define MSG_DATA_FRAM_HDR         0xAAAA
-// #pragma pack(push, 1)
-// typedef struct st_MsgFramHdr
-// {
-//     uint16_t usHdr;       /* 帧头 */
-//     uint16_t usLen;       /* 长度 */
-//     uint8_t ucSign;       /* 标识 */
-// } MsgFramHdr; 
+typedef struct st_MsgDataFramCrc
+{
+    uint16_t usCRC;      /* 校验 */
+} MsgDataFramCrc; 
+#pragma pack(pop)
+#endif
 
-// typedef struct st_MsgDataFramCrc
-// {
-//     uint16_t usCRC;      /* 校验 */
-// } MsgDataFramCrc; 
-// #pragma pack(pop)
-
-
-// fkz9/设备地址/5G/file/0x15
-// fkz9/设备地址/file/5G/0x16
-// fkz9/设备地址/5G/file/0x17
-// fkz9/设备地址/5G/OTA/0x18
-// fkz9/设备地址/OTA/5G /0x19
-// fkz9/设备地址/5G/OTA/0x1A
-// fkz9/设备地址/OTA/5G/0x1B
-// fkz9/设备地址/OTA/5G/0x1C
-// fkz9/设备地址/5G/OTA/0x1D
-
-#define MSG_SIGN_VOD_FILE_REQUEST       0x15
-#define MSG_SIGN_VOD_FILE_RESPONSE      0x16
-#define MSG_SIGN_VOD_FILE_TRANS_FB      0x17
-#define MSG_SIGN_VERSION_INFO_REQUEST   0x18
-#define MSG_SIGN_VERSION_INFO_RESPONSE  0x19
-#define NSG_SIGN_UPDATE_PACK_REQUEST    0x1A
-#define MSG_SIGN_UPDATE_PACK_RESPONSE   0x1B
-#define MSG_SIGN_UPDATE_REPORT_REQUEST  0x1C
-#define MSG_SIGN_UPDATE_REPORT_RESPONSE 0x1D
 
 #define MQTT_HEARTBEAT_REQUEST_TOPIC "/fkz9/%d/4G/CPU/0x15"
 #define MQTT_HEARTBEAT_RESPONSE_TOPIC "/fkz9/%d/4G/CPU/0x16"
@@ -69,6 +50,16 @@ typedef struct st_HeartBeatDataSeg
 } HeartBeatDataSeg;
 #pragma pack(pop)
 
+#if 0 //旧协议,暂不使用
+#define MSG_SIGN_VOD_FILE_REQUEST       0x15
+#define MSG_SIGN_VOD_FILE_RESPONSE      0x16
+#define MSG_SIGN_VOD_FILE_TRANS_FB      0x17
+#define MSG_SIGN_VERSION_INFO_REQUEST   0x18
+#define MSG_SIGN_VERSION_INFO_RESPONSE  0x19
+#define NSG_SIGN_UPDATE_PACK_REQUEST    0x1A
+#define MSG_SIGN_UPDATE_PACK_RESPONSE   0x1B
+#define MSG_SIGN_UPDATE_REPORT_REQUEST  0x1C
+#define MSG_SIGN_UPDATE_REPORT_RESPONSE 0x1D
 
 typedef enum em_DataType
 {
@@ -87,17 +78,6 @@ typedef enum em_UserPwdType
     USER_PWD_TYPE_UNKN = 0xFF
 } UPType;
 
-// #pragma pack(push, 1)
-// typedef struct st_UserPwdDataSeg
-// {
-//     DataType emDataType;
-//     uint16_t usDevAddr;     /* 0x0000 ～ 0x9999 */
-//     UPType   emUPType;
-//     char     cUser[17];
-//     char     uPwd[17];
-//     uint8_t  ucRsvd[3];
-// } UserPwdDataSeg;
-// #pragma pack(pop)
 
 typedef enum em_TransMode
 {
@@ -252,27 +232,7 @@ typedef struct st_UpdateReportRespDataSeg
     uint8_t  ucRsvd[2];
 } UpdateReportResp;
 #pragma pack(pop)
-
-// #pragma pack(push, 1)
-// typedef struct st_MsgConfirmDataSeg
-// {
-//     uint8_t ucFlag;
-//     DataType emDataType;
-//     uint8_t ucConfirmFlag;
-// } MsgConfirmDataSeg;
-// #pragma pack(pop)
-
-// #pragma pack(push, 1)
-// typedef struct st_BreakPointRetransDataSeg
-// {
-//     DataType emDataType;
-//     uint16_t usStartPos;
-//     uint8_t  ucDir;
-//     uint16_t usReqDataLen;
-//     uint8_t  ucRsvd[4];
-// } BreakPointRetransDataSeg;
-// #pragma pack(pop)
-
+#endif
 
 typedef struct st_Fkz9CommContext
 {

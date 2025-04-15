@@ -5,7 +5,7 @@
 #define URC_BUFFER_SIZE 256
 #define AT_MAX_RESPONSE_LEN 1024
 
-#define FX650_PID "0A04"
+#define FX650_PID "0A06"
 #define FX650_VID "2CB7"
 
 // 模组信息相关定义
