@@ -67,6 +67,8 @@ int main(int argc, char ** args)
     event_base_free(base);
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
+    led_destroy(&sys_run);
+    led_destroy(&sys_err);
 
     return 0;
 }
