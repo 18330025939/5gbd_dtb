@@ -42,8 +42,8 @@ int main(int argc, char ** args)
 
     led_init(&sys_run, SYS_RUN_LED_PIN_NUM);
     led_init(&sys_err, SYS_ERR_LED_PIN_NUM);
-    led_set_low(&sys_run);
-    led_set_low(&sys_err);
+    led_set_high(&sys_run);
+    led_set_high(&sys_err);
     // signal(SIGINT, signal_handler);
     clound_comm_init(cloud_ctx);
     fkz9_comm_init(fkz9_ctx);
