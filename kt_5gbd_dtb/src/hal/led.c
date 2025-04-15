@@ -7,7 +7,7 @@
 #include "led.h"
 
 // 初始化GPIO控制器
-static int GpioController_Init(GpioController *controller, int gpio_num) 
+static int GpioController_Init(GpioController *controller, char *gpio_num) 
 {
     char path[64];
     int fd_export, ret;
@@ -23,7 +23,7 @@ static int GpioController_Init(GpioController *controller, int gpio_num)
         return -1;
     }
 
-    ret = write(fd_export, &gpio_num, sizeof(gpio_num));
+    ret = write(fd_export, gpio_num, sizeof(gpio_num));
     if (ret < 0) {
         perror("Failed to export GPIO");
         close(fd_export);
@@ -32,15 +32,15 @@ static int GpioController_Init(GpioController *controller, int gpio_num)
     close(fd_export);
 
     // 打开方向文件
-    snprintf(path, sizeof(path), "%s%s%d%s", GPIO_SYSFS_PATH, "gpio", gpio_num, "/direction");
-    controller->fd_dir = open(path, O_WRONLY);
+    snprintf(path, sizeof(path), "%s%s%s%s", GPIO_SYSFS_PATH, "gpio", gpio_num, "/direction");
+    controller->fd_dir = open(path, O_RDWR);
     if (controller->fd_dir < 0) {
         perror("Failed to open direction");
         return -1;
     }
 
     // 打开值文件
-    snprintf(path, sizeof(path), "%s%s%d%s", GPIO_SYSFS_PATH, "gpio", gpio_num, "/value");
+    snprintf(path, sizeof(path), "%s%s%s%s", GPIO_SYSFS_PATH, "gpio", gpio_num, "/value");
     controller->fd_value = open(path, O_RDWR);
     if (controller->fd_value < 0) {
         perror("Failed to open value");
@@ -138,7 +138,7 @@ static void GpioController_Cleanup(GpioController *controller)
     }
 }
 
-int led_init(LedController *controller, int gpio_num) 
+int led_init(LedController *controller, char *gpio_num) 
 {
     // 初始化GPIO控制器
     if (GpioController_Init(&controller->gpio_controller, gpio_num) < 0) {
