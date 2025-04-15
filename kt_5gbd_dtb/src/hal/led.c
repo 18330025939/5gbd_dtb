@@ -129,7 +129,7 @@ static void GpioController_Cleanup(GpioController *controller)
     // 取消导出GPIO
     fd_unexport = open("/sys/class/gpio/unexport", O_WRONLY);
     if (fd_unexport >= 0) {
-        snprintf(path, sizeof(path), "%d", controller->gpio_num);
+        snprintf(path, sizeof(path), "%s", controller->gpio_num);
         int ret = write(fd_unexport, path, strlen(path) + 1);
         if(ret < 0) {
             perror("Failed to unexport GPIO");
