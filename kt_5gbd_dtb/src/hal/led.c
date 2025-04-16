@@ -91,7 +91,7 @@ static int GpioController_SetValue(GpioController *controller, int value)
 // 获取GPIO值
 static int GpioController_GetValue(GpioController *controller, int *value) 
 {
-    char buf;
+    unsigned char buf;
     int ret;
 
     if (controller->fd_value < 0) {
@@ -99,7 +99,7 @@ static int GpioController_GetValue(GpioController *controller, int *value)
         return -1;
     }
 
-    ret = read(controller->fd_value, buf, sizeof(buf));
+    ret = read(controller->fd_value, &buf, sizeof(buf));
     if (ret < 0) {
         perror("Failed to read value");
         return -1;
