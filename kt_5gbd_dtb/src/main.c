@@ -10,8 +10,6 @@
 #include "fkz9_comm.h"
 #include "led.h"
 
-#define SYS_RUN_LED_PIN_NUM "104"  //GPIO3_B0
-#define SYS_ERR_LED_PIN_NUM "103"  //GPIO3_A7 3*32+(1-1)*8+7
 
 void signal_handler(evutil_socket_t fd, short events, void *arg)
 {
@@ -38,12 +36,8 @@ int main(int argc, char ** args)
         free(cloud_ctx);
         exit(1);
     }
-    LedController sys_run, sys_err;
-
-    led_init(&sys_run, SYS_RUN_LED_PIN_NUM);
-    led_init(&sys_err, SYS_ERR_LED_PIN_NUM);
-    led_set_high(&sys_run);
-    led_set_high(&sys_err);
+    RUN_LED_INIT();
+    FAULT_LED_INIT();
     // signal(SIGINT, signal_handler);
     clound_comm_init(cloud_ctx);
     fkz9_comm_init(fkz9_ctx);
@@ -67,8 +61,7 @@ int main(int argc, char ** args)
     event_base_free(base);
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
-    led_destroy(&sys_run);
-    led_destroy(&sys_err);
+    FAULT_LED_ON();
 
 
 

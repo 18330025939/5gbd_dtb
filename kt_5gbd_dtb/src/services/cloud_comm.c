@@ -13,6 +13,7 @@
 #include "tcp_client.h"
 #include "ftp_handler.h"
 #include "cloud_comm.h"
+#include "led.h"
 
 extern SGData sg_data;
 
@@ -245,7 +246,8 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     if (arg == NULL) {
         return ;
     }
-
+    
+    RUN_LED_TOGGLE();
     CloundCommContext *ctx = (CloundCommContext *)arg;
     laneTo_read_nav_data(ctx->laneTo);
     memset(buf, 0, sizeof(buf));
