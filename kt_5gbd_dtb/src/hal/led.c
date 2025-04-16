@@ -3,6 +3,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <sys/ioctl.h>
 #include "led.h"
 
@@ -90,7 +91,7 @@ static int GpioController_SetValue(GpioController *controller, int value)
 // 获取GPIO值
 static int GpioController_GetValue(GpioController *controller, int *value) 
 {
-    uint8_t buf;
+    char buf;
     int ret;
 
     if (controller->fd_value < 0) {
@@ -104,7 +105,7 @@ static int GpioController_GetValue(GpioController *controller, int *value)
         return -1;
     }
 
-    *value = atoi(buf);
+    *value = atoi(&buf);
     printf("get_value_char %c\n, value %d", buf, *value);
     lseek(controller->fd_value, 0, SEEK_SET); // 重置文件指针位置
 
