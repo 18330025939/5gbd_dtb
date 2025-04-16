@@ -33,14 +33,14 @@ LedController fault_led;
 #define RUN_LED_INIT() \
     do { \
         led_init(&run_led, SYS_RUN_LED_PIN_NUM); \
-        led_set_low(&run_led) < 0); \
+        led_set_low(&run_led); \
     } while (0)
 
 // 初始化故障灯
 #define FAULT_LED_INIT() \
     do { \
         led_init(&fault_led, SYS_FAULT_LED_PIN_NUM); \
-        led_set_high(&fault_led) < 0); \
+        led_set_high(&fault_led); \
     } while (0)
 
 // 打开运行灯
