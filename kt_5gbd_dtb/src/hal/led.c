@@ -91,7 +91,7 @@ static int GpioController_SetValue(GpioController *controller, int value)
 // 获取GPIO值
 static int GpioController_GetValue(GpioController *controller, int *value) 
 {
-    unsigned char buf;
+    char buf;
     int ret;
 
     if (controller->fd_value < 0) {
