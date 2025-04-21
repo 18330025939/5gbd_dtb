@@ -136,7 +136,7 @@ int ftp_download(const char *url, const char *local_path, const char *user, cons
 
     res = curl_easy_perform(curl);
 
-    free(ftp_url);
+    // free(ftp_url);
     fclose(fp);
     curl_easy_cleanup(curl);
 

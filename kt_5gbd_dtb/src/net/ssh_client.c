@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <libssh/libssh.h>
 #include <libssh/sftp.h>
 #include "ssh_client.h"
@@ -41,7 +42,7 @@ static int SSHClient_Connect(SSHClient *client)
 static int SSHClient_Disconnect(SSHClient *client)
 {
     if (client->sftp) {
-        sftp_shutdown(client->sftp);
+        // sftp_shutdown(client->sftp);
         sftp_free(client->sftp);
         client->sftp = NULL;
     }
@@ -82,7 +83,7 @@ static int SSHClient_Execute(SSHClient *client, const char *command, char *outpu
         recv_bytes += nbytes;
     }
     output[recv_bytes] = '\0';
-    
+
     ssh_channel_send_eof(channel);
     ssh_channel_close(channel);
     ssh_channel_free(channel);
@@ -101,7 +102,7 @@ static int SSHClient_UploadFile(SSHClient *client, const char *local_path, const
         return -1;
     }
 
-    sftp_file remote_file = sftp_open(client->sftp, remote_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    sftp_file remote_file = sftp_open(client->sftp, remote_path, O_WRONLY | O_CREAT , 0644);
     if (remote_file == NULL) {
         fprintf(stderr, "Failed to open remote file: %s\n", ssh_get_error(client->session));
         fclose(local_file);
