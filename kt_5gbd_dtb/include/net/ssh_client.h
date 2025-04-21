@@ -1,6 +1,9 @@
 #ifndef __SSH_CLIENT_H
 #define __SSH_CLIENT_H
 
+#include <libssh/libssh.h>
+#include <libssh/sftp.h>
+
 typedef struct st_SSHClient SSHClient;
 
 struct st_SSHClient {

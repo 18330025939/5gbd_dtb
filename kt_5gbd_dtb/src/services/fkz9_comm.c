@@ -15,7 +15,7 @@
 
 
 #define WAVEDAT_FILE_PATH  "/upload/cktt/wavedat/"
-
+#if 0
 static int _system_(const char *cmd, char *pRetMsg, int msg_len)
 {
 
@@ -39,10 +39,8 @@ static int _system_(const char *cmd, char *pRetMsg, int msg_len)
 	pRetMsg[strlen(pRetMsg)-1] = '\0';
 
 	return 0;
-
 }
-
-
+#endif
 
 #if 0 //旧协议产生,暂不使用
 /* 数据终端盒到FKZ9 */
@@ -265,7 +263,7 @@ int proc_update_report_resp(void *arg)
 
 
 
-static void heartbeat_resp(void *arg)
+static void heartbeat_resp(uint8_t *arg)
 {
     HeartBeatDataSeg *hb_data = NULL;
 
@@ -291,7 +289,7 @@ static void on_message_cb(const char* topic, const void* payload, size_t payload
     }
 
     pHdr = (MsgFramHdr *)payload;
-    uint16_t crc = checkSum_8(payload, pHdr->usLen);
+    uint16_t crc = checkSum_8((uint8_t *)payload, pHdr->usLen);
     pCrc = (MsgDataFramCrc *)(payload + pHdr->usLen);
 
     if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != pCrc->usCRC) {
@@ -299,7 +297,7 @@ static void on_message_cb(const char* topic, const void* payload, size_t payload
     }
     switch (pHdr->ucSign) {
         case MQTT_MSG_SIGN_HEARTBEAT_RESP:
-            heartbeat_resp(payload);
+            heartbeat_resp((uint8_t *)payload);
             break;
         default:
         break;

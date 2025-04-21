@@ -177,7 +177,7 @@ void SSHClient_Destroy(SSHClient *client)
     free(client->username);
     free(client->password);
     if (client->sftp) {
-        sftp_shutdown(client->sftp);
+        // sftp_shutdown(client->sftp);
         sftp_free(client->sftp);
     }
     if (client->session) {

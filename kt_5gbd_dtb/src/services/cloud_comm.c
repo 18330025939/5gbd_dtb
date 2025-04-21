@@ -13,15 +13,16 @@
 #include "tcp_client.h"
 #include "ftp_handler.h"
 #include "cloud_comm.h"
+#include "fkz9_comm.h"
 #include "led.h"
 #include "ssh_client.h"
-#include "firmware_upgrader.h"
+#include "firmware_updater.h"
 
 extern SGData sg_data;
 extern struct FwUpdater __start_firmware_update;
 extern struct FwUpdater __stop_firmware_update;
 
-static uint16_t checkSum_8(uint8_t *buf, uint16_t len)
+uint16_t checkSum_8(uint8_t *buf, uint16_t len)
 {
     uint8_t i;
     uint16_t ret = 0;
@@ -61,7 +62,7 @@ static int _system_(const char *cmd, char *pRetMsg, int msg_len)
 	return 0;
 }
 
-static void get_system_time(Time *t)
+void get_system_time(Time *t)
 {
     time_t rawtime;
 	struct tm *timeinfo;
@@ -206,7 +207,6 @@ int get_ota_heartbeat_info(void *arg)
             pHb_info->total_mem, pHb_info->used_mem,
             pHb_info->up_time, pHb_info->cur_time);
     
-    char resp[256];
     ret = ssh_client.execute(&ssh_client, "./updater.sh r unit_info", 
             resp, sizeof(resp));
     if (ret) {
@@ -225,7 +225,7 @@ int get_ota_heartbeat_info(void *arg)
     int i = 0;
     token = strtok((char *)resp, ";");
     while (token != NULL) {
-        sscanf(token, "%[^:]:%[^,],%s"), pHb_info->units[i].unit_name,
+        sscanf(token, "%[^:]:%[^,],%s", pHb_info->units[i].unit_name,
                 pHb_info->units[i].sw_ver, pHb_info->units[i].hw_ver);
         i++;
         token = strtok(NULL, ";");
@@ -258,21 +258,22 @@ int get_ota_heartbeat_info(void *arg)
 cJSON *create_unit_info_object(UnitInfo * unit_info, uint8_t type)
 {
     cJSON *obj = NULL;
-    char version[20];
+    char version[64];
 
     obj = cJSON_CreateObject();
     if (type == 1) {
         cJSON_AddStringToObject(obj, "software", unit_info->unit_name);
+        snprintf(version, sizeof(version), "V%s", unit_info->sw_ver);
     } else {
         cJSON_AddStringToObject(obj, "hardware", unit_info->unit_name);
+        snprintf(version, sizeof(version), "V%s", unit_info->hw_ver);
     }
-    snprintf(version, sizeof(version), "V%s", unit_info->unit_ver);
     cJSON_AddStringToObject(obj, "version", version);
     
     return obj;
 }
 
-cJSON *create_hw_unit_info_array(uint8_t num, UnitInfo* info, uint8_t type)
+cJSON *create_unit_info_array(uint8_t num, UnitInfo* info, uint8_t type)
 {
     cJSON *array = NULL;
     cJSON *item = NULL;
@@ -304,13 +305,13 @@ int create_ota_heartbeat_data(char *data)
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     // sprintf(str, "%hu", heart_beat.dev_addr);
     cJSON_AddStringToObject(root, "deviceAddress", heart_beat.dev_addr);
-    cJSON_AddStringToObject(root, "usageCpu", heart_beat.usage_cpu);
-    cJSON_AddStringToObject(root, "usageMemory", heart_beat.usage_mem);
+    cJSON_AddStringToObject(root, "usageCpu", heart_beat.cpu_info);
+    cJSON_AddStringToObject(root, "usageMemory", heart_beat.used_mem);
     cJSON_AddStringToObject(root, "totalMemory", heart_beat.total_mem);
-    cJSON_AddStringToObject(root, "usageDisk", heart_beat.usage_disk);
+    cJSON_AddStringToObject(root, "usageDisk", heart_beat.used_disk);
     cJSON_AddStringToObject(root, "totalDisk", heart_beat.total_disk);
     cJSON_AddStringToObject(root, "upTime", heart_beat.up_time);
-    cJSON_AddStringToObject(root, "systemTime", heart_beat.sys_time);
+    cJSON_AddStringToObject(root, "systemTime", heart_beat.cur_time);
     cJSON_AddStringToObject(root, "extendInfo", "");
     unit_info = create_unit_info_array(heart_beat.unit_num, heart_beat.units, 0);
     cJSON_AddItemToObject(root, "hardwareList", unit_info);
@@ -342,10 +343,10 @@ int create_ota_report_data(char *data)
     cJSON_AddStringToObject(root, "deviceAddress", buf);
     sprintf(buf, "%hu", report.task_id);
     cJSON_AddStringToObject(root, "taskId", buf);
-    TIME_TO_STR(&report.up_time, buf);
-    cJSON_AddStringToObject(root, "executionTime", buf);
-    TIME_TO_STR(&report.report_time, buf);
-    cJSON_AddStringToObject(root, "executionReport", buf);
+    // TIME_TO_STR(&report.time, buf);
+    cJSON_AddStringToObject(root, "executionTime", report.time);
+    // TIME_TO_STR(&report.report, buf);
+    cJSON_AddStringToObject(root, "executionReport", report.report);
     data = cJSON_Print(root);
     cJSON_Delete(root);
 
@@ -355,18 +356,18 @@ int create_ota_report_data(char *data)
 
 void *do_upgrade_entry(void *arg)
 {
-    struct FwUpdater *start = __start_firmware_update;
+    struct FwUpdater *start = &__start_firmware_update;
     struct FwUpdater *fw_up = NULL;
     struct List *up_list = NULL;
     struct ListNode *pNode = NULL;
     struct UpgradeTask *pTask = NULL;
 
-    if (up_list.count > 0) {
+    if (up_list->count > 0) {
         return NULL;
     }
 
-    for (; start != __stop_firmware_update; start++) {
-        if (strcmp(start->name, "fkz9") == 0) {
+    for (; start != &__stop_firmware_update; start++) {
+        if (strcmp(start->dev_name, "fkz9") == 0) {
             fw_up = start;
             break;
         }
@@ -386,6 +387,8 @@ void *do_upgrade_entry(void *arg)
             }
         }
     }
+
+    return NULL;
 }
 
 int ota_upgrade_pack_download(struct List *task_list)
@@ -400,14 +403,14 @@ int ota_upgrade_pack_download(struct List *task_list)
         return -1;
     }
 
-    if (task_list.count > 0) {
+    if (task_list->count > 0) {
         while((pNode = List_GetHead(task_list)) != NULL) {
             pTask = (struct st_DownTask *)pNode->arg;
 
             GetFileName(pTask->url, name);
-            snprintf(mkdir, sizeof(dir), "mkdir -p /upgrade/%d", pTask->task_id);
+            snprintf(mkdir, sizeof(mkdir), "mkdir -p /upgrade/%d", pTask->id);
             _system_(mkdir, NULL, 0);
-            snprintf(path, sizeof(path), "/upgrade/%d/%s", pTask->task_id, name);
+            snprintf(path, sizeof(path), "/upgrade/%d/%s", pTask->id, name);
             int ret = ftp_download(pTask->url, path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
             if (!ret) {
                 //通知去执行更新
@@ -465,7 +468,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
                     strcpy(task->type,type_obj->valuestring);
                     List_Insert(task_list, (void*)task);
 
-                    printf("Task ID: %d, Artifact URL: %s, Artifact MD5: %s, Task Type: %d\n", task->id, task->url, task->md5, task->type);
+                    printf("Task ID: %d, Artifact URL: %s, Artifact MD5: %s, Task Type: %s\n", task->id, task->url, task->md5, task->type);
                 }
             }
         }
@@ -489,7 +492,7 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
     printf("%s\n", resp);
 
     ctx = (CloundCommContext *)arg;
-    int ret = ota_heartbeat_resp_parse(ctx->task_list, resp);
+    ret = ota_heartbeat_resp_parse(&ctx->down_task, resp);
     if (ret == 0) {
         //通知去下载
     }   
@@ -589,7 +592,7 @@ void _func_wave_file_req()
     uint8_t buf[64];
 
 
-    trans_file_from_fkz9();
+    // trans_file_from_fkz9();
     pHdr = (MsgFramHdr *)buf;
     pHdr->usHdr = MSG_SIGN_WAVE_FILE_REQ;
     pHdr->ucSign = MSG_SIGN_WAVE_FILE_RESP;
@@ -598,7 +601,7 @@ void _func_wave_file_req()
     pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr));
     pCrc->usCRC = checkSum_8((uint8_t *)pHdr, pHdr->usLen);
 
-    client->ops->send(client, buf, pHdr->usLen + sizeof(MsgDataFramCrc));
+    // client->ops->send(client, buf, pHdr->usLen + sizeof(MsgDataFramCrc));
 
 
 }
@@ -615,7 +618,7 @@ void proc_message_cb(char *buf, size_t len)
     printf("proc_message_cb %s, %ld\n", buf, len);
 
     pHdr = (MsgFramHdr *)buf;
-    uint16_t crc = checkSum_8(buf, pHdr->usLen);
+    uint16_t crc = checkSum_8((uint8_t *)buf, pHdr->usLen);
     pCrc = (MsgDataFramCrc *)(buf + pHdr->usLen);
 
     if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != pCrc->usCRC) {
@@ -700,7 +703,7 @@ void clound_comm_init(CloundCommContext *ctx)
     ctx->running = true;
     init_queue(&ctx->queue, 512);
     List_Init_Thread(&ctx->ev_list);
-    List_Init_Thread(&ctx->task_list);
+    List_Init_Thread(&ctx->down_task);
 
     client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
     client->ops->register_cb(client, proc_message_cb);

@@ -36,12 +36,12 @@ struct FwUpdater
     int (*update_cb)(void *);
 } __attribute__((aligned(8)));
 
-#define REGISTER_FIRMWARE_UPDATE_INTERFACE(name, trans, update, update_cb)\
+#define REGISTER_FIRMWARE_UPDATE_INTERFACE(name, trans, update, up_cb)\
     __attribute__((used, __section__("firmware_update"))) static struct FwUpdater firmware_update_##name = { \
         .dev_name = #name, \
         .trans_func = trans, \
         .update_func = update, \
-        .update_cb = update_cb \
+        .update_cb = up_cb \
     }
 
 #endif
