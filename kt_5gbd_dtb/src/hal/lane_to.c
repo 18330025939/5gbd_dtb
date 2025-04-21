@@ -468,8 +468,6 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
 
     ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
     if (bytes_read > 0) {
-        // printf("laneTo read byte %ld\n", bytes_read);
-        // printf("%s\n", buffer);
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);
         if (start != NULL && end != NULL && end > start) {

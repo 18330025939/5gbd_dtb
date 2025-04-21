@@ -10,12 +10,12 @@
 #define MQTT_SERVER_USERNAME "cktt"
 #define MQTT_SERVER_PASSWORD "cktt"
 
-#define MQTT_CLIENT_ID  "bd_box"
+#define MQTT_CLIENT_ID     "RT-A100"
 
-#define FTP_USERNAME   "cktt"
-#define FTP_PASSWORD   "cktt"
-#define FTP_CTRL_PORT       21
-#define FTP_DATA_PORT       20
+// #define FTP_USERNAME       "cktt"
+// #define FTP_PASSWORD       "cktt"
+// #define FTP_CTRL_PORT       21
+// #define FTP_DATA_PORT       20
 
 #if 0 //在其他头文件有定义
 #define MSG_DATA_FRAM_HDR         0xAAAA
@@ -34,19 +34,19 @@ typedef struct st_MsgDataFramCrc
 #pragma pack(pop)
 #endif
 
+/* */
+#define MQTT_HEARTBEAT_REQ_TOPIC   "/5G/4G/0x21"
+#define MQTT_HEARTBEAT_RESP_TOPIC  "/4G/5G/0x22"
 
-#define MQTT_HEARTBEAT_REQUEST_TOPIC "/fkz9/%d/4G/CPU/0x15"
-#define MQTT_HEARTBEAT_RESPONSE_TOPIC "/fkz9/%d/4G/CPU/0x16"
-
-#define MSG_SIGN_HEARTBEAT_REQUEST      0x15
-#define MSG_SIGN_HEARTBEAT_RESPONSE     0x16
+#define MQTT_MSG_SIGN_HEARTBEAT_REQ    0x15
+#define MQTT_MSG_SIGN_HEARTBEAT_RESP   0x16
 
 #pragma pack(push, 1)
 typedef struct st_HeartBeatDataSeg
 {
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
     Time     stTime;
-    uint8_t  ucRsvd[8];
+    uint8_t  ucRsvd[9];
 } HeartBeatDataSeg;
 #pragma pack(pop)
 
@@ -238,13 +238,22 @@ typedef struct st_Fkz9CommContext
 {
     AsyncMQTTClient *mqtt_client;
     ThreadSafeQueue tx_queue;
-    ThreadSafeQueue re_queue;
+    ThreadSafeQueue rx_queue;
     pthread_t send_thread;
     uint16_t fkz9_dev_addr;
     pthread_t timer_thread;
     struct event_base *base;
     struct List ev_list;
 } Fkz9CommContext;
+
+struct UnitCorrInfo
+{
+    char *name;
+    char *sw_str;
+    char *hw_str;
+} ;
+
+//  /upload/fkz9/wavedat/年月日/年月日时/点播文件名称
 
 void fkz9_comm_init(Fkz9CommContext *ctx);
 void fkz9_comm_uninit(Fkz9CommContext *ctx);

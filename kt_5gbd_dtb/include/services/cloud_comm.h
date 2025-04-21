@@ -7,11 +7,20 @@
 #include "list.h"
 
 
-#define CLOUD_SERVER_IP "152.136.10.158"
+#define CLOUD_SERVER_IP   "152.136.10.158"
 #define CLOUD_SERVER_PORT 3901
+#define CLOUD_SERVER_USERNAME "123"
+#define CLOUD_SERVER_PASSWORD "123"
 
 #define OTA_HEARTBEAT_URL  "https://ota.cktt.com.cn/ota-server/heartbeat"
-#define OTA_REPORT_URL  "/ota-server/submitReport"
+#define OTA_UPREPORT_URL   "/ota-server/submitReport"
+
+/* WAVE文件路径格式： WAVE_FILE_PATH + 年月日 + / + 年月日时 + / + WAVE文件 */
+#define WAVE_FILE_PATH "/upload/fkz9/wavedat/"
+
+/* OTA升级报告路径格式： OTA_UPREPORT_PATH + task_id + / + filename*/
+#define OTA_UPREPORT_PATH "/upgrade/cktt/upgradereport/"
+
 
 #define MSG_DATA_FRAM_HDR         0xAAAA
 #pragma pack(push, 1)
@@ -46,10 +55,10 @@ typedef struct st_Time
                 (t)->ucHour, (t)->ucMinute, (t)->ucSecond); \
     } while (0)
 
-#define  MSG_SIGN_TRANS_NAV_DATA      0xF0
-// #define  MSG_SIGN_GNGGA_DATA   0xF1
-// #define  MSG_SIGN_GNRMC_DATA   0xF2
-// #define  MSG_SIGN_GNATT_DATA   0xF3
+/* 云平台对设备端是请求，设备端对云平台是响应*/
+#define  MSG_SIGN_WAVE_FILE_REQ      0xAE
+#define  MSG_SIGN_WAVE_FILE_RESP     0xAF
+#define  MSG_SIGN_TRANS_NAV_DATA     0xF0
 
 /* 导航数据段 */
 #pragma pack(push, 1)
@@ -108,36 +117,38 @@ typedef struct st_MsgCommContext
     struct List ev_list;
     // struct EventList *ev_list;
     LaneToCtx *laneTo;
+    struct List down_task;
+    struct List upgrade_task;
 } CloundCommContext;
 
 typedef struct st_UnitInfo
 {
     char unit_name[20];
-    char unit_ver[20];
+    char hw_ver[20];
+    char sw_ver[20];
 } UnitInfo;
 
+#define STRING_LEN_MAX 64
 typedef struct st_OtaHeartBeat
 {
-    uint16_t dev_addr;
-    char *usage_cpu;
-    uint32_t usage_mem;
-    uint32_t total_mem;
-    uint32_t usage_disk;
-    uint32_t total_disk;
-    char *up_time;
-    char *sys_time;
-    UnitInfo *hw_unit;
-    uint8_t sw_unit_num;
-    UnitInfo *sw_unit;
-    uint16_t hw_unit_num;
+    char dev_addr[STRING_LEN_MAX];
+    char cpu_info[STRING_LEN_MAX];
+    char used_mem[STRING_LEN_MAX];
+    char total_mem[STRING_LEN_MAX];
+    char used_disk[STRING_LEN_MAX];
+    char total_disk[STRING_LEN_MAX];
+    char up_time[STRING_LEN_MAX];
+    char cur_time[STRING_LEN_MAX];
+    UnitInfo *units;
+    uint16_t unit_num;
 } OtaHeartBeat;
 
 typedef struct st_OtaReport
 {
     uint16_t dev_addr;
     uint16_t task_id;
-    Time up_time;
-    Time report_time;
+    char *time;
+    char *report;
 } OtaReport;
 
 typedef enum 
@@ -148,6 +159,21 @@ typedef enum
     EVENT_TYPE_SIGNAL,
     EVENT_TYPE_MAX
 } EventType;
+
+typedef struct st_DownTask
+{
+    uint16_t id;
+    char url[128];
+    char md5[64];
+    char type[20];
+} DownTask;
+
+
+typedef struct st_DownTaskList
+{
+    uint16_t task_num;
+    struct st_DownTask *task;
+} DownTaskList;
 
 // void (*task_cb)(evutil_socket_t, short, void*);
 

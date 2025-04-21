@@ -29,6 +29,7 @@ struct st_TcpClient
     pthread_t conn_thread;
     pthread_t send_thread;
     ThreadSafeQueue tx_queue;
+    // ThreadSafeQueue rx_queue;
     TcpClientOps *ops;
     void (*on_message)(char *buf, size_t len);
 } ;

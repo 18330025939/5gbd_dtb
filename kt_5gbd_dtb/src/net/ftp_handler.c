@@ -93,7 +93,7 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
 }
 
 // FTP下载文件
-int ftp_download(const char *url, const char *local_path, const char *remote_path, const char *user, const char *pass) 
+int ftp_download(const char *url, const char *local_path, const char *user, const char *pass) 
 {
     CURL *curl;
     CURLcode res;
@@ -112,16 +112,16 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
         return -1;
     }
 
-    char *ftp_url = malloc(strlen(url) + strlen(remote_path) + 2);
-    if (!ftp_url) {
-        fprintf(stderr, "Memory allocation failed\n");
-        fclose(fp);
-        curl_easy_cleanup(curl);
-        return -1;
-    }
-    sprintf(ftp_url, "%s/%s", url, remote_path);
+    // char *ftp_url = malloc(strlen(url) + strlen(remote_path) + 2);
+    // if (!ftp_url) {
+    //     fprintf(stderr, "Memory allocation failed\n");
+    //     fclose(fp);
+    //     curl_easy_cleanup(curl);
+    //     return -1;
+    // }
+    // sprintf(ftp_url, "%s/%s", url, remote_path);
 
-    curl_easy_setopt(curl, CURLOPT_URL, ftp_url);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, download_write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);

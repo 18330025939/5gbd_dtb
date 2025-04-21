@@ -11,6 +11,7 @@
 #include "ftp_handler.h"
 #include "cloud_comm.h"
 #include "fkz9_comm.h"
+#include "ssh_client.h"
 
 
 #define WAVEDAT_FILE_PATH  "/upload/cktt/wavedat/"
@@ -42,7 +43,8 @@ static int _system_(const char *cmd, char *pRetMsg, int msg_len)
 }
 
 
-#if 0 //就协议产生,暂不使用
+
+#if 0 //旧协议产生,暂不使用
 /* 数据终端盒到FKZ9 */
 int proc_vod_file_req(void *arg)
 {
@@ -258,17 +260,50 @@ int proc_update_report_resp(void *arg)
 }
 
 #endif
+
+
+
+
+
+static void heartbeat_resp(void *arg)
+{
+    HeartBeatDataSeg *hb_data = NULL;
+
+    if (arg == NULL) {
+        return;
+    }
+
+    hb_data = (HeartBeatDataSeg*)((uint8_t*)arg + sizeof(MsgFramHdr));
+    if (hb_data->usDevAddr == 0) {
+        return;
+    }
+
+    return;
+}
+
 static void on_message_cb(const char* topic, const void* payload, size_t payload_len)
 {
-    // AsyncMQTTClient *mqtt_client= (AsyncMQTTClient*)ctx;
+    MsgFramHdr *pHdr = NULL;
+    MsgDataFramCrc *pCrc = NULL;
     
     if (topic == NULL && payload == NULL && payload_len == 0) {
         return;
     }
 
-    // for () {
+    pHdr = (MsgFramHdr *)payload;
+    uint16_t crc = checkSum_8(payload, pHdr->usLen);
+    pCrc = (MsgDataFramCrc *)(payload + pHdr->usLen);
 
-    // }
+    if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != pCrc->usCRC) {
+        return ;
+    }
+    switch (pHdr->ucSign) {
+        case MQTT_MSG_SIGN_HEARTBEAT_RESP:
+            heartbeat_resp(payload);
+            break;
+        default:
+        break;
+    }
 }
 
 static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
@@ -287,7 +322,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     mqtt_client = ctx->mqtt_client;
     hdr = (MsgFramHdr*)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR;
-    hdr->ucSign = MSG_SIGN_HEARTBEAT_REQUEST;
+    hdr->ucSign = MQTT_MSG_SIGN_HEARTBEAT_REQ;
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg);
     hb_data = (HeartBeatDataSeg*)(hdr + 1);
     hb_data->usDevAddr = 0;
@@ -297,37 +332,12 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
 
     if (mqtt_client->is_conn) {
         char topic[50] = {0};
-        snprintf(topic, sizeof(topic), "fkz9/%d%s", ctx->fkz9_dev_addr, MQTT_HEARTBEAT_REQUEST_TOPIC);
+        snprintf(topic, sizeof(topic), "fkz9/%d%s", ctx->fkz9_dev_addr, MQTT_HEARTBEAT_REQ_TOPIC);
         mqtt_client->ops->publish(mqtt_client, topic, buf, hdr->usLen + sizeof(MsgDataFramCrc));
     }
 
     return;
 }
-
-static void heartbeat_resp_task_cb(evutil_socket_t fd, short event, void *arg)
-{
-    HeartBeatDataSeg *hb_data = NULL;
-
-    if (arg == NULL) {
-        return;
-    }
-
-    hb_data = (HeartBeatDataSeg*)((uint8_t*)arg + sizeof(MsgFramHdr));
-    if (hb_data->usDevAddr == 0) {
-        return;
-    }
-
-    return;
-}
-
-// void *send_msg_entry(void *arg)
-// {
-//     Fkz9CommContext *ctx = (Fkz9CommContext*)arg;
-//     while (1) {
-//         ctx->mqtt_client.publish(&ctx->mqtt_client, topic, payload, payload_len);
-//     }
-
-// }
 
 static void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
 {
@@ -384,7 +394,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
 
     init_queue(&ctx->tx_queue, MAX_MSG_SIZE);
     List_Init_Thread(&ctx->ev_list);
-    // init_queue(ctx->re_queue, MAX_MSG_SIZE);
+    // init_queue(ctx->rx_queue, MAX_MSG_SIZE);
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
     mqtt_client = mqtt_client_create(url, MQTT_CLIENT_ID, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
     mqtt_client->ops->register_cb(mqtt_client, on_message_cb);

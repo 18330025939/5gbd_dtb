@@ -4,7 +4,7 @@ CFLAGS += $(KT_5GBD_DTB_BUILD)
 CROSS_COMPILE ?= 
 CC=$(CROSS_COMPILE)gcc
 LDFLAGS += -fPIC
-LIBS += -L../lib -lpub -lusb-1.0 -lcurl -levent -levent_pthreads -lpthread -L$(KT_5GBD_DTB)/third_party/mqtt/lib -lpaho-mqtt3a
+LIBS += -L../lib -lpub -lusb-1.0 -lcurl -lssh -levent -levent_pthreads -lpthread -L$(KT_5GBD_DTB)/third_party/mqtt/lib -lpaho-mqtt3a
 EXEC = 5GBD_MODULE
 
 THIRD_PARTY = $(KT_5GBD_DTB)/third_party/json/obj/cJSON.o
@@ -22,9 +22,10 @@ SRC += $(KT_5GBD_DTB)/src/net/tcp_server.o
 SRC += $(KT_5GBD_DTB)/src/net/mqtt_client.o
 SRC += $(KT_5GBD_DTB)/src/net/ftp_handler.o
 SRC += $(KT_5GBD_DTB)/src/net/tcp_client.o
+SRC += $(KT_5GBD_DTB)/src/net/ssh_client.o
 SRC += $(KT_5GBD_DTB)/src/services/cloud_comm.o
 SRC += $(KT_5GBD_DTB)/src/services/fkz9_comm.o
-
+SRC += $(KT_5GBD_DTB)/src/services/firmware_updater.o
 
 OBJ = $(addprefix obj/,$(notdir $(SRC)))
 

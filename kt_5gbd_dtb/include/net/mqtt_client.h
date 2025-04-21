@@ -3,7 +3,7 @@
 
 #include <MQTTAsync.h>
 
-#define QOS 1
+#define QOS 0
 #define KEEP_ALIVE_TIME 20
 
 typedef struct st_AsyncMQTTClient AsyncMQTTClient;

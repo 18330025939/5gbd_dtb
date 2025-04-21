@@ -41,11 +41,15 @@ static void tcp_client_read_cb(struct bufferevent* bev, void* arg)
 {
     TcpClient* client = (TcpClient*)arg;
     char msg[1024];
+
     size_t len = bufferevent_read(bev, msg, sizeof(msg));
-    msg[len] = '\0';
-    printf("Received: %s\n", msg);
-    if (client->on_message) {
-        client->on_message(msg, len);
+    if (len > 0) {
+        // enqueue(client->rx_queue, msg, len);
+        // msg[len] = '\0';  
+        // printf("Received: %s\n", msg);
+        if (client->on_message) {
+            client->on_message(msg, len);
+        }
     }
 }
 
@@ -122,10 +126,10 @@ void *tcp_client_send_entry(void *arg)
     while (client->is_connected) {
         int ret = dequeue(&client->tx_queue, buf, &len);
         if (ret) {
+            // sleep(100);
             continue;
         }
         bufferevent_write(client->bev, buf, len);
-        sleep(100);
     }
 
     return NULL;
@@ -179,6 +183,7 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
     client->is_connected = false;
     client->ops = &tcp_client_ops;
     init_queue(&client->tx_queue, 1024);
+    // init_queue(&client->rx_queue, 1024);
     return client;
 }
 
@@ -186,6 +191,7 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 void tcp_client_destroy(TcpClient* client) 
 {
     clean_queue(&client->tx_queue);
+    // clean_queue(&client->rx_queue);
     free(client->server_ip);
     free(client);
 }
