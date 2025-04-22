@@ -55,30 +55,30 @@ function upgrade()
         echo "Excute upgrade failed $res"
     fi
     
-    time=`date "+%Y-%m-%d %H:%M:%S"`
-    report=`base64 $2 | tr -d '\n\r'`
-    ota_report "$devaddr" "$1" "$time" "$report"
-    res=$?
-    if [ $res -ne 0 ]; then
-        count=0
-        while [ $count -lt 5 ]
-        do
-           count=`expr $count + 1`
-           ota_report "$devaddr" "$1" "$time" "$report"
-           res=$?
-           if [ $res -eq 0 ]; then
-               echo "retry send ota report success"
-               break
-           fi
-           sleep 20
-        done
-    else
-        echo "send ota report success"
-    fi
+    # time=`date "+%Y-%m-%d %H:%M:%S"`
+    # report=`base64 $2 | tr -d '\n\r'`
+    # ota_report "$devaddr" "$1" "$time" "$report"
+    # res=$?
+    # if [ $res -ne 0 ]; then
+    #     count=0
+    #     while [ $count -lt 5 ]
+    #     do
+    #        count=`expr $count + 1`
+    #        ota_report "$devaddr" "$1" "$time" "$report"
+    #        res=$?
+    #        if [ $res -eq 0 ]; then
+    #            echo "retry send ota report success"
+    #            break
+    #        fi
+    #        sleep 20
+    #     done
+    # else
+    #     echo "send ota report success"
+    # fi
     
-    if [ $count -eq 5 -a $res -ne 0 ]; then
-        touch /home/cktt/script/$1_ota_report
-    fi
+    # if [ $count -eq 5 -a $res -ne 0 ]; then
+    #     touch /home/cktt/script/$1_ota_report
+    # fi
 }
 
 #检查ota_mission文件是否存在，如果存在执行升级操作
@@ -119,7 +119,62 @@ function download_ota_file()
     echo "download ota file $filename success" >> $file 2>&1
 }
 
-function process_ota_task()
+# function process_ota_task()
+# {
+#     $task_id=$1
+#     $task_url=$2
+#     $task_md5=$3
+#     $task_type=$4
+
+#     create_dir $task_id
+#     file=`create_file $task_id $devaddr $task_id`
+#     time=`date "+%Y-%m-%d %H:%M:%S"`
+#     echo "$time upgrade mission $task_id" >> $file 2>&1
+    
+#     filename=`echo $task_url | awk -F '/' '{print $NF}'`
+#     extension=${filename#*.}
+#     if [ "$extension" != "tar.gz" ]; then
+
+#         echo "task $task_id file extension is not tar.gz" >> $file 2>&1
+#         time=`date "+%Y-%m-%d %H:%M:%S"`
+#         report=`base64 $file | tr -d '\n\r'`
+#         ota_report "$devaddr" "$task_id" "$time" "$report"e
+#         continue
+#     fi
+    
+#     echo "start to check $filename md5" >> $file 2>&1
+#     md5_res=$(md5sum /upgrade/$task_id/$filename | cut -d ' ' -f 1)
+#     if [ "$task_md5" != "$md5_res" ]; then
+#         echo "md5 not match, do not excute task $task_id, ota failed" >> $file 2>&1
+#         time=`date "+%Y-%m-%d %H:%M:%S"`
+#         report=`base64 $file | tr -d '\n\r'`
+#         res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
+#         if [ $? -ne 0 ]; then
+#             touch /home/cktt/script/"$task_id"_ota_report
+#         fi 
+#         #rm /upgrade/$task_id/$filename
+#         continue
+#     fi
+#     echo "end to check $filename md5" >> $file 2>&1
+#     if [ "$task_type" = "AT_ONCE" ]; then
+#         echo "start the ota task now" >> $file 2>&1
+#         upgrade $task_id "$file"
+#     else
+#         if [ ! -f "$mission_file" ]; then
+#             touch "$mission_file"
+#         fi
+#         echo "start the ota task when next reboot" >> $file 2>&1
+#         time=`date "+%Y-%m-%d %H:%M:%S"`
+#         report=`base64 $file | tr -d '\n\r'`
+#         res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
+#         if [ $res -ne 0 ]; then
+#             touch /home/cktt/script/"$task_id"_ota_report
+#         fi 
+#         echo $task_id $file >> $mission_file
+#     fi
+# }
+
+function get_ota_report_info()
 {
     $task_id=$1
     $task_url=$2
@@ -130,7 +185,7 @@ function process_ota_task()
     file=`create_file $task_id $devaddr $task_id`
     time=`date "+%Y-%m-%d %H:%M:%S"`
     echo "$time upgrade mission $task_id" >> $file 2>&1
-    
+
     filename=`echo $task_url | awk -F '/' '{print $NF}'`
     extension=${filename#*.}
     if [ "$extension" != "tar.gz" ]; then
@@ -138,40 +193,45 @@ function process_ota_task()
         echo "task $task_id file extension is not tar.gz" >> $file 2>&1
         time=`date "+%Y-%m-%d %H:%M:%S"`
         report=`base64 $file | tr -d '\n\r'`
-        ota_report "$devaddr" "$task_id" "$time" "$report"e
-        continue
-    fi
-    
-    echo "start to check $filename md5" >> $file 2>&1
-    md5_res=$(md5sum /upgrade/$task_id/$filename | cut -d ' ' -f 1)
-    if [ "$task_md5" != "$md5_res" ]; then
-        echo "md5 not match, do not excute task $task_id, ota failed" >> $file 2>&1
-        time=`date "+%Y-%m-%d %H:%M:%S"`
-        report=`base64 $file | tr -d '\n\r'`
-        res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
-        if [ $? -ne 0 ]; then
-            touch /home/cktt/script/"$task_id"_ota_report
-        fi 
-        #rm /upgrade/$task_id/$filename
-        continue
-    fi
-    echo "end to check $filename md5" >> $file 2>&1
-    if [ "$task_type" = "AT_ONCE" ]; then
-        echo "start the ota task now" >> $file 2>&1
-        upgrade $task_id "$file"
+        # ota_report "$devaddr" "$task_id" "$time" "$report"e
+        # continue
     else
-        if [ ! -f "$mission_file" ]; then
-            touch "$mission_file"
+        echo "start to check $filename md5" >> $file 2>&1
+        md5_res=$(md5sum /upgrade/$task_id/$filename | cut -d ' ' -f 1)
+        if [ "$task_md5" != "$md5_res" ]; then
+            echo "md5 not match, do not excute task $task_id, ota failed" >> $file 2>&1
+            time=`date "+%Y-%m-%d %H:%M:%S"`
+            report=`base64 $file | tr -d '\n\r'`
+            # res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
+            # if [ $? -ne 0 ]; then
+            #     touch /home/cktt/script/"$task_id"_ota_report
+            # fi 
+            #rm /upgrade/$task_id/$filename
+            # continue
+        else
+            echo "end to check $filename md5" >> $file 2>&1
+            if [ "$task_type" = "AT_ONCE" ]; then
+                echo "start the ota task now" >> $file 2>&1
+                upgrade $task_id "$file"
+                time=`date "+%Y-%m-%d %H:%M:%S"`
+                report=`base64 $2 | tr -d '\n\r'`
+            else
+                if [ ! -f "$mission_file" ]; then
+                    touch "$mission_file"
+                fi
+                echo "start the ota task when next reboot" >> $file 2>&1
+                time=`date "+%Y-%m-%d %H:%M:%S"`
+                report=`base64 $file | tr -d '\n\r'`
+                # res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
+                # if [ $res -ne 0 ]; then
+                #     touch /home/cktt/script/"$task_id"_ota_report
+                # fi 
+                echo $task_id $file >> $mission_file
+            fi
         fi
-        echo "start the ota task when next reboot" >> $file 2>&1
-        time=`date "+%Y-%m-%d %H:%M:%S"`
-        report=`base64 $file | tr -d '\n\r'`
-        res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
-        if [ $res -ne 0 ]; then
-            touch /home/cktt/script/"$task_id"_ota_report
-        fi 
-        echo $task_id $file >> $mission_file
     fi
+
+    echo "$devaddr,$task_id,$time,$report,"
 }
 
 function get_heartbeat_base_info()
@@ -244,22 +304,35 @@ db_res=`psql -U cktt  -d fkz9 -t -c "set search_path=obc; select dev_addr from d
 devaddr=`printf "%04d" $db_res`
 boot_time=$(cut -d. -f1 /proc/uptime)
 
-echo "start to check ota failed report"
-ota_report_check
-echo "end to check ota failed report"
+# echo "start to check ota failed report"
+# ota_report_check
+# echo "end to check ota failed report"
 
-if [ $boot_time -gt 120 -a $boot_time -lt 240 ]; then
-    echo "ota upgrade check start"
-    ota_upgrade_check
-    echo "ota upgrade check end"
-fi
+# if [ $boot_time -gt 120 -a $boot_time -lt 240 ]; then
+#     echo "ota upgrade check start"
+#     ota_upgrade_check
+#     echo "ota upgrade check end"
+# fi
 
-echo "process heartbeat start"
-ota_heartbeat
-echo "process heartbeat end"
-#脚本执行完成后备份执行过程
-if [ -f "$log_file" ]; then
-    mv "$log_file" "$log_file_bak"
-fi
+# echo "process heartbeat start"
+# ota_heartbeat
+# echo "process heartbeat end"
+# #脚本执行完成后备份执行过程
+# if [ -f "$log_file" ]; then
+#     mv "$log_file" "$log_file_bak"
+# fi
 
-
+case $1 in
+    base_info)
+        get_heartbeat_base_info
+        ;;
+    unit_info)
+        get_heartbeat_unit_info
+        ;;
+    report_info)
+        get_ota_report_info
+        ;;
+    *)
+        echo "unknow command"
+        ;;
+esac

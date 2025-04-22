@@ -13,14 +13,21 @@
 #define CLOUD_SERVER_PASSWORD "123"
 
 #define OTA_HEARTBEAT_URL  "https://ota.cktt.com.cn/ota-server/heartbeat"
-#define OTA_UPREPORT_URL   "/ota-server/submitReport"
+#define OTA_UPREPORT_URL   "https://ota.cktt.com.cn/ota-server/submitReport"
+/* OTA升级报告路径格式： OTA_UPREPORT_PATH + task_id + / + filename*/
+#define OTA_UPREPORT_REMOTE_PATH "/home/cktt/script/"
+#define OTA_UPREPORT_LOCAL_PATH "/upgrade/cktt/upgradereport/"
+
 
 /* WAVE文件路径格式： WAVE_FILE_PATH + 年月日 + / + 年月日时 + / + WAVE文件 */
-#define WAVE_FILE_PATH "/upload/fkz9/wavedat/"
+#define WAVE_FILE_REMOTE_PATH "/upload/fkz9/wavedat/"
+#define WAVE_FILE_LOCAL_PATH "/upload/cktt/wavedat/"
 
-/* OTA升级报告路径格式： OTA_UPREPORT_PATH + task_id + / + filename*/
-#define OTA_UPREPORT_PATH "/upgrade/cktt/upgradereport/"
+#define FTP_SERVER_URL   "ftp://192.168.10.158"
 
+/* 升级文件路径格式：UPGRADE_FILE_PATH + task_id + / + filename */
+// #define UPGRADE_FILE_REMOTE_PATH "/upgrade/"
+#define UPGRADE_FILE_LOCAL_PATH "/upgrade/cktt/"
 
 #define MSG_DATA_FRAM_HDR         0xAAAA
 #pragma pack(push, 1)
@@ -48,17 +55,41 @@ typedef struct st_Time
     uint8_t  ucSecond;
 } Time;
 
-#define TIME_TO_STR(t, buffer) \
+#define TIME_TO_STR(pt, buffer) \
     do { \
         sprintf(buffer, "%04d-%02d-%02d %02d:%02d:%02d", \
-                (t)->usYear, (t)->ucMonth, (t)->ucDay, \
-                (t)->ucHour, (t)->ucMinute, (t)->ucSecond); \
+                (pt)->usYear, (pt)->ucMonth, (pt)->ucDay, \
+                (pt)->ucHour, (pt)->ucMinute, (pt)->ucSecond); \
     } while (0)
 
 /* 云平台对设备端是请求，设备端对云平台是响应*/
 #define  MSG_SIGN_WAVE_FILE_REQ      0xAE
 #define  MSG_SIGN_WAVE_FILE_RESP     0xAF
 #define  MSG_SIGN_TRANS_NAV_DATA     0xF0
+
+#pragma pack(push, 1)
+typedef struct st_WaveFileResp
+{
+    uint16_t usDevAddr;
+    uint8_t ucYear;
+    uint8_t ucMonth;
+    uint8_t ucDay;
+    uint8_t ucHour;
+    uint8_t ucMinute;
+    uint8_t ucCode;
+} WaveFileResp;
+
+typedef struct st_WaveFileReq
+{
+    uint16_t usDevAddr;
+    uint8_t ucYear;
+    uint8_t ucMonth;
+    uint8_t ucDay;
+    uint8_t ucHour;
+    uint8_t ucMinute;
+} WaveFileReq;
+#pragma pack(pop)
+
 
 /* 导航数据段 */
 #pragma pack(push, 1)
@@ -145,10 +176,10 @@ typedef struct st_OtaHeartBeat
 
 typedef struct st_OtaReport
 {
-    uint16_t dev_addr;
-    uint16_t task_id;
-    char *time;
-    char *report;
+    char dev_addr[STRING_LEN_MAX];
+    char task_id[STRING_LEN_MAX];
+    char time[STRING_LEN_MAX];
+    char report[STRING_LEN_MAX];
 } OtaReport;
 
 typedef enum 

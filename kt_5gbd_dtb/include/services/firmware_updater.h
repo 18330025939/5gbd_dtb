@@ -20,13 +20,16 @@
 #define SERVER_USERNAME "cktt"
 #define SERVER_PASSWORD "cktt"
 
-typedef struct st_UpdateTask
+struct UpdateTask
 {
     char path[128];
     char name[64];
     char md5[64];
+    uint16_t id;
     uint8_t flag;
-} UpdateTask;
+} ;
+#define UPGRADE_FILE_REMOTE_PATH "/upgrade"
+
 
 struct FwUpdater
 {

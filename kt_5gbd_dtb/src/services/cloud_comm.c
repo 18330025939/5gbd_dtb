@@ -326,6 +326,40 @@ int create_ota_heartbeat_data(char *data)
     return 0;
 }
 
+int get_ota_report_info(void *arg)
+{
+    SSHClient ssh_client;
+    struct st_OtaReport *pReport = NULL;
+
+    if (arg != NULL) {
+        return -1;
+    }
+
+    pReport = (struct st_OtaHeartBeat*)arg;
+    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
+    int ret = ssh_client.connect(&ssh_client);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.connect failed.\n");
+        return -1;
+    }
+
+    char resp[256];
+    ret = ssh_client.execute(&ssh_client, "./updater.sh r report_info", 
+            resp, sizeof(resp));
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.execute get_ota_heartbeat_info failed.\n");
+        return -1;
+    }
+
+    sscanf(resp, "%[^,],%[^,],%[^,],%[^,],",
+            pReport->dev_addr, pReport->task_id, pReport->time, pReport->report);
+    SSHClient_Destroy(&ssh_client);
+
+    return 0;
+}
+
 int create_ota_report_data(char *data)
 {
     cJSON *root = NULL;
@@ -338,14 +372,11 @@ int create_ota_report_data(char *data)
 
     memset(&report, 0, sizeof(OtaReport));
     root = cJSON_CreateObject();
+    get_ota_report_info((void *)&report);
     cJSON_AddStringToObject(root, "lang", "zh_CN");
-    sprintf(buf, "%hu", report.dev_addr);
-    cJSON_AddStringToObject(root, "deviceAddress", buf);
-    sprintf(buf, "%hu", report.task_id);
-    cJSON_AddStringToObject(root, "taskId", buf);
-    // TIME_TO_STR(&report.time, buf);
+    cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
+    cJSON_AddStringToObject(root, "taskId", report.task_id));
     cJSON_AddStringToObject(root, "executionTime", report.time);
-    // TIME_TO_STR(&report.report, buf);
     cJSON_AddStringToObject(root, "executionReport", report.report);
     data = cJSON_Print(root);
     cJSON_Delete(root);
@@ -360,7 +391,7 @@ void *do_upgrade_entry(void *arg)
     struct FwUpdater *fw_up = NULL;
     struct List *up_list = NULL;
     struct ListNode *pNode = NULL;
-    struct UpgradeTask *pTask = NULL;
+    struct UpdateTask *pTask = NULL;
 
     if (up_list->count > 0) {
         return NULL;
@@ -374,7 +405,7 @@ void *do_upgrade_entry(void *arg)
     }
 
     while((pNode = List_GetHead(up_list)) != NULL) {
-        pTask = (struct UpgradeTask *)pNode;
+        pTask = (struct UpdateTask *)pNode;
         int ret = fw_up->trans_func((void *)pTask);
         if (fw_up->update_func != NULL) {
             ret = fw_up->update_func((void *)pTask);
@@ -386,6 +417,7 @@ void *do_upgrade_entry(void *arg)
                 }
             }
         }
+        List_DelHead(up_list);
     }
 
     return NULL;
@@ -395,9 +427,9 @@ int ota_upgrade_pack_download(struct List *task_list)
 {
     struct st_DownTask *pTask = NULL;
     struct ListNode *pNode = NULL;
-    char name[20];
-    char path[128];
-    char mkdir[64];
+    char file_name[20];
+    char local_path[128];
+    char cmd[64];
 
     if (task_list == NULL) {
         return -1;
@@ -407,11 +439,11 @@ int ota_upgrade_pack_download(struct List *task_list)
         while((pNode = List_GetHead(task_list)) != NULL) {
             pTask = (struct st_DownTask *)pNode->arg;
 
-            GetFileName(pTask->url, name);
-            snprintf(mkdir, sizeof(mkdir), "mkdir -p /upgrade/%d", pTask->id);
-            _system_(mkdir, NULL, 0);
-            snprintf(path, sizeof(path), "/upgrade/%d/%s", pTask->id, name);
-            int ret = ftp_download(pTask->url, path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
+            GetFileName(pTask->url, file_name);
+            snprintf(cmd, sizeof(cmd), "mkdir -p %s%d", UPGRADE_FILE_LOCAL_PATH, pTask->id);
+            _system_(cmd, NULL, 0);
+            snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pTask->id, file_name);
+            int ret = ftp_download(pTask->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
             if (!ret) {
                 //通知去执行更新
             }
@@ -585,26 +617,94 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     return;
 }
 
-void _func_wave_file_req()
+int func_wave_file_resp()
 {
     MsgFramHdr *pHdr = NULL;
+    WaveFileResp *pResp = NULL;
     MsgDataFramCrc *pCrc = NULL;
     uint8_t buf[64];
-
+    TcpClient *client = NULL;
 
     // trans_file_from_fkz9();
     pHdr = (MsgFramHdr *)buf;
     pHdr->usHdr = MSG_SIGN_WAVE_FILE_REQ;
     pHdr->ucSign = MSG_SIGN_WAVE_FILE_RESP;
     pHdr->usLen = sizeof(MsgFramHdr);
+    pResp = (WaveFileResp *)(buf + sizeof(MsgFramHdr));
+    pResp->usDevAddr = 0;
+    Time t;
+    get_system_time(&t);
+    pResp->ucYear = t->ucYear - 2000;
+    pResp->ucMonth = t->ucMonth;
+    pResp->ucDay = t->ucDay;
+    pResp->ucHour = t->ucHour;
+    pResp->ucMinute = t->ucMinute;
+    pResp->ucCode = 0;
 
-    pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr));
+    pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(WaveFileResp));
     pCrc->usCRC = checkSum_8((uint8_t *)pHdr, pHdr->usLen);
 
-    // client->ops->send(client, buf, pHdr->usLen + sizeof(MsgDataFramCrc));
+    client->ops->send(client, buf, pHdr->usLen + sizeof(MsgDataFramCrc));
 
+    char remote_path[128];
+    char local_path[128];
+    uint16_t dev_addr = 0;
+    snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d", dev_addr, pResp->stTime.ucDay);
+    int ret = ftp_upload(FTP_SERVER_URL, local_path, remote_path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
+    if (ret != 0) {
+        return -1;
+    }
 
+    char cmd[64];
+    snprintf(cmd, sizeof(cmd), "rm -f %s", local_path);
+    _system_(cmd, NULL, 0);
+
+    return 0;
 }
+
+int func_wave_file_req(void *arg)
+{
+    MsgFramHdr *pHdr = NULL;
+    WaveFileReq *pReq = NULL;
+    MsgDataFramCrc *pCrc = NULL;
+    SSHClient *ssh_client = NULL;
+
+    if (arg == NULL) {
+        return -1;
+    }
+    
+    pReq = (WaveFileReq *)((uint8_t *)arg + sizeof(MsgFramHdr));
+    char r_folder[128];
+    uint16_t year = pReq->usYear + 2000; 
+    snprintf(r_folder, sizeof(r_folder), "%s%4d%2d%2d/%4d%2d%2d%2d/", WAVE_FILE_REMOTE_PATH, 
+                year, pReq->ucMonth, pReq->ucDay, 
+                year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
+    char file_name[32];
+    snprintf(file_name, sizeof(file_name), "%4d-wavedat-%4d%2d%2d%2d.dat.gz", pReq->usDevAddr, pReq->usYear, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
+    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
+    int ret = ssh_client.connect(&ssh_client);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.connect failed.\n");
+        return -1;
+    }
+
+    char l_folder[128];
+    snprintf(l_folder, sizeof(l_folder), "%s%4d%2d%2d%2d/", WAVE_FILE_LOCAL_PATH,
+                year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
+    char r_path[256];
+    snprintf(r_path, sizeof(r_path), "%s%s", r_folder, file_name);
+    ret = ssh_client->download_file(&ssh_client, r_path, l_folder);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.download_file cp_wave_file_from_fkz9 failed.\n");
+        return -1;
+    }
+
+    SSHClient_Destroy(&ssh_client);
+    return 0;
+)
+
 
 void proc_message_cb(char *buf, size_t len)
 {
@@ -627,6 +727,7 @@ void proc_message_cb(char *buf, size_t len)
 
     switch (pHdr->ucSign) {
         case MSG_SIGN_WAVE_FILE_REQ:
+            func_wave_file_req(buf);
             break;
         default:
             break;
