@@ -335,7 +335,7 @@ int get_ota_report_info(void *arg)
         return -1;
     }
 
-    pReport = (struct st_OtaHeartBeat*)arg;
+    pReport = (struct st_OtaReport*)arg;
     SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
@@ -364,7 +364,6 @@ int create_ota_report_data(char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
-    char buf[40];
 
     if (data == NULL) {
         return -1;
@@ -375,7 +374,7 @@ int create_ota_report_data(char *data)
     get_ota_report_info((void *)&report);
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
-    cJSON_AddStringToObject(root, "taskId", report.task_id));
+    cJSON_AddStringToObject(root, "taskId", report.task_id);
     cJSON_AddStringToObject(root, "executionTime", report.time);
     cJSON_AddStringToObject(root, "executionReport", report.report);
     data = cJSON_Print(root);
@@ -634,11 +633,11 @@ int func_wave_file_resp()
     pResp->usDevAddr = 0;
     Time t;
     get_system_time(&t);
-    pResp->ucYear = t->ucYear - 2000;
-    pResp->ucMonth = t->ucMonth;
-    pResp->ucDay = t->ucDay;
-    pResp->ucHour = t->ucHour;
-    pResp->ucMinute = t->ucMinute;
+    pResp->ucYear = t.ucYear - 2000;
+    pResp->ucMonth = t.ucMonth;
+    pResp->ucDay = t.ucDay;
+    pResp->ucHour = t.ucHour;
+    pResp->ucMinute = t.ucMinute;
     pResp->ucCode = 0;
 
     pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(WaveFileResp));
@@ -649,13 +648,13 @@ int func_wave_file_resp()
     char remote_path[128];
     char local_path[128];
     uint16_t dev_addr = 0;
-    snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d", dev_addr, pResp->stTime.ucDay);
+    snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d", dev_addr, pResp->ucDay);
     int ret = ftp_upload(FTP_SERVER_URL, local_path, remote_path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
     if (ret != 0) {
         return -1;
     }
 
-    char cmd[64];
+    char cmd[256];
     snprintf(cmd, sizeof(cmd), "rm -f %s", local_path);
     _system_(cmd, NULL, 0);
 
@@ -667,7 +666,7 @@ int func_wave_file_req(void *arg)
     MsgFramHdr *pHdr = NULL;
     WaveFileReq *pReq = NULL;
     MsgDataFramCrc *pCrc = NULL;
-    SSHClient *ssh_client = NULL;
+    SSHClient ssh_client;
 
     if (arg == NULL) {
         return -1;
@@ -675,7 +674,7 @@ int func_wave_file_req(void *arg)
     
     pReq = (WaveFileReq *)((uint8_t *)arg + sizeof(MsgFramHdr));
     char r_folder[128];
-    uint16_t year = pReq->usYear + 2000; 
+    uint16_t year = pReq->ucYear + 2000; 
     snprintf(r_folder, sizeof(r_folder), "%s%4d%2d%2d/%4d%2d%2d%2d/", WAVE_FILE_REMOTE_PATH, 
                 year, pReq->ucMonth, pReq->ucDay, 
                 year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
@@ -703,7 +702,7 @@ int func_wave_file_req(void *arg)
 
     SSHClient_Destroy(&ssh_client);
     return 0;
-)
+}
 
 
 void proc_message_cb(char *buf, size_t len)
@@ -830,3 +829,4 @@ void clound_comm_uninit(CloundCommContext *ctx)
     tcp_client_destroy(ctx->client);
     clean_queue(&ctx->queue);
 }
+
