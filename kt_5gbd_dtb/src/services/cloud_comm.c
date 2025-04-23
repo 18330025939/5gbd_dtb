@@ -466,7 +466,7 @@ void *download_upgrade_entry(void *arg)
     while (true) {
         pthread_mutex_lock(&ctx->mutex);
         pthread_cond_wait(&ctx->cond, &ctx->mutex);
-        do_downlaod_firmware(&ctx->down_task)
+        do_downlaod_firmware(&ctx->down_task);
         pthread_mutex_unlock(&ctx->mutex);
     }
 
@@ -687,7 +687,7 @@ int func_wave_file_resp()
 
 int func_wave_file_req(void *arg)
 {
-    MsgFramHdr *pHdr = NULL;
+    // MsgFramHdr *pHdr = NULL;
     WaveFileReq *pReq = NULL;
     MsgDataFramCrc *pCrc = NULL;
     SSHClient ssh_client;
