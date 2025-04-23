@@ -1,7 +1,6 @@
 .vscode/
 *.o
 *.o.d
-*.a
 obj/
 bin/
 5GBD_MODULE

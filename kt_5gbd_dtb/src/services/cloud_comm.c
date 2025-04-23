@@ -689,7 +689,7 @@ int func_wave_file_req(void *arg)
 {
     // MsgFramHdr *pHdr = NULL;
     WaveFileReq *pReq = NULL;
-    MsgDataFramCrc *pCrc = NULL;
+    //MsgDataFramCrc *pCrc = NULL;
     SSHClient ssh_client;
 
     if (arg == NULL) {
