@@ -34,7 +34,7 @@ uint16_t checkSum_8(uint8_t *buf, uint16_t len)
     return ret;
 }
 
-static int _system_(const char *cmd, char *pRetMsg, int msg_len)
+int _system_(const char *cmd, char *pRetMsg, int msg_len)
 {
 
 	FILE *fp;
@@ -384,7 +384,7 @@ int create_ota_report_data(char *data)
 }
 
 
-void *do_upgrade_entry(void *arg)
+void *do_upgrade_firmware(void *arg)
 {
     struct FwUpdater *start = &__start_firmware_update;
     struct FwUpdater *fw_up = NULL;
@@ -422,7 +422,7 @@ void *do_upgrade_entry(void *arg)
     return NULL;
 }
 
-int ota_upgrade_pack_download(struct List *task_list)
+int do_downlaod_firmware(struct List *task_list)
 {
     struct st_DownTask *pTask = NULL;
     struct ListNode *pNode = NULL;
@@ -454,6 +454,25 @@ int ota_upgrade_pack_download(struct List *task_list)
     return 0;
 }
 
+void *download_upgrade_entry(void *arg)
+{
+    CloundCommContext *ctx = NULL;
+
+    if (arg == NULL) {
+        return NULL;
+    }
+
+    ctx = (CloundCommContext *)arg;
+    while (true) {
+        pthread_mutex_lock(&ctx->mutex);
+        pthread_cond_wait(&ctx->cond, &ctx->mutex);
+        do_downlaod_firmware(&ctx->down_task)
+        pthread_mutex_unlock(&ctx->mutex);
+    }
+
+    return NULL;
+}
+
 int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
 {
     // 解析 JSON 数据
@@ -463,7 +482,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
         if (error_ptr != NULL) {
             fprintf(stderr, "Error before: %s\n", error_ptr);
         }
-        return 1;
+        return -1;
     }
 
     // 提取 code 字段
@@ -474,6 +493,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
             printf("send heartbeat success and receive respond\n");
         } else {
             printf("send heartbeat failed and respond %s %s\n", code, respond);
+            return -1;
         }
     }
 
@@ -523,10 +543,13 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
     printf("%s\n", resp);
 
     ctx = (CloundCommContext *)arg;
+    pthread_mutex_lock(&ctx->mutex);
     ret = ota_heartbeat_resp_parse(&ctx->down_task, resp);
     if (ret == 0) {
         //通知去下载
+        pthread_cond_signal(&ctx->cond);
     }   
+    pthread_mutex_unlock(&ctx->mutex);
 
     free(resp);
 }
@@ -633,7 +656,7 @@ int func_wave_file_resp()
     pResp->usDevAddr = 0;
     Time t;
     get_system_time(&t);
-    pResp->ucYear = t.ucYear - 2000;
+    pResp->ucYear = t.usYear - 2000;
     pResp->ucMonth = t.ucMonth;
     pResp->ucDay = t.ucDay;
     pResp->ucHour = t.ucHour;
@@ -648,7 +671,8 @@ int func_wave_file_resp()
     char remote_path[128];
     char local_path[128];
     uint16_t dev_addr = 0;
-    snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d", dev_addr, pResp->ucDay);
+    snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d/%4d-wavedat-%4d%2d%2d%2d%2d.dat.gz", dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, 
+                pResp->ucHour, dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, pResp->ucHour, pResp->ucMinute);
     int ret = ftp_upload(FTP_SERVER_URL, local_path, remote_path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
     if (ret != 0) {
         return -1;
@@ -679,7 +703,7 @@ int func_wave_file_req(void *arg)
                 year, pReq->ucMonth, pReq->ucDay, 
                 year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
     char file_name[32];
-    snprintf(file_name, sizeof(file_name), "%4d-wavedat-%4d%2d%2d%2d.dat.gz", pReq->usDevAddr, pReq->usYear, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
+    snprintf(file_name, sizeof(file_name), "%4d-wavedat-%4d%2d%2d%2d.dat.gz", pReq->usDevAddr, year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
     SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
@@ -693,7 +717,7 @@ int func_wave_file_req(void *arg)
                 year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
     char r_path[256];
     snprintf(r_path, sizeof(r_path), "%s%s", r_folder, file_name);
-    ret = ssh_client->download_file(&ssh_client, r_path, l_folder);
+    ret = ssh_client.download_file(&ssh_client, r_path, l_folder);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.download_file cp_wave_file_from_fkz9 failed.\n");
@@ -776,25 +800,6 @@ void *timer_task_entry(void *arg)
 
     return NULL;
 }
-
-// void send_msg_entry(void *arg)
-// {
-//     CloundCommContext *ctx = (CloundCommContext *)arg;
-//     TcpClient *client = ctx->client;
-//     ThreadSafeQueue *send_queue = &ctx->queue;
-//     uint8_t buf[1024];
-//     size_t len = 0;
-
-//     while (ctx->running) {
-//         int ret = dequeue(send_queue, buf, &len);
-//         if (ret) {
-//             continue;
-//         }
-
-//         client->ops->send(client, buf, len);
-//         sleep(100);
-//     }
-// }
 
 void clound_comm_init(CloundCommContext *ctx)
 {

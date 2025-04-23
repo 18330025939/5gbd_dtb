@@ -47,7 +47,7 @@ int main(int argc, char ** args)
         perror("event_base_new");
         exit(1);
     }
-    struct event *signal = evsignal_new(base, SIGINT, signal_handler, base);
+    struct event *signal = evsignal_new(base, SIGINT | SIGKILL, signal_handler, base);
     if (!signal) {
         perror("event_new");
         event_base_free(base);
@@ -62,8 +62,6 @@ int main(int argc, char ** args)
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
     FAULT_LED_ON();
-
-
 
     return 0;
 }

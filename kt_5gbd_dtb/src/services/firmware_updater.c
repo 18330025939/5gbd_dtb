@@ -25,6 +25,9 @@ int fkz9_fw_trans_func(void *arg)
     ret = ssh_client.upload_file(&ssh_client, up_task->path, remote_path);
     if (ret) {
         //上传失败是否再次上传
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.upload_file up_file:%s failed.\n", up_task->path);
+        return -1;
     }
 
     char cmd[256] = {'\0'};
@@ -33,6 +36,9 @@ int fkz9_fw_trans_func(void *arg)
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if (strcmp(up_task->md5, resp) != 0) {
         //校验失败是否再次上传
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.execute md5 of the file,l_md5:%s,r_md5%sfailed.\n", up_task->md5, resp);
+        return -1;
     }
 
     SSHClient_Destroy(&ssh_client);
