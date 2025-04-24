@@ -244,6 +244,7 @@ typedef struct st_Fkz9CommContext
     pthread_t timer_thread;
     struct event_base *base;
     struct List ev_list;
+    bool is_running;
 } Fkz9CommContext;
 
 struct UnitCorrInfo

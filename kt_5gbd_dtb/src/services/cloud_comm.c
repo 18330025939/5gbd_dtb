@@ -821,7 +821,7 @@ void *timer_task_entry(void *arg)
     
     if (ctx->ev_list.count > 0) {
         while((pNode = List_GetHead(&ctx->ev_list)) != NULL) {
-            event_free((struct event *)pNode->arg);
+            event_free((struct event *)(pNode->arg));
             List_DelHead(&ctx->ev_list);
         }
     }
@@ -862,15 +862,10 @@ void clound_comm_uninit(CloundCommContext *ctx)
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     pthread_join(ctx->event_thread, NULL);
-    printf("clound_comm_uninit4444\n");
     pthread_join(ctx->down_task.thread, NULL);
-    printf("clound_comm_uninit5555\n");
     pthread_mutex_destroy(&ctx->down_task.mutex);
-    printf("clound_comm_uninit6666\n");
     pthread_cond_destroy(&ctx->down_task.cond);
-    printf("clound_comm_uninit7777\n");
     ctx->client->ops->disconnect(ctx->client);
-    printf("clound_comm_uninit....\n");
     tcp_client_destroy(ctx->client);
     clean_queue(&ctx->event_queue);
 }

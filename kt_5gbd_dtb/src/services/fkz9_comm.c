@@ -122,7 +122,7 @@ static void *timer_task_entry(void *arg)
     
     if (ctx->ev_list.count > 0) {
         while((pNode = List_GetHead(&ctx->ev_list)) != NULL) {
-            event_free((struct event *)pNode->arg);
+            event_free((struct event *)(pNode->arg));
             List_DelHead(&ctx->ev_list);
         }
     }
@@ -149,19 +149,21 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     int ret = mqtt_client->ops->connect(mqtt_client);
     if(ret) {
         printf("mqtt connect failed\n");
+        ctx->is_running = false;
         clean_queue(&ctx->tx_queue);
         mqtt_client_destroy(mqtt_client);
         return;
     }
     ctx->mqtt_client = mqtt_client;
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
+    ctx->is_running = true;
 }
 
 void fkz9_comm_uninit(Fkz9CommContext *ctx)
 {
     AsyncMQTTClient *mqtt_client = NULL;
 
-    if (ctx == NULL) {
+    if (ctx == NULL || ctx->is_running == false) {
         return;
     }
 
