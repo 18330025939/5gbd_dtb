@@ -458,7 +458,9 @@ void *download_upgrade_entry(void *arg)
     pTask = (struct DownUpgradeTask *)arg;
     while (true) {
         pthread_mutex_lock(&pTask->mutex);
-        pthread_cond_wait(&pTask->cond, &pTask->mutex);
+        while (&pTask->list.count == 0) {
+            pthread_cond_wait(&(pTask->cond), &(pTask->mutex));
+        }
         do_downlaod_firmware(&pTask->list);
         pthread_mutex_unlock(&pTask->mutex);
     }
@@ -759,7 +761,6 @@ void *event_task_entry(void *arg)
     ctx = (CloundCommContext *)arg;
     while (ctx->running) {
         if (dequeue(&ctx->event_queue, buf, &len)) {
-            sleep(100);
             continue;
         }
         pHdr = (MsgFramHdr *)buf;
@@ -852,12 +853,10 @@ void clound_comm_init(CloundCommContext *ctx)
 
 void clound_comm_uninit(CloundCommContext *ctx)
 {
-
+    printf("clound_comm_uninit\n");
     ctx->running = false;
     laneTo_uninit(ctx->laneTo);
-    printf("clound_comm_uninit111\n");
     event_base_loopbreak(ctx->base);
-    printf("clound_comm_uninit2222\n");
     pthread_join(ctx->timer_thread, NULL);
     printf("clound_comm_uninit3333\n");
     pthread_join(ctx->event_thread, NULL);
