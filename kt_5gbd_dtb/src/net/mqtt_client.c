@@ -171,10 +171,11 @@ exit:
 /* 销毁 */
 void mqtt_client_destroy(AsyncMQTTClient* client) 
 {
-    if (!client) {
+    if (client == NULL) {
         return;
     }
 
+    printf("mqtt_client_destroy\n");
     pthread_mutex_lock(&client->lock);
     MQTTAsync_disconnect(client->handle, NULL);
     MQTTAsync_destroy(&client->handle);

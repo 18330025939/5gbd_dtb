@@ -832,7 +832,7 @@ void clound_comm_init(CloundCommContext *ctx)
     TcpClient *client = NULL;
 
     ctx->running = true;
-    init_queue(&ctx->event_queue, 512);
+    init_queue(&ctx->event_queue, 256);
     List_Init_Thread(&ctx->ev_list);
     List_Init_Thread(&ctx->down_task.list);
 
@@ -844,6 +844,8 @@ void clound_comm_init(CloundCommContext *ctx)
     laneTo_init(ctx->laneTo);
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
     pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
+    pthread_mutex_init(&ctx->down_task.mutex, NULL);
+    pthread_cond_init(&ctx->down_task.cond, NULL);
     pthread_create(&ctx->down_task.thread, NULL, download_upgrade_entry, &ctx->down_task);
     gp_cloud_comm_ctx = ctx;
 }
@@ -857,6 +859,8 @@ void clound_comm_uninit(CloundCommContext *ctx)
     pthread_join(ctx->timer_thread, NULL);
     pthread_join(ctx->event_thread, NULL);
     pthread_join(ctx->down_task.thread, NULL);
+    pthread_mutex_destroy(&ctx->down_task.mutex);
+    pthread_cond_destroy(&ctx->down_task.cond);
 
     ctx->client->ops->disconnect(ctx->client);
     printf("clound_comm_uninit....\n");

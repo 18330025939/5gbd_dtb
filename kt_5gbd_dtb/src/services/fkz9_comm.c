@@ -165,6 +165,7 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
         return;
     }
 
+    printf("fkz9_comm_uninit\n");
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     mqtt_client = ctx->mqtt_client;
