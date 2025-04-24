@@ -48,7 +48,7 @@ int main(int argc, char ** args)
         perror("event_base_new");
         exit(1);
     }
-    struct event *signal = evsignal_new(base, SIGINT | SIGKILL, signal_handler, base);
+    struct event *signal = evsignal_new(base, SIGINT, signal_handler, base);
     if (!signal) {
         perror("event_new");
         event_base_free(base);
@@ -57,10 +57,6 @@ int main(int argc, char ** args)
     event_add(signal, NULL);
 
     event_base_dispatch(base);
-
-#if 1 //test
-
-#endif
 
     printf("wait....\n");
     event_free(signal);
