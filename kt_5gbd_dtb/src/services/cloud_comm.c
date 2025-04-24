@@ -428,7 +428,7 @@ int do_downlaod_firmware(struct List *task_list)
             int ret = ftp_download(pInfo->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
             if (!ret) {
                 //通知去执行更新
-                memset(up_info, 0, sizeof(struct FwUpdateInfo));
+                memset(&up_info, 0, sizeof(struct FwUpdateInfo));
                 up_info.flag = 1;
                 up_info.id = pInfo->id;
                 strncpy(up_info.md5, pInfo->md5, sizeof(up_info.md5));
