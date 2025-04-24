@@ -3,6 +3,7 @@
 
 #include "tcp_client.h"
 #include "lane_to.h"
+#include "fx650.h"
 #include "queue.h"
 #include "list.h"
 
