@@ -149,6 +149,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     int ret = mqtt_client->ops->connect(mqtt_client);
     if(ret) {
         printf("mqtt connect failed\n");
+        clean_queue(&ctx->tx_queue);
         mqtt_client_destroy(mqtt_client);
         return;
     }

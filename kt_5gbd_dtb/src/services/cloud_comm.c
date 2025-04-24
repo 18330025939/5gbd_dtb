@@ -101,7 +101,7 @@ int get_ota_heartbeat_info(void *arg)
     SSHClient ssh_client;
     struct st_OtaHeartBeat *pHb_info = NULL;
 
-    if (arg != NULL) {
+    if (arg == NULL) {
         return -1;
     }
 
@@ -286,7 +286,10 @@ int create_ota_heartbeat_data(char *data)
     }
 
     root = cJSON_CreateObject();    
-    get_ota_heartbeat_info(&heart_beat);
+    int ret = get_ota_heartbeat_info(&heart_beat);
+    if (ret) {
+        return -1;
+    }
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     // sprintf(str, "%hu", heart_beat.dev_addr);
     cJSON_AddStringToObject(root, "deviceAddress", heart_beat.dev_addr);
