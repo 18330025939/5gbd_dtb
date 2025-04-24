@@ -22,6 +22,11 @@ extern SGData sg_data;
 extern struct FwUpdater __start_firmware_update;
 extern struct FwUpdater __stop_firmware_update;
 
+extern struct MsgProcInf __start_messgae_processing;
+extern struct MsgProcInf __stop_messgae_processing;
+
+static CloundCommContext *gp_cloud_comm_ctx = NULL;
+
 uint16_t checkSum_8(uint8_t *buf, uint16_t len)
 {
     uint8_t i;
@@ -235,26 +240,6 @@ int get_ota_heartbeat_info(void *arg)
     return 0;
 }
 
-#if 0
-// void uninit_ota_heartbeat(OtaHeartBeat *hb_info)
-// {
-//     if (hb_info == NULL) {
-//         return;
-//     }
-
-//     free(hb_info->usage_cpu);
-//     free(hb_info->up_time);
-//     free(hb_info->sys_time);
-//     if (hb_info->hw_unit != NULL) {
-//         free(hb_info->hw_unit);
-//     }
-
-//     if (hb_info->sw_unit != NULL) {
-//         free(hb_info->sw_unit);
-//     }
-// }
-#endif
-
 cJSON *create_unit_info_object(UnitInfo * unit_info, uint8_t type)
 {
     cJSON *obj = NULL;
@@ -384,17 +369,16 @@ int create_ota_report_data(char *data)
 }
 
 
-void *do_upgrade_firmware(void *arg)
+void do_upgrade_firmware(struct UpdateTask *pTask)
 {
     struct FwUpdater *start = &__start_firmware_update;
     struct FwUpdater *fw_up = NULL;
-    struct List *up_list = NULL;
-    struct ListNode *pNode = NULL;
-    struct UpdateTask *pTask = NULL;
+    // struct List *up_list = NULL;
+    // struct ListNode *pNode = NULL;
 
-    if (up_list->count > 0) {
-        return NULL;
-    }
+    // if (up_list->count > 0) {
+    //     return NULL;
+    // }
 
     for (; start != &__stop_firmware_update; start++) {
         if (strcmp(start->dev_name, "fkz9") == 0) {
@@ -403,32 +387,31 @@ void *do_upgrade_firmware(void *arg)
         }
     }
 
-    while((pNode = List_GetHead(up_list)) != NULL) {
-        pTask = (struct UpdateTask *)pNode;
-        int ret = fw_up->trans_func((void *)pTask);
-        if (fw_up->update_func != NULL) {
-            ret = fw_up->update_func((void *)pTask);
-            if (ret) {
-                fprintf(stderr, "up->update_func failed.\n");
-            } else {
-                if (fw_up->update_cb != NULL) {
-                    fw_up->update_cb((void *)pTask);
-                }
+    // while((pNode = List_GetHead(up_list)) != NULL) {
+        // pTask = (struct UpdateTask *)pNode;
+    int ret = fw_up->trans_func((void *)pTask);
+    if (fw_up->update_func != NULL) {
+        ret = fw_up->update_func((void *)pTask);
+        if (ret) {
+            fprintf(stderr, "up->update_func failed.\n");
+        } else {
+            if (fw_up->update_cb != NULL) {
+                fw_up->update_cb((void *)pTask);
             }
         }
-        List_DelHead(up_list);
     }
-
-    return NULL;
+        // List_DelHead(up_list);
+    // }
 }
 
 int do_downlaod_firmware(struct List *task_list)
 {
-    struct st_DownTask *pTask = NULL;
+    struct FwDownInfo *pInfo = NULL;
     struct ListNode *pNode = NULL;
     char file_name[20];
     char local_path[128];
     char cmd[64];
+    struct FwUpdateInfo up_info;
 
     if (task_list == NULL) {
         return -1;
@@ -436,15 +419,22 @@ int do_downlaod_firmware(struct List *task_list)
 
     if (task_list->count > 0) {
         while((pNode = List_GetHead(task_list)) != NULL) {
-            pTask = (struct st_DownTask *)pNode->arg;
+            pInfo = (struct FwDownInfo *)pNode->arg;
 
-            GetFileName(pTask->url, file_name);
-            snprintf(cmd, sizeof(cmd), "mkdir -p %s%d", UPGRADE_FILE_LOCAL_PATH, pTask->id);
+            GetFileName(pInfo->url, file_name);
+            snprintf(cmd, sizeof(cmd), "mkdir -p %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
             _system_(cmd, NULL, 0);
-            snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pTask->id, file_name);
-            int ret = ftp_download(pTask->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
+            snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, file_name);
+            int ret = ftp_download(pInfo->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
             if (!ret) {
                 //通知去执行更新
+                memset(up_task, 0, sizeof(struct UpdateTask));
+                up_info.flag = 1;
+                up_info.id = pInfo->id;
+                strncpy(up_info.md5, pInfo->md5, sizeof(up_info.md5));
+                strncpy(up_info.path, local_path, sizeof(up_info.path));
+                strncpy(up_info.name, file_name, sizeof(up_info.name));
+                do_upgrade_firmware(&up_info);
             }
 
             List_DelHead(task_list);
@@ -456,18 +446,18 @@ int do_downlaod_firmware(struct List *task_list)
 
 void *download_upgrade_entry(void *arg)
 {
-    CloundCommContext *ctx = NULL;
+    struct DownUpgradeTask *pTask = NULL;
 
     if (arg == NULL) {
         return NULL;
     }
 
-    ctx = (CloundCommContext *)arg;
+    pTask = (struct DownUpgradeTask *)arg;
     while (true) {
-        pthread_mutex_lock(&ctx->mutex);
-        pthread_cond_wait(&ctx->cond, &ctx->mutex);
-        do_downlaod_firmware(&ctx->down_task);
-        pthread_mutex_unlock(&ctx->mutex);
+        pthread_mutex_lock(pTask->mutex);
+        pthread_cond_wait(pTask->cond, pTask->mutex);
+        do_downlaod_firmware(pTask->list);
+        pthread_mutex_unlock(pTask->mutex);
     }
 
     return NULL;
@@ -512,14 +502,14 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
                 cJSON *type_obj = cJSON_GetObjectItemCaseSensitive(task_obj, "taskType");
 
                 if (cJSON_IsNumber(id_obj) && cJSON_IsString(url_obj) && cJSON_IsString(md5_obj) && cJSON_IsString(type_obj)) {
-                    struct st_DownTask *task = (struct st_DownTask *)malloc(sizeof(struct st_DownTask));
-                    task->id = id_obj->valueint;
-                    strcpy(task->url, url_obj->valuestring);
-                    strcpy(task->md5, md5_obj->valuestring);
-                    strcpy(task->type,type_obj->valuestring);
-                    List_Insert(task_list, (void*)task);
+                    struct FwDownInfo *pInfo = (struct FwDownInfo *)malloc(sizeof(struct FwDownInfo));
+                    pInfo->id = id_obj->valueint;
+                    strcpy(pInfo->url, url_obj->valuestring);
+                    strcpy(pInfo->md5, md5_obj->valuestring);
+                    strcpy(pInfo->type,type_obj->valuestring);
+                    List_Insert(task_list, (void*)pInfo);
 
-                    printf("Task ID: %d, Artifact URL: %s, Artifact MD5: %s, Task Type: %s\n", task->id, task->url, task->md5, task->type);
+                    printf("pInfo ID: %d, URL: %s, MD5: %s, Type: %s\n", pInfo->id, pInfo->url, pInfo->md5, pInfo->type);
                 }
             }
         }
@@ -539,17 +529,19 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
         return;
     }
 
-    http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
-    printf("%s\n", resp);
+    ret = http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
+    printf("resp to ota_heartbeat_req: %s, %d\n", resp, ret);
 
-    ctx = (CloundCommContext *)arg;
-    pthread_mutex_lock(&ctx->mutex);
-    ret = ota_heartbeat_resp_parse(&ctx->down_task, resp);
     if (ret == 0) {
-        //通知去下载
-        pthread_cond_signal(&ctx->cond);
-    }   
-    pthread_mutex_unlock(&ctx->mutex);
+        ctx = (CloundCommContext *)arg;
+        pthread_mutex_lock(&ctx->down_task.mutex);
+        ret = ota_heartbeat_resp_parse(&ctx->down_task.list, resp);
+        if (ret == 0) {
+            //通知去下载
+            pthread_cond_signal(&ctx->down_task.cond);
+        }   
+        pthread_mutex_unlock(&ctx->down_task.mutex);
+    }
 
     free(resp);
 }
@@ -639,15 +631,19 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     return;
 }
 
-int func_wave_file_resp()
+int func_wave_file_resp(void *arg)
 {
     MsgFramHdr *pHdr = NULL;
     WaveFileResp *pResp = NULL;
     MsgDataFramCrc *pCrc = NULL;
     uint8_t buf[64];
     TcpClient *client = NULL;
+    CloundCommContext *ctx = NULL; 
 
-    // trans_file_from_fkz9();
+    if (arg  == NULL) {
+        return -1;
+    }
+    ctx = (CloundCommContext *)arg;
     pHdr = (MsgFramHdr *)buf;
     pHdr->usHdr = MSG_SIGN_WAVE_FILE_REQ;
     pHdr->ucSign = MSG_SIGN_WAVE_FILE_RESP;
@@ -666,7 +662,9 @@ int func_wave_file_resp()
     pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(WaveFileResp));
     pCrc->usCRC = checkSum_8((uint8_t *)pHdr, pHdr->usLen);
 
-    client->ops->send(client, buf, pHdr->usLen + sizeof(MsgDataFramCrc));
+    if (ctx->client->is_connected) {
+        ctx->client->ops->send(client, buf, pHdr->usLen + sizeof(MsgDataFramCrc));
+    }
 
     char remote_path[128];
     char local_path[128];
@@ -729,6 +727,8 @@ int func_wave_file_req(void *arg)
 }
 
 
+REGISTER_MESSAGE_PROCESSINFG_INTERFACE(wave_file, MSG_SIGN_WAVE_FILE_REQ, func_wave_file_req, func_wave_file_resp);
+
 void proc_message_cb(char *buf, size_t len)
 {
     MsgFramHdr *pHdr = NULL;
@@ -739,22 +739,48 @@ void proc_message_cb(char *buf, size_t len)
     }
 
     printf("proc_message_cb %s, %ld\n", buf, len);
+    enqueue(&gp_cloud_comm_ctx->event_queue, (uint8_t *)buf, len);
+}
 
-    pHdr = (MsgFramHdr *)buf;
-    uint16_t crc = checkSum_8((uint8_t *)buf, pHdr->usLen);
-    pCrc = (MsgDataFramCrc *)(buf + pHdr->usLen);
 
-    if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != pCrc->usCRC) {
-        return ;
+void *event_task_entry(void *arg)
+{
+    CloundCommContext *ctx = NULL;
+    uint8_t buf[256];
+    uint16_t len = 0;
+    MsgFramHdr *pHdr = NULL;
+    MsgDataFramCrc *pCrc = NULL;
+    struct MsgProcInf *start = &__start_messgae_processing;
+
+    if (arg == NULL) {
+        return NULL;
     }
 
-    switch (pHdr->ucSign) {
-        case MSG_SIGN_WAVE_FILE_REQ:
-            func_wave_file_req(buf);
-            break;
-        default:
-            break;
+    ctx = (CloundCommContext *)arg;
+    while (ctx->running) {
+        if (dequeue(&ctx->event_queue, buf, &len)) {
+            sleep(100);
+            continue;
+        }
+        pHdr = (MsgFramHdr *)buf;
+        uint16_t crc = checkSum_8((uint8_t *)buf, pHdr->usLen);
+        pCrc = (MsgDataFramCrc *)(buf + pHdr->usLen);
+
+        if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != pCrc->usCRC) {
+            continue ;
+        }
+
+        for (; start != &__stop_messgae_processing; start++) {
+            if (start->sign == pHdr->ucSign) {
+                int ret = start->pFuncEntry(buf);
+                if (int == 0 && start->pFuncCb != NULL) {
+                    start->pFuncCb(arg);
+                }
+            }
+        }
     }
+    
+    return NULL;
 }
 
 void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
@@ -806,32 +832,35 @@ void clound_comm_init(CloundCommContext *ctx)
     TcpClient *client = NULL;
 
     ctx->running = true;
-    init_queue(&ctx->queue, 512);
+    init_queue(&ctx->event_queue, 512);
     List_Init_Thread(&ctx->ev_list);
-    List_Init_Thread(&ctx->down_task);
+    List_Init_Thread(&ctx->down_task.list);
 
     client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
     client->ops->register_cb(client, proc_message_cb);
     ctx->client = client;
     client->ops->connect(client);
-    // pthread_create(&ctx->send_thread, NULL, send_msg_entry, ctx);
     ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
     laneTo_init(ctx->laneTo);
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
+    pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
+    pthread_create(&ctx->down_task.thread, NULL, download_upgrade_entry, &ctx->down_task);
+    gp_cloud_comm_ctx = ctx;
 }
 
 void clound_comm_uninit(CloundCommContext *ctx)
 {
-    // CloundCommContext *ctx;
     printf("clound_comm_uninit\n");
     ctx->running = false;
-    // pthread_join(ctx->send_thread, NULL);
-    event_base_loopbreak(ctx->base);
     laneTo_uninit(ctx->laneTo);
+    event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
+    pthread_join(ctx->event_thread, NULL);
+    pthread_join(ctx->down_task.thread, NULL);
+
     ctx->client->ops->disconnect(ctx->client);
     printf("clound_comm_uninit....\n");
     tcp_client_destroy(ctx->client);
-    clean_queue(&ctx->queue);
+    clean_queue(&ctx->event_queue);
 }
 

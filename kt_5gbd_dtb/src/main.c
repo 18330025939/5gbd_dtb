@@ -9,6 +9,7 @@
 #include "cloud_comm.h"
 #include "fkz9_comm.h"
 #include "led.h"
+#include "ssh_client.h"
 
 
 void signal_handler(evutil_socket_t fd, short events, void *arg)
@@ -56,6 +57,11 @@ int main(int argc, char ** args)
     event_add(signal, NULL);
 
     event_base_dispatch(base);
+
+#if 1 //test
+
+#endif
+
     printf("wait....\n");
     event_free(signal);
     event_base_free(base);

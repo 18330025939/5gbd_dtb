@@ -20,7 +20,7 @@
 #define SERVER_USERNAME "cktt"
 #define SERVER_PASSWORD "cktt"
 
-struct UpdateTask
+struct FwUpdateInfo
 {
     char path[128];
     char name[64];

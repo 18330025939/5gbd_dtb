@@ -132,27 +132,40 @@ typedef struct st_NAVDataSeg
 } NAVDataSeg;
 #pragma pack(pop)
 
-// struct EventList {
-//     struct event *ev;
-//     struct EventList *next;
-// } ;
+struct MsgProcInf {
+    uint8_t sign;
+    int (*pFuncEntry)(void *);
+    int (*pFuncCb)(void *);
+} ;
+
+#define REGISTER_MESSAGE_PROCESSINFG_INTERFACE(name, msg_sign, func_entry, func_cb)\
+    __attribute__((used, __section__("messgae_processing"))) static struct MsgProcInf meg_proc_##name#_inf = { \
+        .sign = msg_sign, \
+        .pFuncEntry = func_entry, \
+        .pFuncCb = func_cb \
+    }
+
+struct DownUpgradeTask
+{
+    struct List list;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    pthread_t thread;
+};
 
 typedef struct st_MsgCommContext
 {
     TcpClient *client;
-    ThreadSafeQueue queue;
-    pthread_t send_thread;
+    ThreadSafeQueue event_queue;
+    pthread_t event_thread;
     pthread_t timer_thread;
     bool running;
     struct event_base *base;
     struct List ev_list;
     // struct EventList *ev_list;
     LaneToCtx *laneTo;
-    struct List down_task;
     struct List upgrade_task;
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
-    pthread_t down_upgrade_thread;
+    struct DownUpgradeTask down_task;
 } CloundCommContext;
 
 typedef struct st_UnitInfo
@@ -194,20 +207,20 @@ typedef enum
     EVENT_TYPE_MAX
 } EventType;
 
-typedef struct st_DownTask
+struct FwDownInfo
 {
     uint16_t id;
     char url[128];
     char md5[64];
     char type[20];
-} DownTask;
+} ;
 
 
-typedef struct st_DownTaskList
-{
-    uint16_t task_num;
-    struct st_DownTask *task;
-} DownTaskList;
+// typedef struct st_DownTaskList
+// {
+//     uint16_t task_num;
+//     struct st_DownTask *task;
+// } DownTaskList;
 
 // void (*task_cb)(evutil_socket_t, short, void*);
 
