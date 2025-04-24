@@ -865,7 +865,9 @@ void clound_comm_uninit(CloundCommContext *ctx)
     pthread_join(ctx->down_task.thread, NULL);
     pthread_mutex_destroy(&ctx->down_task.mutex);
     pthread_cond_destroy(&ctx->down_task.cond);
-    ctx->client->ops->disconnect(ctx->client);
+    if (ctx->client->is_connected) {
+        ctx->client->ops->disconnect(ctx->client);
+    }
     tcp_client_destroy(ctx->client);
     clean_queue(&ctx->event_queue);
 }
