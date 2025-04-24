@@ -450,13 +450,15 @@ int do_downlaod_firmware(struct List *task_list)
 void *download_upgrade_entry(void *arg)
 {
     struct DownUpgradeTask *pTask = NULL;
+    CloundCommContext *ctx = NULL;
 
     if (arg == NULL) {
         return NULL;
     }
 
-    pTask = (struct DownUpgradeTask *)arg;
-    while (true) {
+    ctx = (CloundCommContext *)arg;
+    pTask = ctx->down_task;
+    while (ctx->running) {
         pthread_mutex_lock(&pTask->mutex);
         while (&pTask->list.count == 0) {
             pthread_cond_wait(&(pTask->cond), &(pTask->mutex));
@@ -845,9 +847,10 @@ void clound_comm_init(CloundCommContext *ctx)
     laneTo_init(ctx->laneTo);
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
     pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
-    pthread_mutex_init(&ctx->down_task.mutex, NULL);
-    pthread_cond_init(&ctx->down_task.cond, NULL);
-    pthread_create(&ctx->down_task.thread, NULL, download_upgrade_entry, &ctx->down_task);
+    if ((pthread_mutex_init(&ctx->down_task.mutex, NULL) == 0) && 
+        (pthread_cond_init(&ctx->down_task.cond, NULL) ==0)) {
+        pthread_create(&ctx->down_task.thread, NULL, download_upgrade_entry, ctx);
+    }
     gp_cloud_comm_ctx = ctx;
 }
 
@@ -858,7 +861,6 @@ void clound_comm_uninit(CloundCommContext *ctx)
     laneTo_uninit(ctx->laneTo);
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
-    printf("clound_comm_uninit3333\n");
     pthread_join(ctx->event_thread, NULL);
     printf("clound_comm_uninit4444\n");
     pthread_join(ctx->down_task.thread, NULL);
