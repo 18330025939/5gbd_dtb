@@ -369,7 +369,7 @@ int create_ota_report_data(char *data)
 }
 
 
-void do_upgrade_firmware(struct UpdateTask *pTask)
+void do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 {
     struct FwUpdater *start = &__start_firmware_update;
     struct FwUpdater *fw_up = NULL;
@@ -389,14 +389,14 @@ void do_upgrade_firmware(struct UpdateTask *pTask)
 
     // while((pNode = List_GetHead(up_list)) != NULL) {
         // pTask = (struct UpdateTask *)pNode;
-    int ret = fw_up->trans_func((void *)pTask);
+    int ret = fw_up->trans_func((void *)pInfo);
     if (fw_up->update_func != NULL) {
-        ret = fw_up->update_func((void *)pTask);
+        ret = fw_up->update_func((void *)pInfo);
         if (ret) {
             fprintf(stderr, "up->update_func failed.\n");
         } else {
             if (fw_up->update_cb != NULL) {
-                fw_up->update_cb((void *)pTask);
+                fw_up->update_cb((void *)pInfo);
             }
         }
     }
@@ -428,7 +428,7 @@ int do_downlaod_firmware(struct List *task_list)
             int ret = ftp_download(pInfo->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
             if (!ret) {
                 //通知去执行更新
-                memset(up_task, 0, sizeof(struct UpdateTask));
+                memset(up_info, 0, sizeof(struct UpdateTask));
                 up_info.flag = 1;
                 up_info.id = pInfo->id;
                 strncpy(up_info.md5, pInfo->md5, sizeof(up_info.md5));
@@ -454,10 +454,10 @@ void *download_upgrade_entry(void *arg)
 
     pTask = (struct DownUpgradeTask *)arg;
     while (true) {
-        pthread_mutex_lock(pTask->mutex);
-        pthread_cond_wait(pTask->cond, pTask->mutex);
-        do_downlaod_firmware(pTask->list);
-        pthread_mutex_unlock(pTask->mutex);
+        pthread_mutex_lock(&pTask->mutex);
+        pthread_cond_wait(&pTask->cond, &pTask->mutex);
+        do_downlaod_firmware(&pTask->list);
+        pthread_mutex_unlock(&pTask->mutex);
     }
 
     return NULL;
@@ -731,9 +731,6 @@ REGISTER_MESSAGE_PROCESSINFG_INTERFACE(wave_file, MSG_SIGN_WAVE_FILE_REQ, func_w
 
 void proc_message_cb(char *buf, size_t len)
 {
-    MsgFramHdr *pHdr = NULL;
-    MsgDataFramCrc *pCrc = NULL;
-
     if (buf == NULL || len == 0) {
         return ;
     }
@@ -747,7 +744,7 @@ void *event_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     uint8_t buf[256];
-    uint16_t len = 0;
+    size_t len = 0;
     MsgFramHdr *pHdr = NULL;
     MsgDataFramCrc *pCrc = NULL;
     struct MsgProcInf *start = &__start_messgae_processing;
@@ -773,7 +770,7 @@ void *event_task_entry(void *arg)
         for (; start != &__stop_messgae_processing; start++) {
             if (start->sign == pHdr->ucSign) {
                 int ret = start->pFuncEntry(buf);
-                if (int == 0 && start->pFuncCb != NULL) {
+                if (ret == 0 && start->pFuncCb != NULL) {
                     start->pFuncCb(arg);
                 }
             }
