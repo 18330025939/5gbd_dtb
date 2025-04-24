@@ -164,6 +164,7 @@ typedef struct st_MsgCommContext
     struct List ev_list;
     // struct EventList *ev_list;
     LaneToCtx *laneTo;
+    Fx650Ctx *fx650;
     struct List upgrade_task;
     struct DownUpgradeTask down_task;
 } CloundCommContext;

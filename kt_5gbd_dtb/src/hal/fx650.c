@@ -105,7 +105,7 @@ static char* find_interface_by_vid_pid(const char *vid, const char *pid)
 }
 
 // 发送AT指令核心函数
-static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
+static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
                                   char* resp, size_t resp_len,
                                   uint32_t timeout_ms) 
 {
@@ -145,10 +145,10 @@ static FX650_Error send_at_command(FX650_CTX* ctx, const char* cmd,
 }
 
 // 检查SIM卡状态
-static int check_sim_status(FX650_CTX* ctx) 
+static int check_sim_status(Fx650Ctx* ctx) 
 {
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(ctx, "AT+CPIN?", resp, sizeof(resp), 1000) < 0) {
+    if (send_at_command(ctx, "AT+CPIN?", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -160,16 +160,16 @@ static int check_sim_status(FX650_CTX* ctx)
 }
 
 // 设置APN
-/*  cmnet：中国移动的3G、4G和5G网络。
-    3gnet：中国联通的3G、4G和5G网络。
-    ctnet：中国电信的3G、4G和5G网络。
+/*  cmiot：中国移动的4G和5G网络。
+    5gnet：中国联通的4G和5G网络。
+    ctlte：中国电信的4G和5G网络。
 */
-static int set_apn(FX650_CTX* ctx, const char *apn) 
+static int set_apn(Fx650Ctx* ctx, const char *apn) 
 {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"", apn);
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(ctx, cmd, resp, sizeof(resp), 1000) < 0) {
+    if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -181,12 +181,12 @@ static int set_apn(FX650_CTX* ctx, const char *apn)
 }
 
 // 激活拨号
-static int activate_dia(FX650_CTX* ctx, uint8_t status) 
+static int activate_dia(Fx650Ctx* ctx, uint8_t status) 
 {
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=%s,1", status ? "1" : "0");
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(ctx, cmd, resp, sizeof(resp), 1000) < 0) {
+    if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -197,7 +197,7 @@ static int activate_dia(FX650_CTX* ctx, uint8_t status)
     }
     if (status) {
         // 查询IP分配状态
-        if (send_at_command(ctx, "AT+GTRNDIS?", resp, sizeof(resp), 10000) < 0) {
+        if (send_at_command(ctx, "AT+GTRNDIS?", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
         }
 
@@ -223,14 +223,14 @@ static int run_dhcp_client(const char* net)
     return 0;
 }
 
-FX650_Error fx650_connect_network(FX650_CTX* ctx) 
+FX650_Error fx650_connect_network(Fx650Ctx* ctx) 
 {
     int ret = 0;
     ret = check_sim_status(ctx);
     if (ret) {
         return FX650_ERR_SIM_NOT_READY;
     }
-    ret = set_apn(ctx, "ctnet");
+    ret = set_apn(ctx, "5gnet");
     if(ret) {
         return FX650_ERR_APN_NOT_READY;
     }
@@ -243,7 +243,7 @@ FX650_Error fx650_connect_network(FX650_CTX* ctx)
     return FX650_OK;
 }
 
-FX650_Error fx650_disconnect_network(FX650_CTX* ctx) 
+FX650_Error fx650_disconnect_network(Fx650Ctx* ctx) 
 {
     int ret = 0;
 
@@ -255,7 +255,7 @@ FX650_Error fx650_disconnect_network(FX650_CTX* ctx)
     return FX650_OK;
 }
 
-FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev) 
+FX650_Error fx650_init(Fx650Ctx* ctx) 
 {
     UartPort *fx650_port = NULL;
 
@@ -272,7 +272,7 @@ FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev)
         .fctl = 0
     };
     fx650_port = uart_port_create();
-    int code = fx650_port->base.ops->open(&fx650_port->base, uart_dev);
+    int code = fx650_port->base.ops->open(&fx650_port->base, FX650_DEV_NAME);
     if (code) {
         return FX650_ERR_INIT;
     }
@@ -282,20 +282,31 @@ FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev)
 
     // 发送基础AT指令测试
     char resp[64];
-    FX650_Error ret = send_at_command(ctx, "AT\r", resp, sizeof(resp), 1000);
+    FX650_Error ret = send_at_command(ctx, "AT\r", resp, sizeof(resp), AT_TIMEOUT_MS);
     if (ret != FX650_OK) {
         close(ctx->uart->base.fd);
         return FX650_ERR_AT_TIMEOUT;
     }
 
     // 关闭回显
-    ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), 1000);
+    ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), AT_TIMEOUT_MS);
     return ret;
 }
 
-// void fx650_uninit(FX650_CTX* ctx)
-// {
-//     ctx->uart->base.ops->close();
-//     close(ctx->uart->base.fd);
-//     free()
-// } 
+void fx650_uninit(Fx650Ctx* ctx)
+{
+    UartPort *fx650_port = NULL;
+
+    if (ctx == NULL) {
+        return ;
+    }
+
+    fx650_port = ctx->uart;
+    if (fx650_port->base.is_open) {
+        fx650_port->base.ops->close(&fx650_port->base);
+    }
+    if (fx650_port) {
+        free(fx650_port);
+    }
+    free(ctx);
+} 

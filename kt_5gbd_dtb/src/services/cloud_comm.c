@@ -10,6 +10,7 @@
 #include "queue.h"
 #include "list.h"
 #include "lane_to.h"
+#include "fx650.h"
 #include "tcp_client.h"
 #include "ftp_handler.h"
 #include "cloud_comm.h"
@@ -845,6 +846,10 @@ void clound_comm_init(CloundCommContext *ctx)
     client->ops->connect(client);
     ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
     laneTo_init(ctx->laneTo);
+    ctx->fx650 = (Fx650Ctx *)malloc(sizeof(Fx650Ctx));
+    if (FX650_OK == fx650_init(ctx->fx650)) {
+        fx650_connect_network(ctx->fx650);
+    }
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
     pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
     if ((pthread_mutex_init(&ctx->down_task.mutex, NULL) == 0) && 
@@ -859,6 +864,7 @@ void clound_comm_uninit(CloundCommContext *ctx)
     printf("clound_comm_uninit\n");
     ctx->running = false;
     laneTo_uninit(ctx->laneTo);
+    fx650_uninit(ctx->fx650);
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     pthread_join(ctx->event_thread, NULL);

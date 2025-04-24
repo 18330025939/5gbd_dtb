@@ -8,6 +8,8 @@
 #define FX650_PID "0A06"
 #define FX650_VID "2CB7"
 
+#define FX650_DEV_NAME "/dev/ttyUSB1"
+
 // 模组信息相关定义
 #define AT_CGMI "+CGMI"          // 获取制造商 ID
 #define AT_GMI "+GMI"            // 获取制造商 ID
@@ -328,7 +330,7 @@ typedef struct {
     APNConfig apn_config;
     DataReceivedCallback data_cb;
     NetworkEventCallback event_cb;
-} FX650_CTX;
+} Fx650Ctx;
 
 // AT指令响应解析状态机
 typedef enum {
@@ -351,7 +353,7 @@ typedef enum {
     FX650_ERR_TX
 } FX650_Error;
 
-FX650_Error fx650_connect_network(FX650_CTX* ctx);
-FX650_Error fx650_init(FX650_CTX* ctx, const char* uart_dev); 
-
+FX650_Error fx650_connect_network(Fx650Ctx* ctx);
+FX650_Error fx650_init(Fx650Ctx* ctx); 
+void fx650_uninit(Fx650Ctx* ctx);
 #endif
