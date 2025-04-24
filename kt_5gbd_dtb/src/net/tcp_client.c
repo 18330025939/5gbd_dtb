@@ -24,6 +24,7 @@ static void tcp_client_disconnect(TcpClient* client);
 void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 {
     TcpClient* client = (TcpClient*)arg;
+
     if (client->recnt_att < client->max_recnt_att) {
         client->recnt_att++;
         printf("Reconnecting... Attempt %d/%d\n", client->recnt_att, client->max_recnt_att);
@@ -54,20 +55,23 @@ static void tcp_client_read_cb(struct bufferevent* bev, void* arg)
 }
 
 // 事件回调函数
-static void tcp_client_event_cb(struct bufferevent* bev, short event, void* arg)
+static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg)
 {
     TcpClient* client = (TcpClient*)arg;
-    if (event & BEV_EVENT_CONNECTED) {
+    
+    printf("tcp_client_event_cb--------event 0x%x, BEV_EVENT_CONNECTED:0x%x\n", events, BEV_EVENT_CONNECTED);
+    if (events & BEV_EVENT_CONNECTED) {
         printf("Connected to server.\n");
         client->recnt_att = 0;
         client->is_connected = true;
         pthread_create(&client->send_thread, NULL, tcp_client_send_entry, (void*)client);
-    } else if (event & BEV_EVENT_EOF) {
+    } else if (events & BEV_EVENT_EOF) {
         printf("Connection closed.\n");
         client->is_connected = false;
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
-    } else if (event & BEV_EVENT_ERROR) {
-        printf("Error on connection.\n");
+    } else if (events & BEV_EVENT_ERROR) {
+        int err = EVUTIL_SOCKET_ERROR();
+        printf("An error occurred: %d\n", err);
         client->is_connected = false;
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     }
