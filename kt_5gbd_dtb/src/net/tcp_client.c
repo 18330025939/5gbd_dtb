@@ -195,11 +195,9 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 // 销毁客户端
 void tcp_client_destroy(TcpClient* client) 
 {
+    printf("tcp_client_destroy\n");
     clean_queue(&client->tx_queue);
-    printf("clean_queue(&client->tx_queue)\n");
     // clean_queue(&client->rx_queue);
     free(client->server_ip);
-    printf("free(client->server_ip)\n");
     free(client);
-    printf("free(client)\n");
 }
