@@ -852,16 +852,22 @@ void clound_comm_init(CloundCommContext *ctx)
 
 void clound_comm_uninit(CloundCommContext *ctx)
 {
-    printf("clound_comm_uninit\n");
+
     ctx->running = false;
     laneTo_uninit(ctx->laneTo);
+    printf("clound_comm_uninit111\n");
     event_base_loopbreak(ctx->base);
+    printf("clound_comm_uninit2222\n");
     pthread_join(ctx->timer_thread, NULL);
+    printf("clound_comm_uninit3333\n");
     pthread_join(ctx->event_thread, NULL);
+    printf("clound_comm_uninit4444\n");
     pthread_join(ctx->down_task.thread, NULL);
+    printf("clound_comm_uninit5555\n");
     pthread_mutex_destroy(&ctx->down_task.mutex);
+    printf("clound_comm_uninit6666\n");
     pthread_cond_destroy(&ctx->down_task.cond);
-
+    printf("clound_comm_uninit7777\n");
     ctx->client->ops->disconnect(ctx->client);
     printf("clound_comm_uninit....\n");
     tcp_client_destroy(ctx->client);

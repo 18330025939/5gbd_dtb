@@ -152,14 +152,12 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
 // 断开连接
 static void tcp_client_disconnect(TcpClient* client) 
 {
-    if (client->is_connected) {
-        client->is_connected = false;
-        event_base_loopbreak(client->base);
-        pthread_join(client->conn_thread, NULL);
-        printf("client->conn_thread\n");
-        pthread_join(client->send_thread, NULL);
-        printf("client->send_thread\n");
-    }
+    client->is_connected = false;
+    event_base_loopbreak(client->base);
+    pthread_join(client->conn_thread, NULL);
+    printf("client->conn_thread\n");
+    pthread_join(client->send_thread, NULL);
+    printf("client->send_thread\n");
 }
 
 static void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 
