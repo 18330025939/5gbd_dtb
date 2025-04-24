@@ -457,7 +457,7 @@ void *download_upgrade_entry(void *arg)
     }
 
     ctx = (CloundCommContext *)arg;
-    pTask = ctx->down_task;
+    pTask = &(ctx->down_task);
     while (ctx->running) {
         pthread_mutex_lock(&pTask->mutex);
         while (&pTask->list.count == 0) {
