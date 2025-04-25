@@ -174,9 +174,29 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
     }
 
     if (strstr(resp, "OK") == NULL) {
-        fprintf(stderr, "设置APN失败\n");
+        fprintf(stderr, "APN setting failed.\n");
         return -1;
     }
+
+    // snprintf(cmd, sizeof(cmd), "AT+CGREG?");
+    // if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    //     return -1;
+    // }
+
+    // if (strstr(resp, "OK") == NULL) {
+    //     fprintf(stderr, "Module attachment data network failure.\n");
+    //     return -1;
+    // }
+
+    // snprintf(cmd, sizeof(cmd), "AT+CEREG?");
+    // if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    //     return -1;
+    // }
+
+    // if (strstr(resp, "OK") == NULL) {
+    //     fprintf(stderr, "模块附着 LTE网络\n");
+    //     return -1;
+    // }
     return 0;
 }
 
@@ -192,7 +212,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
 
     // 检查是否返回OK
     if (strstr(resp, "OK") == NULL) {
-        fprintf(stderr, "激活拨号失败\n");
+        fprintf(stderr, "Activation dialing failed.\n");
         return -1;
     }
     if (status) {
@@ -202,7 +222,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
         }
 
         if (strstr(resp, "+GTRNDIS: 1") == NULL) {
-            fprintf(stderr, "未获取到IP地址\n");
+            fprintf(stderr, "IP address not obtained.\n");
             return -1;
         }
     }
@@ -236,7 +256,15 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
     }
     ret = activate_dia(ctx, 1);
     if (ret) {
-        return FX650_ERR_PDP_ACTIVATE;
+        fprintf(stderr, "Activation of RNDIS failed,attempt to deactivate and reactivate.\n");
+        if (activate_dia(ctx, 0)) {
+            fprintf(stderr, "Failed to deactivate RNDIS.\n");
+            return FX650_ERR_PDP_ACTIVATE;
+        }
+        if (activate_dia(ctx, 1)) {
+            fprintf(stderr, "Activation failed again, exit.\n");
+            return FX650_ERR_PDP_ACTIVATE;
+        }
     }
 
     run_dhcp_client(ctx->net_name);
