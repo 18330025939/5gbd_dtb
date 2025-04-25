@@ -4,8 +4,8 @@
 // #include <libssh/libssh.h>
 // #include <libssh/sftp.h>
 
-typedef struct ssh_session_struct ssh_session;
-typedef struct sftp_session_struct  sftp_session;
+typedef struct ssh_session_struct* ssh_session;
+typedef struct sftp_session_struct*  sftp_session;
 
 typedef struct st_SSHClient SSHClient;
 
