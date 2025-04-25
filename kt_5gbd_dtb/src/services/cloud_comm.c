@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <event2/event.h>
+#include "publib.h"
 #include "cJSON.h"
 #include "queue.h"
 #include "list.h"
@@ -68,25 +69,25 @@ int _system_(const char *cmd, char *pRetMsg, int msg_len)
 	return 0;
 }
 
-void get_system_time(CustomTime *t)
-{
-    time_t rawtime;
-	struct tm *timeinfo;
+// void get_system_time(CustomTime *t)
+// {
+//     time_t rawtime;
+// 	struct tm *timeinfo;
 
-    if (t == NULL) {
-        return;
-    }
+//     if (t == NULL) {
+//         return;
+//     }
 
-	time (&rawtime);
-	timeinfo = localtime(&rawtime);
+// 	time (&rawtime);
+// 	timeinfo = localtime(&rawtime);
 
-    t->usYear = timeinfo->tm_year + 1900;
-    t->ucMonth = timeinfo->tm_mon + 1;
-    t->ucDay = timeinfo->tm_mday;
-    t->ucHour = timeinfo->tm_hour;
-    t->ucMinute = timeinfo->tm_min;
-    t->ucSecond = timeinfo->tm_sec;
-}
+//     t->usYear = timeinfo->tm_year + 1900;
+//     t->ucMonth = timeinfo->tm_mon + 1;
+//     t->ucDay = timeinfo->tm_mday;
+//     t->ucHour = timeinfo->tm_hour;
+//     t->ucMinute = timeinfo->tm_min;
+//     t->ucSecond = timeinfo->tm_sec;
+// }
 
 static void GetFileName(const char *url, char *filename)
 {

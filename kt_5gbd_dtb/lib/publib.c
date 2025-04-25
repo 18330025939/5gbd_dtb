@@ -144,3 +144,24 @@ char *GetSysTimeStr(int isWithDate)
 	return p;
 }
 
+
+
+void get_system_time(CustomTime *t)
+{
+    time_t rawtime;
+	struct tm *timeinfo;
+
+    if (t == NULL) {
+        return;
+    }
+
+	time (&rawtime);
+	timeinfo = localtime(&rawtime);
+
+    t->usYear = timeinfo->tm_year + 1900;
+    t->ucMonth = timeinfo->tm_mon + 1;
+    t->ucDay = timeinfo->tm_mday;
+    t->ucHour = timeinfo->tm_hour;
+    t->ucMinute = timeinfo->tm_min;
+    t->ucSecond = timeinfo->tm_sec;
+}

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <event2/event.h>
+#include "publib.h"
 #include "queue.h"
 #include "list.h"
 #include "mqtt_client.h"
@@ -74,7 +75,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg);
     hb_data = (HeartBeatDataSeg*)(hdr + 1);
     hb_data->usDevAddr = 0;
-    get_system_time(&(hb_data->stCtTime));
+    get_system_time(&(hb_data->stTime));
     crc = (MsgDataFramCrc*)(hb_data + 1);
     crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen);
 

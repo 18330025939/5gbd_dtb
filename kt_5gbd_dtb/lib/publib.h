@@ -5,6 +5,17 @@
 #include <sys/time.h>
 
 
+typedef struct st_CustomTime
+{
+    uint16_t usYear;
+    uint8_t  ucMonth;
+    uint8_t  ucDay;
+    uint8_t  ucHour;
+    uint8_t  ucMinute;
+    uint8_t  ucSecond;
+} CustomTime;
+
+void get_system_time(CustomTime *t);
 uint64_t get_timestamp_ms(void);
 int getCurrentTime(struct timeval *tv,  struct timezone *tz);
 int BeTimeOut(struct timeval *stv, int s);
