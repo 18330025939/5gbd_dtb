@@ -119,3 +119,5 @@ int fkz9_fw_update_cb(void * arg)
 }
 
 REGISTER_FIRMWARE_UPDATE_INTERFACE(fkz9, fkz9_fw_trans_func, fkz9_fw_update_func, fkz9_fw_update_cb);
+
+

@@ -163,16 +163,15 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
 {
     AsyncMQTTClient *mqtt_client = NULL;
 
+    printf("fkz9_comm_uninit\n");
     if (ctx == NULL || ctx->is_running == false) {
         return;
     }
 
-    printf("fkz9_comm_uninit\n");
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     mqtt_client = ctx->mqtt_client;
-    // mqtt_client->ops->disconnect(mqtt_client);
     mqtt_client_destroy(mqtt_client);
-
     clean_queue(&ctx->tx_queue);
 }
+
