@@ -80,17 +80,17 @@ static char* find_interface_by_vid_pid(const char *vid, const char *pid)
         // 构建设备路径
         char device_path[300];
         snprintf(device_path, sizeof(device_path), "%s/%s/device", SYS_NET_PATH, entry->d_name);
-
+        printf("device path: %s\n", device_path);
         // 解析符号链接获取真实路径
         char real_device_path[512];
         if (realpath(device_path, real_device_path) == NULL) {
             continue;
         }
-
+        printf("real device path: %s\n", real_device_path);
         // 构建uevent文件路径
         char uevent_path[1024];
         snprintf(uevent_path, sizeof(uevent_path), "%s/uevent", real_device_path);
-
+        printf("uevent path: %s\n", uevent_path);
         // 检查uevent文件
         if (access(uevent_path, R_OK) == 0) {
             if (check_uevent_product(uevent_path, vid, pid)) {
