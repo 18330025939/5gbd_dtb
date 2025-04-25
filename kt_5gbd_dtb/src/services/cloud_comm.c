@@ -106,7 +106,43 @@ int get_ota_heartbeat_info(void *arg)
     if (arg == NULL) {
         return -1;
     }
+    pHb_info = (struct st_OtaHeartBeat*)arg;
+    SSHClient_Init(&ssh_client, TEST_SERVER_IP, TEST_SERVER_USERNAME, TEST_SERVER_PASSWORD);
+    int ret = ssh_client.connect(&ssh_client);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "TEST ssh_client.connect failed.\n");
+        return -1;
+    }
+    char resp[4096];
+    ret = ssh_client.execute(&ssh_client, "ls /home/lrj -al", resp, sizeof(resp));
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.execute get_ota_heartbeat_info failed.\n");
+        return -1;
+    }
+    printf("resp of the cmd ls /home/lrj -al %s\n", resp);
 
+    char file_path[256] = {'\0'};
+    char local_path[256] = {'\0'};
+    snprintf(file_path, sizeof(file_path), "/home/lrj/test.log");
+    snprintf(local_path, sizeof(local_path), "/home/rk/");
+    ret = ssh_client.download_file(&ssh_client, file_path, local_path);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.download_file /home/lrj/test.log failed.\n");
+        return -1;
+    }
+
+    snprintf(file_path, sizeof(file_path), "/home/lrj/");
+    snprintf(local_path, sizeof(local_path), "/home/rk/rk.log");
+    ret = ssh_client.upload_file(&ssh_client, local_path, file_path);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.download_file /home/lrj/test.log failed.\n");
+        return -1;
+    }
+#if 0
     pHb_info = (struct st_OtaHeartBeat*)arg;
     SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
@@ -237,9 +273,10 @@ int get_ota_heartbeat_info(void *arg)
         i++;
         token = strtok(NULL, ";");
     }
+#endif
     SSHClient_Destroy(&ssh_client);
 
-    return 0;
+    return -1;
 }
 
 cJSON *create_unit_info_object(UnitInfo * unit_info, uint8_t type)

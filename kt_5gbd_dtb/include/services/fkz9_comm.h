@@ -15,6 +15,11 @@ typedef struct st_AsyncMQTTClient AsyncMQTTClient;
 #define MQTT_SERVER_USERNAME "cktt"
 #define MQTT_SERVER_PASSWORD "cktt"
 
+#define TEST_SERVER_IP   "192.168.42.50"
+#define TEST_SERVER_PORT 1883
+#define TEST_SERVER_USERNAME "lrj"
+#define TEST_SERVER_PASSWORD "123456"
+
 #define MQTT_CLIENT_ID     "RT-A100"
 
 // #define FTP_USERNAME       "cktt"
