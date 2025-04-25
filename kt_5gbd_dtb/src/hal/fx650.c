@@ -221,7 +221,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
             return -1;
         }
 
-        if (strstr(resp, "+GTRNDIS: 1") == NULL) {
+        if (strstr(resp, "OK") == NULL) {
             fprintf(stderr, "IP address not obtained.\n");
             return -1;
         }
@@ -235,6 +235,11 @@ static int run_dhcp_client(const char* net)
 {
     char cmd[128];
     int ret = 0;
+
+    snprintf(cmd, sizeof(cmd), "ip link set %s up", net);
+    if((ret = system(cmd)) == -1) {
+        return ret;
+    }
 
     snprintf(cmd, sizeof(cmd), "udhcpc -i %s &", net);
     if((ret = system(cmd)) == -1) {
@@ -293,6 +298,7 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
         return FX650_ERR_INIT;
     }
 
+    printf("Network port name: %s\n", ctx->net_name);   
     SerialPortInfo fx650_port_info = {
         .speed = 115200, 
         .data_bits = 8, 
@@ -332,6 +338,9 @@ void fx650_uninit(Fx650Ctx* ctx)
         return ;
     }
 
+    if (ctx->net_name) {
+        free(ctx->net_name);
+    }
     fx650_port = ctx->uart;
     if (fx650_port->base.is_open) {
         fx650_port->base.ops->close(&fx650_port->base);

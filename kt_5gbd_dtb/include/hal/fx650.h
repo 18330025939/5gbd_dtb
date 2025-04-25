@@ -320,16 +320,16 @@ typedef struct {
 } APNConfig;
 
 // 回调函数类型定义
-typedef void (*DataReceivedCallback)(uint8_t* data, size_t len);
-typedef void (*NetworkEventCallback)(int event);
+// typedef void (*DataReceivedCallback)(uint8_t* data, size_t len);
+// typedef void (*NetworkEventCallback)(int event);
 
 typedef struct st_Fx650Ctx {
     UartPort *uart;
     char *net_name;
-    NetworkStatus net_status;
-    APNConfig apn_config;
-    DataReceivedCallback data_cb;
-    NetworkEventCallback event_cb;
+    // NetworkStatus net_status;
+    // APNConfig apn_config;
+    // DataReceivedCallback data_cb;
+    // NetworkEventCallback event_cb;
 } Fx650Ctx;
 
 // AT指令响应解析状态机
