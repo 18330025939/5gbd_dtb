@@ -49,7 +49,7 @@ typedef struct st_MsgDataFramCrc
 typedef struct st_HeartBeatDataSeg
 {
     uint16_t usDevAddr;       /* 0x0000 ～ 0x9999 */
-    CustomTime stTime;
+    CustomTime stCtTime;
     uint8_t  ucRsvd[9];
 } HeartBeatDataSeg;
 #pragma pack(pop)

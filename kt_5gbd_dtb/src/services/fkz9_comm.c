@@ -74,7 +74,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg);
     hb_data = (HeartBeatDataSeg*)(hdr + 1);
     hb_data->usDevAddr = 0;
-    get_system_time(&(hb_data->stTime));
+    get_system_time(&(hb_data->stCtTime));
     crc = (MsgDataFramCrc*)(hb_data + 1);
     crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen);
 
