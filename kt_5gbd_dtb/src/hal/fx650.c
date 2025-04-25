@@ -39,9 +39,9 @@ static int check_uevent_product(const char *uevent_path, const char *target_vid,
             // 截取前两部分（vid/pid）
             *first_slash = '\0';
             char *vid = product;
-            printf("vid %s\n", vid);
+            // printf("vid %s\n", vid);
             char *pid = first_slash + 1;
-            printf("pid %s\n", pid);
+            // printf("pid %s\n", pid);
             char *second_slash = strchr(pid, '/');
             if (second_slash) *second_slash = '\0';
 
@@ -83,17 +83,17 @@ static char* find_interface_by_vid_pid(const char *vid, const char *pid)
         // 构建设备路径
         char device_path[300];
         snprintf(device_path, sizeof(device_path), "%s/%s/device", SYS_NET_PATH, entry->d_name);
-        printf("device path: %s\n", device_path);
+        // printf("device path: %s\n", device_path);
         // 解析符号链接获取真实路径
         char real_device_path[512];
         if (realpath(device_path, real_device_path) == NULL) {
             continue;
         }
-        printf("real device path: %s\n", real_device_path);
+        // printf("real device path: %s\n", real_device_path);
         // 构建uevent文件路径
         char uevent_path[1024];
         snprintf(uevent_path, sizeof(uevent_path), "%s/uevent", real_device_path);
-        printf("uevent path: %s\n", uevent_path);
+        // printf("uevent path: %s\n", uevent_path);
         // 检查uevent文件
         if (access(uevent_path, R_OK) == 0) {
             if (check_uevent_product(uevent_path, vid, pid)) {
@@ -126,25 +126,22 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
 		FD_SET(ctx->uart->base.fd, &read_set);
         timeout.tv_sec = timeout_ms / 1000;
         timeout.tv_usec = (timeout_ms % 1000) * 1000;
-	printf("timeout.tv_sec %d, tv_uses %d\n", timeout.tv_sec, timeout.tv_usec);
+
         if (select(ctx->uart->base.fd + 1, &read_set, NULL, NULL, &timeout) <= 0) {
-		printf("timeout\n");
 			return FX650_ERR_AT_TIMEOUT;
 		}
 
         ssize_t n = ctx->uart->base.ops->read(&ctx->uart->base, pos, remaining);
-        //if (n <= 0) continue;
-	pos[n] = '\0';
-	printf("%s --,%ld\n", resp, n);
+        if (n <= 0) continue;
+	    pos[n] = '\0';
+	    // printf("%s --,%ld\n", resp, n);
 
         // 检查是否收到OK或ERROR
         if (strstr(resp, "OK\r\n")) {
-		printf("OK\n");
             return FX650_OK;
         }
         if (strstr(resp, "\r\nERROR\r\n") || strstr(resp, "+CME ERROR:")) {
-		printf("error\n");
-            return FX650_ERR_AT_TIMEOUT;
+            return FX650_ERR_AT_ERROR;
         }
     }
 }
@@ -158,7 +155,7 @@ static int check_sim_status(Fx650Ctx* ctx)
     }
 
     if (strstr(resp, "+CPIN: READY") == NULL) {
-        fprintf(stderr, "SIM卡未就绪\n");
+        fprintf(stderr, "SIM card not ready.\n");
         return -1;
     }
     return 0;
@@ -183,25 +180,6 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
         return -1;
     }
 
-    // snprintf(cmd, sizeof(cmd), "AT+CGREG?");
-    // if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
-    //     return -1;
-    // }
-
-    // if (strstr(resp, "OK") == NULL) {
-    //     fprintf(stderr, "Module attachment data network failure.\n");
-    //     return -1;
-    // }
-
-    // snprintf(cmd, sizeof(cmd), "AT+CEREG?");
-    // if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
-    //     return -1;
-    // }
-
-    // if (strstr(resp, "OK") == NULL) {
-    //     fprintf(stderr, "模块附着 LTE网络\n");
-    //     return -1;
-    // }
     return 0;
 }
 
@@ -327,11 +305,11 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
     if (ret != FX650_OK) {
         fprintf(stderr, "Failed to send AT command.\n");
         close(ctx->uart->base.fd);
-        return FX650_ERR_AT_TIMEOUT;
+        return ret;
     }
 
     // 关闭回显
-    //ret = send_at_command(ctx, "AT\r", resp, sizeof(resp), AT_TIMEOUT_MS);
+    ret = send_at_command(ctx, "AT\r", resp, sizeof(resp), AT_TIMEOUT_MS);
     return ret;
 }
 
@@ -355,3 +333,5 @@ void fx650_uninit(Fx650Ctx* ctx)
     }
     free(ctx);
 } 
+
+

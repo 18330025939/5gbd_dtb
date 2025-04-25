@@ -13,19 +13,21 @@
 
 int serial_open(SerialPort *self, const char *path)
 {
+    mode_t mode = 0666;
+
     printf("serial_open %s\n", path);
-    if (chmod(path, 0666) == -1) {
-        printf("chmod error\n");
+    if (chmod(path, mode) == -1) {
+        fprintf(stderr, "chmod error\n");
         return -1;
     }
     self->fd = open(path, O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (-1 == self->fd) {
-        printf("serial open failed!\n");
+        fprintf(stderr, "serial open failed!\n");
         return -1;
     }
 
     if (tcgetattr(self->fd, &self->origin_tios) < 0) {
-        printf("tcgetattr error!\n");
+        fprintf(stderr, "tcgetattr error!\n");
         close(self->fd);
         return -2;
     }
@@ -61,16 +63,14 @@ ssize_t serial_read(SerialPort *self, void *buf, size_t count)
     if(self->is_open == false) {
         return 0;
     }
-//    printf("serial_read\n");
-    while (t_bytes < count - 1) {
-        r_bytes = read(self->fd, buf + t_bytes, 128);
-	if (r_bytes < 0) {
-	    return 0;
-	}
-	if (r_bytes == 0) {
-	    break;
-	}
-	t_bytes += r_bytes;
+
+    while (t_bytes < (count - 1)) {
+        r_bytes = read(self->fd, buf + t_bytes, 256);
+        if (r_bytes <= 0) {
+            break;
+        }
+
+        t_bytes += r_bytes;
     }
 
     return t_bytes;
@@ -183,7 +183,7 @@ static int uart_configure(SerialPort *self, const SerialPortInfo *info)//int nSp
 
     tcflush(self->fd, TCOFLUSH);
     if (tcsetattr(self->fd , TCSANOW, &tio) != 0) {
-        printf("com set error\n");
+        fprintf(stderr, "com set error\n");
         return -1;
     }
 

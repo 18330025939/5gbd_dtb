@@ -46,9 +46,6 @@ static void tcp_client_read_cb(struct bufferevent* bev, void* arg)
 
     size_t len = bufferevent_read(bev, msg, sizeof(msg));
     if (len > 0) {
-        // enqueue(client->rx_queue, msg, len);
-        // msg[len] = '\0';  
-        // printf("Received: %s\n", msg);
         if (client->on_message) {
             client->on_message(msg, len);
         }
@@ -72,7 +69,7 @@ static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     } else if (events & BEV_EVENT_ERROR) {
         int err = EVUTIL_SOCKET_ERROR();
-        printf("An error occurred: %d\n", err);
+        printf("An error occurred: %d, %s\n", err, strerror(err));
         // client->is_connected = false;
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     }
@@ -160,9 +157,7 @@ static void tcp_client_disconnect(TcpClient* client)
     client->is_connected = false;
     event_base_loopbreak(client->base);
     pthread_join(client->conn_thread, NULL);
-    printf("client->conn_thread\n");
     pthread_join(client->send_thread, NULL);
-    printf("client->send_thread\n");
 }
 
 static void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 
