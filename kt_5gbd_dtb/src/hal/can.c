@@ -10,9 +10,9 @@
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdbool.h>
-// #include "queue.h"
-#include "can.h"
 #include "publib.h"
+#include "queue.h"
+#include "can.h"
 
 /*接收*/
 static void* rx_thread_func(void* arg)

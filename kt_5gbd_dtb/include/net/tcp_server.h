@@ -1,8 +1,9 @@
 #ifndef __TCP_SERVER_H
 #define __TCP_SERVER_H
 
-#include "accept_client.h"
+// #include "accept_client.h"
 // extern typedef struct st_AcceptClient AcceptClient;
+typedef struct st_AcceptClient AcceptClient;
 
 typedef void (*TcpClientCanllback)(int sockfd, const char *data, size_t len);
 

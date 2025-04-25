@@ -4,7 +4,7 @@
 
 #define MAX_SEGMENTS 128
 
-typedef struct {
+typedef struct st_ThreadSafeQueue {
     pthread_mutex_t mutex;
     uint8_t* buffers[MAX_SEGMENTS];
     size_t sizes[MAX_SEGMENTS];

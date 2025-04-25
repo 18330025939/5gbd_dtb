@@ -1,7 +1,11 @@
 #ifndef __FKZ9_COMM_H
 #define __FKZ9_COMM_H
 
-#include "mqtt_client.h"
+#include <stdbool.h>
+
+typedef struct st_AsyncMQTTClient AsyncMQTTClient;
+typedef struct st_ThreadSafeQueue ThreadSafeQueue;
+typedef struct st_Time Time;
 
 #define MAX_MSG_SIZE    200
 

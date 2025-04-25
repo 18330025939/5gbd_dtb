@@ -299,7 +299,7 @@ struct MessageParser {
         .func = parse_func \
     }
 
-typedef struct {
+typedef struct st_LaneToCtx {
     UartPort *uart;
     // char dev_name[20];
     // pthread_t recv_thread;

@@ -323,7 +323,7 @@ typedef struct {
 typedef void (*DataReceivedCallback)(uint8_t* data, size_t len);
 typedef void (*NetworkEventCallback)(int event);
 
-typedef struct {
+typedef struct st_Fx650Ctx {
     UartPort *uart;
     char *net_name;
     NetworkStatus net_status;

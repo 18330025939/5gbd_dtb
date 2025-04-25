@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <net/if.h>
 #include <linux/can.h>
-#include "queue.h"
+typedef struct st_ThreadSafeQueue ThreadSafeQueue;
 
 // #define MAX_SEGMENTS     32
 #define RETRY_TIMEOUT_MS 500

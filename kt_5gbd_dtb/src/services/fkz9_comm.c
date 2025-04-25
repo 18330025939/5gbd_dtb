@@ -10,9 +10,8 @@
 #include "mqtt_client.h"
 #include "ftp_handler.h"
 #include "cloud_comm.h"
-#include "fkz9_comm.h"
 #include "ssh_client.h"
-
+#include "fkz9_comm.h"
 
 static void heartbeat_resp(uint8_t *arg)
 {
