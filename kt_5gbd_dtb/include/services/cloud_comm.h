@@ -1,6 +1,8 @@
 #ifndef __CLOUD_COMM_H
 #define __CLOUD_COMM_H
 
+#include <stdbool.h>
+
 typedef struct st_TcpClient TcpClient;
 typedef struct st_LaneToCtx LaneToCtx;
 typedef struct st_Fx650Ctx Fx650Ctx;
