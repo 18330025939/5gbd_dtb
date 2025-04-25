@@ -55,11 +55,25 @@ ssize_t serial_write(SerialPort *self, const void *buf, size_t count)
 
 ssize_t serial_read(SerialPort *self, void *buf, size_t count)
 {
+    size_t t_bytes = 0;
+    size_t r_bytes = 0;
+
     if(self->is_open == false) {
         return 0;
     }
-    printf("serial_read\n");
-    return read(self->fd, buf, count);
+//    printf("serial_read\n");
+    while (t_bytes < count - 1) {
+        r_bytes = read(self->fd, buf + t_bytes, 128);
+	if (r_bytes < 0) {
+	    return 0;
+	}
+	if (r_bytes == 0) {
+	    break;
+	}
+	t_bytes += r_bytes;
+    }
+
+    return t_bytes;
 }
 
 static int conv_baud(unsigned long int baudrate)

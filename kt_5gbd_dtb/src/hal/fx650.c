@@ -126,22 +126,24 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
 		FD_SET(ctx->uart->base.fd, &read_set);
         timeout.tv_sec = timeout_ms / 1000;
         timeout.tv_usec = (timeout_ms % 1000) * 1000;
-
+	printf("timeout.tv_sec %d, tv_uses %d\n", timeout.tv_sec, timeout.tv_usec);
         if (select(ctx->uart->base.fd + 1, &read_set, NULL, NULL, &timeout) <= 0) {
+		printf("timeout\n");
 			return FX650_ERR_AT_TIMEOUT;
 		}
 
         ssize_t n = ctx->uart->base.ops->read(&ctx->uart->base, pos, remaining);
-        if (n <= 0) continue;
+        //if (n <= 0) continue;
+	pos[n] = '\0';
+	printf("%s --,%ld\n", resp, n);
 
-        pos += n;
-        remaining -= n;
-        
         // 检查是否收到OK或ERROR
         if (strstr(resp, "OK\r\n")) {
+		printf("OK\n");
             return FX650_OK;
         }
         if (strstr(resp, "\r\nERROR\r\n") || strstr(resp, "+CME ERROR:")) {
+		printf("error\n");
             return FX650_ERR_AT_TIMEOUT;
         }
     }
@@ -151,7 +153,7 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
 static int check_sim_status(Fx650Ctx* ctx) 
 {
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(ctx, "AT+CPIN?", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (send_at_command(ctx, "AT+CPIN?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -170,7 +172,7 @@ static int check_sim_status(Fx650Ctx* ctx)
 static int set_apn(Fx650Ctx* ctx, const char *apn) 
 {
     char cmd[128];
-    snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"", apn);
+    snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"\r", apn);
     char resp[AT_MAX_RESPONSE_LEN];
     if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
@@ -207,7 +209,7 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
 static int activate_dia(Fx650Ctx* ctx, uint8_t status) 
 {
     char cmd[128];
-    snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=%s,1", status ? "1" : "0");
+    snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=%s,1\r", status ? "1" : "0");
     char resp[AT_MAX_RESPONSE_LEN];
     if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
@@ -220,7 +222,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
     }
     if (status) {
         // 查询IP分配状态
-        if (send_at_command(ctx, "AT+GTRNDIS?", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+        if (send_at_command(ctx, "AT+GTRNDIS?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
         }
 
@@ -321,7 +323,7 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
 
     // 发送基础AT指令测试
     char resp[64];
-    FX650_Error ret = send_at_command(ctx, "AT\r", resp, sizeof(resp), AT_TIMEOUT_MS);
+    FX650_Error ret = send_at_command(ctx, "AT\r\n", resp, sizeof(resp), AT_TIMEOUT_MS);
     if (ret != FX650_OK) {
         fprintf(stderr, "Failed to send AT command.\n");
         close(ctx->uart->base.fd);
@@ -329,7 +331,7 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
     }
 
     // 关闭回显
-    ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), AT_TIMEOUT_MS);
+    //ret = send_at_command(ctx, "AT\r", resp, sizeof(resp), AT_TIMEOUT_MS);
     return ret;
 }
 
