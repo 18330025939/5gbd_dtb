@@ -32,13 +32,16 @@ static int check_uevent_product(const char *uevent_path, const char *target_vid,
         if (strncmp(line, PRODUCT_PREFIX, strlen(PRODUCT_PREFIX)) == 0) {
             // 提取PRODUCT值（格式：vid/pid/...）
             char *product = line + strlen(PRODUCT_PREFIX);
+            printf("product %s\n", product);
             char *first_slash = strchr(product, '/');
             if (!first_slash) continue;
 
             // 截取前两部分（vid/pid）
             *first_slash = '\0';
             char *vid = product;
+            printf("vid %s\n", vid);
             char *pid = first_slash + 1;
+            printf("pid %s\n", pid);
             char *second_slash = strchr(pid, '/');
             if (second_slash) *second_slash = '\0';
 

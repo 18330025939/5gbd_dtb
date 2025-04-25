@@ -5,8 +5,8 @@
 #define URC_BUFFER_SIZE 256
 #define AT_MAX_RESPONSE_LEN 1024
 
-#define FX650_PID "0A06"
-#define FX650_VID "2CB7"
+#define FX650_PID  "A05"
+#define FX650_VID  "2CB7"
 
 #define FX650_DEV_NAME "/dev/ttyUSB1"
 
