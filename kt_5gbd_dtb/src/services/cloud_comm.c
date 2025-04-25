@@ -126,7 +126,7 @@ int get_ota_heartbeat_info(void *arg)
     char file_path[256] = {'\0'};
     char local_path[256] = {'\0'};
     snprintf(file_path, sizeof(file_path), "/home/lrj/test.log");
-    snprintf(local_path, sizeof(local_path), "/home/rk/");
+    snprintf(local_path, sizeof(local_path), "/home/rk/test.log");
     ret = ssh_client.download_file(&ssh_client, file_path, local_path);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
@@ -134,12 +134,12 @@ int get_ota_heartbeat_info(void *arg)
         return -1;
     }
 
-    snprintf(file_path, sizeof(file_path), "/home/lrj/");
+    snprintf(file_path, sizeof(file_path), "/home/lrj/rk.log");
     snprintf(local_path, sizeof(local_path), "/home/rk/rk.log");
     ret = ssh_client.upload_file(&ssh_client, local_path, file_path);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.download_file /home/lrj/test.log failed.\n");
+        fprintf(stderr, "ssh_client.upload_file /home/rk/rk.log failed.\n");
         return -1;
     }
 #if 0
