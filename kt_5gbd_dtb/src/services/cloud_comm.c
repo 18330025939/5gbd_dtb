@@ -9,7 +9,7 @@
 #include "publib.h"
 #include "cJSON.h"
 #include "queue.h"
-#include "list.h"
+// #include "list.h"
 #include "lane_to.h"
 #include "fx650.h"
 #include "tcp_client.h"

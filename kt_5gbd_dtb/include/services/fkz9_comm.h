@@ -2,10 +2,11 @@
 #define __FKZ9_COMM_H
 
 #include <stdbool.h>
+#include "publib.h"
+#include "queue.h"
+#include "list.h"
 
 typedef struct st_AsyncMQTTClient AsyncMQTTClient;
-typedef struct st_ThreadSafeQueue ThreadSafeQueue;
-typedef struct st_CustomTime CustomTime;
 
 #define MAX_MSG_SIZE    200
 
