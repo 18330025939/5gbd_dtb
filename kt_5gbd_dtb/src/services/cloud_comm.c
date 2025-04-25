@@ -68,7 +68,7 @@ int _system_(const char *cmd, char *pRetMsg, int msg_len)
 	return 0;
 }
 
-void get_system_time(Time *t)
+void get_system_time(CustomTime *t)
 {
     time_t rawtime;
 	struct tm *timeinfo;
@@ -575,7 +575,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     MsgFramHdr *hdr = NULL;
     NAVDataSeg *nav_data = NULL;
     MsgDataFramCrc *crc = NULL;
-    Time t;
+    CustomTime t;
     uint8_t buf[512];
     char str[50];
 
@@ -658,7 +658,7 @@ int func_wave_file_resp(void *arg)
     pHdr->usLen = sizeof(MsgFramHdr);
     pResp = (WaveFileResp *)(buf + sizeof(MsgFramHdr));
     pResp->usDevAddr = 0;
-    Time t;
+    CustomTime t;
     get_system_time(&t);
     pResp->ucYear = t.usYear - 2000;
     pResp->ucMonth = t.ucMonth;

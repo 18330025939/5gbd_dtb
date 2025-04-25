@@ -45,7 +45,7 @@ typedef struct st_MsgDataFramCrc
 #pragma pack(pop)
 
 
-typedef struct st_Time
+typedef struct st_CustomTime
 {
     uint16_t usYear;
     uint8_t  ucMonth;
@@ -53,7 +53,7 @@ typedef struct st_Time
     uint8_t  ucHour;
     uint8_t  ucMinute;
     uint8_t  ucSecond;
-} Time;
+} CustomTime;
 
 #define TIME_TO_STR(pt, buffer) \
     do { \
@@ -226,7 +226,7 @@ struct FwDownInfo
 // void (*task_cb)(evutil_socket_t, short, void*);
 
 uint16_t checkSum_8(uint8_t *buf, uint16_t len);
-void get_system_time(Time *t);
+void get_system_time(CustomTime *t);
 int _system_(const char *cmd, char *pRetMsg, int msg_len);
 void clound_comm_init(CloundCommContext *ctx);
 void clound_comm_uninit(CloundCommContext *ctx);
