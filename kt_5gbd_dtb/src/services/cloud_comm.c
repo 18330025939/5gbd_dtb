@@ -848,7 +848,9 @@ void clound_comm_init(CloundCommContext *ctx)
     ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
     laneTo_init(ctx->laneTo);
     ctx->fx650 = (Fx650Ctx *)malloc(sizeof(Fx650Ctx));
-    if (FX650_OK == fx650_init(ctx->fx650)) {
+    FX650_Error ret = fx650_init(ctx->fx650);
+    printf("fx650_init status %d\n", ret);
+    if (FX650_OK == ret) {
         fx650_connect_network(ctx->fx650);
     }
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);

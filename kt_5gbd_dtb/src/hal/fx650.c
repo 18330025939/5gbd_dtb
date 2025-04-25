@@ -289,6 +289,7 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
 
     ctx->net_name = find_interface_by_vid_pid(FX650_VID, FX650_PID);
     if (ctx->net_name == NULL) {
+        fprintf(stderr, "Network port name not found.\n");
         return FX650_ERR_INIT;
     }
 
@@ -302,6 +303,7 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
     fx650_port = uart_port_create();
     int code = fx650_port->base.ops->open(&fx650_port->base, FX650_DEV_NAME);
     if (code) {
+        fprintf(stderr, "Failed to open serial port %s.\n", FX650_DEV_NAME);
         return FX650_ERR_INIT;
     }
     fx650_port->base.ops->configure(&fx650_port->base, &fx650_port_info);
@@ -312,6 +314,7 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
     char resp[64];
     FX650_Error ret = send_at_command(ctx, "AT\r", resp, sizeof(resp), AT_TIMEOUT_MS);
     if (ret != FX650_OK) {
+        fprintf(stderr, "Failed to send AT command.\n");
         close(ctx->uart->base.fd);
         return FX650_ERR_AT_TIMEOUT;
     }
