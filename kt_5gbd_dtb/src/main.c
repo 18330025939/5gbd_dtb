@@ -59,7 +59,7 @@ int main(int argc, char ** args)
     }
     event_add(sigint, NULL);
 
-    event *sigterm = evsignal_new(base, SIGTERM, signal_handler, base);
+    struct event *sigterm = evsignal_new(base, SIGTERM, signal_handler, base);
     if (!sigterm) {
         fprintf(stderr, "Could not create SIGTERM event: exiting\n");
         event_free(sigint);
@@ -71,8 +71,10 @@ int main(int argc, char ** args)
     event_base_dispatch(base);
 
     printf("wait....\n");
-    event_free(signal);
+    event_free(sigint);
+    event_free(sigterm);
     event_base_free(base);
+    
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
     FAULT_LED_ON();
