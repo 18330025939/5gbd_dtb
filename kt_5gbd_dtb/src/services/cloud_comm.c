@@ -106,6 +106,7 @@ int get_ota_heartbeat_info(void *arg)
     if (arg == NULL) {
         return -1;
     }
+#if 0
     pHb_info = (struct st_OtaHeartBeat*)arg;
     SSHClient_Init(&ssh_client, TEST_SERVER_IP, TEST_SERVER_USERNAME, TEST_SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
@@ -142,7 +143,8 @@ int get_ota_heartbeat_info(void *arg)
         fprintf(stderr, "ssh_client.upload_file /home/rk/rk.log failed.\n");
         return -1;
     }
-#if 0
+#endif
+#if 1
     pHb_info = (struct st_OtaHeartBeat*)arg;
     SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
@@ -771,7 +773,6 @@ int func_wave_file_req(void *arg)
     SSHClient_Destroy(&ssh_client);
     return 0;
 }
-
 
 REGISTER_MESSAGE_PROCESSINFG_INTERFACE(wave_file, MSG_SIGN_WAVE_FILE_REQ, func_wave_file_req, func_wave_file_resp);
 

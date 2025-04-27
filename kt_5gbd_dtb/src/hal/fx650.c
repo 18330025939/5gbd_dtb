@@ -32,7 +32,7 @@ static int check_uevent_product(const char *uevent_path, const char *target_vid,
         if (strncmp(line, PRODUCT_PREFIX, strlen(PRODUCT_PREFIX)) == 0) {
             // 提取PRODUCT值（格式：vid/pid/...）
             char *product = line + strlen(PRODUCT_PREFIX);
-            printf("product %s\n", product);
+            // printf("product %s\n", product);
             char *first_slash = strchr(product, '/');
             if (!first_slash) continue;
 
@@ -116,9 +116,9 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
     // 发送命令
     ctx->uart->base.ops->write(&ctx->uart->base, cmd, strlen(cmd));
     
-    char* pos = resp;
+    // char* pos = resp;
     fd_set read_set;
-    size_t remaining = resp_len;
+    // size_t remaining = resp_len;
     struct timeval timeout;
 
     while (1) {
@@ -131,9 +131,8 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
 			return FX650_ERR_AT_TIMEOUT;
 		}
 
-        ssize_t n = ctx->uart->base.ops->read(&ctx->uart->base, pos, remaining);
-        if (n <= 0) continue;
-	    pos[n] = '\0';
+        ssize_t n = ctx->uart->base.ops->read(&ctx->uart->base, resp, resp_len);
+        // if (n <= 0) continue;
 	    // printf("%s --,%ld\n", resp, n);
 
         // 检查是否收到OK或ERROR

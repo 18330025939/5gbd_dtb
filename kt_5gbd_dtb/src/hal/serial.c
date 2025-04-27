@@ -65,13 +65,14 @@ ssize_t serial_read(SerialPort *self, void *buf, size_t count)
     }
 
     while (t_bytes < (count - 1)) {
-        r_bytes = read(self->fd, buf + t_bytes, 256);
+        r_bytes = read(self->fd, buf + t_bytes, count > 256 ? 256 : count);
         if (r_bytes <= 0) {
             break;
         }
 
         t_bytes += r_bytes;
     }
+    buf[t_bytes] = '\0';
 
     return t_bytes;
 }
