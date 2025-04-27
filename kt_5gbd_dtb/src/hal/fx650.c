@@ -227,6 +227,21 @@ static int run_dhcp_client(const char* net)
     if((ret = system(cmd)) == -1) {
         return ret;
     }
+
+    snprintf(cmd, sizeof(cmd), "ip route del default");
+    if((ret = system(cmd)) == -1) {
+        return ret;
+    }
+
+    snprintf(cmd, sizeof(cmd), "ip route add default via 192.168.10.1 dev %s metric 600", net);
+    if((ret = system(cmd)) == -1) {
+        return ret;
+    }
+
+    snprintf(cmd, sizeof(cmd), "ip route add default via 192.168.42.1 dev eth0 metric 20100");
+    if((ret = system(cmd)) == -1) {
+        return ret;
+    }
     return 0;
 }
 

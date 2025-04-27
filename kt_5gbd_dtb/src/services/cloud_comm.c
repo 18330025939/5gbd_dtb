@@ -874,6 +874,16 @@ void clound_comm_init(CloundCommContext *ctx)
 {
     TcpClient *client = NULL;
 
+    ctx->fx650 = (Fx650Ctx *)malloc(sizeof(Fx650Ctx));
+    FX650_Error ret = fx650_init(ctx->fx650);
+    if (FX650_OK != ret) {
+        printf("fx650_init failed. %d\n", ret);
+        return;
+    }
+    fx650_connect_network(ctx->fx650);
+    ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
+    laneTo_init(ctx->laneTo);
+
     ctx->running = true;
     init_queue(&ctx->event_queue, 256);
     List_Init_Thread(&ctx->ev_list);
@@ -881,16 +891,9 @@ void clound_comm_init(CloundCommContext *ctx)
 
     client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
     client->ops->register_cb(client, proc_message_cb);
-    ctx->client = client;
     client->ops->connect(client);
-    ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
-    laneTo_init(ctx->laneTo);
-    ctx->fx650 = (Fx650Ctx *)malloc(sizeof(Fx650Ctx));
-    FX650_Error ret = fx650_init(ctx->fx650);
-    printf("fx650_init status %d\n", ret);
-    if (FX650_OK == ret) {
-        fx650_connect_network(ctx->fx650);
-    }
+    ctx->client = client;
+
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
     pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
     if ((pthread_mutex_init(&ctx->down_task.mutex, NULL) == 0) && 
@@ -904,8 +907,6 @@ void clound_comm_uninit(CloundCommContext *ctx)
 {
     printf("clound_comm_uninit\n");
     ctx->running = false;
-    laneTo_uninit(ctx->laneTo);
-    fx650_uninit(ctx->fx650);
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     pthread_join(ctx->event_thread, NULL);
@@ -916,6 +917,8 @@ void clound_comm_uninit(CloundCommContext *ctx)
         ctx->client->ops->disconnect(ctx->client);
     }
     tcp_client_destroy(ctx->client);
+    laneTo_uninit(ctx->laneTo);
+    fx650_uninit(ctx->fx650);
     clean_queue(&ctx->event_queue);
 }
 
