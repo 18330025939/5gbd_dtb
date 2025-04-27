@@ -72,7 +72,6 @@ ssize_t serial_read(SerialPort *self, void *buf, size_t count)
 
         t_bytes += r_bytes;
     }
-    buf[t_bytes] = '\0';
 
     return t_bytes;
 }
