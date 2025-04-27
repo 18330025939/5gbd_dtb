@@ -322,7 +322,7 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
     }
 
     // 关闭回显
-    ret = send_at_command(ctx, "AT\r", resp, sizeof(resp), AT_TIMEOUT_MS);
+    // ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), AT_TIMEOUT_MS);
     return ret;
 }
 

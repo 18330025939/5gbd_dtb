@@ -884,7 +884,6 @@ void clound_comm_init(CloundCommContext *ctx)
     ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
     laneTo_init(ctx->laneTo);
 
-    ctx->running = true;
     init_queue(&ctx->event_queue, 256);
     List_Init_Thread(&ctx->ev_list);
     List_Init_Thread(&ctx->down_task.list);
@@ -901,10 +900,15 @@ void clound_comm_init(CloundCommContext *ctx)
         pthread_create(&ctx->down_task.thread, NULL, download_upgrade_entry, ctx);
     }
     gp_cloud_comm_ctx = ctx;
+    ctx->running = true;
 }
 
 void clound_comm_uninit(CloundCommContext *ctx)
 {
+    if (ctx == NULL || ctx->running == true) {
+        return ;
+    } 
+
     printf("clound_comm_uninit\n");
     ctx->running = false;
     event_base_loopbreak(ctx->base);
