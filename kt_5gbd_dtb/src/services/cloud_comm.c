@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <byteswap.h>
 #include <event2/event.h>
 #include "publib.h"
 #include "cJSON.h"

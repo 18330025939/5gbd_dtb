@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <byteswap.h>
 #include <event2/event.h>
 #include "publib.h"
 #include "queue.h"
@@ -40,10 +41,10 @@ static void on_message_cb(const char* topic, const void* payload, size_t payload
     }
 
     pHdr = (MsgFramHdr *)payload;
-    uint16_t crc = checkSum_8((uint8_t *)payload, pHdr->usLen);
-    pCrc = (MsgDataFramCrc *)(payload + pHdr->usLen);
+    uint16_t crc = checkSum_8((uint8_t *)payload, pHdr->usLen - sizeof(MsgDataFramCrc));
+    pCrc = (MsgDataFramCrc *)(payload + pHdr->usLen - sizeof(MsgDataFramCrc));
 
-    if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != pCrc->usCRC) {
+    if (pHdr->usHdr != MSG_DATA_FRAM_HDR || bswap_16(crc) != pCrc->usCRC) {
         return ;
     }
     switch (pHdr->ucSign) {
@@ -71,9 +72,10 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr = (MsgFramHdr*)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR;
     hdr->ucSign = MQTT_MSG_SIGN_HEARTBEAT_REQ;
-    hdr->usLen = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg) + sizeof(MsgDataFramCrc);
+    uint16_t len = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg) + sizeof(MsgDataFramCrc);
+    hdr->usLen = bswap_16(len);
     hb_data = (HeartBeatDataSeg*)(hdr + 1);
-    hb_data->usDevAddr = CLIENT_DEV_ADDR;
+    hb_data->usDevAddr = bswap_16(CLIENT_DEV_ADDR);
     CustomTime t;
     get_system_time(&t);
     hb_data->ucYear = t.usYear - 2000;
@@ -84,7 +86,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hb_data->ucSecond = t.ucSecond;
     crc = (MsgDataFramCrc*)(hb_data + 1);
     crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen - sizeof(MsgDataFramCrc));
-
+    crc->usCRC = bswap_16(crc->usCRC);
     // printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
     mqtt_client = ctx->mqtt_client;
     char topic[50] = {0};
