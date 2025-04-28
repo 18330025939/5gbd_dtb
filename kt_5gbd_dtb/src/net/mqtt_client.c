@@ -56,14 +56,14 @@ int mqtt_connect(AsyncMQTTClient* client)
     if (client == NULL) {
         return -1;
     }
-    
+
     AsyncClientConfig *config = client->config;
     
     // 配置连接参数
     MQTTAsync_connectOptions opts = MQTTAsync_connectOptions_initializer;
     opts.keepAliveInterval = config->keep_alive;
     opts.cleansession = config->clean_session;
-    opts.username, config->user_name;
+    opts.username = config->user_name;
     opts.password = config->password;
     opts.context = client->handle;
     opts.onSuccess = on_connect_success;
@@ -137,7 +137,6 @@ static AsyncClientConfig client_config = {
     .keep_alive = KEEP_ALIVE_TIME,
     .qos = QOS,
     .clean_session = 1,
-    .user_name = 
 } ;
 
 /* 初始化 */
