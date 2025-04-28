@@ -85,6 +85,7 @@ void on_publish_success(void* context, MQTTAsync_successData* response)
 int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload, size_t len) 
 {
     AsyncClientConfig *config = client->config;
+    int rc = -1;
     
     MQTTAsync_message msg = MQTTAsync_message_initializer;
     MQTTAsync_responseOptions pub_opts = MQTTAsync_responseOptions_initializer;
@@ -95,9 +96,11 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     pub_opts.onSuccess = on_publish_success;
     pub_opts.context = client->handle;
 
-    printf("mqtt_publish topic=%s, payload=%s, len=%d\n", topic, (char*)payload, len);
+    printf("mqtt_publish topic=%s, payload=%s, len=%d, client->is_conn=%s\n", topic, (char*)payload, len, client->is_conn == true ? "true" : "false");
     pthread_mutex_lock(&client->lock);
-    int rc = MQTTAsync_sendMessage(client->handle, topic, &msg, &pub_opts);
+    if (client->is_conn == true) {
+        rc = MQTTAsync_sendMessage(client->handle, topic, &msg, &pub_opts);
+    }
     pthread_mutex_unlock(&client->lock);
     return rc;
 }
@@ -116,6 +119,7 @@ static void on_subscribe_failure(void* context, MQTTAsync_failureData* response)
 int mqtt_subscribe(AsyncMQTTClient* client, const char* topic) 
 {
     AsyncClientConfig *config = client->config;
+    int rc = -1;
     
     MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
     opts.onSuccess = on_subscribe_success;
@@ -124,7 +128,9 @@ int mqtt_subscribe(AsyncMQTTClient* client, const char* topic)
 
     printf("mqtt_subscribe topic=%s\n", topic);
     pthread_mutex_lock(&client->lock);
-    int rc = MQTTAsync_subscribe(client->handle, topic, config->qos, &opts);
+    if (client->is_conn == true) {
+        rc = MQTTAsync_subscribe(client->handle, topic, config->qos, &opts);
+    }
     pthread_mutex_unlock(&client->lock);
     return rc;
 }
