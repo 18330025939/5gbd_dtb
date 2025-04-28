@@ -79,6 +79,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     crc = (MsgDataFramCrc*)(hb_data + 1);
     crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen);
 
+    printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
     if (mqtt_client->is_conn) {
         char topic[50] = {0};
         snprintf(topic, sizeof(topic), "fkz9/%d%s", ctx->fkz9_dev_addr, MQTT_HEARTBEAT_REQ_TOPIC);
