@@ -35,6 +35,7 @@ void (*MqttMessageCallback)(const char*, const void*, size_t);
 // 异步客户端结构体
 struct st_AsyncMQTTClient {
     MQTTAsync handle;               // Paho异步客户端句柄
+    MQTTAsync_connectOptions conn_opts;
     AsyncClientConfig *config;      // 客户端配置
     AsyncClientOps *ops;
 
