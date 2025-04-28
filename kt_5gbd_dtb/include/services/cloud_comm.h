@@ -17,9 +17,9 @@ typedef struct st_Fx650Ctx Fx650Ctx;
 
 #define OTA_HEARTBEAT_URL  "https://ota.cktt.com.cn/ota-server/heartbeat"
 #define OTA_UPREPORT_URL   "https://ota.cktt.com.cn/ota-server/submitReport"
-/* OTA升级报告路径格式： OTA_UPREPORT_PATH + task_id + / + filename*/
-#define OTA_UPREPORT_REMOTE_PATH "/home/cktt/script/"
-#define OTA_UPREPORT_LOCAL_PATH "/upgrade/cktt/upgradereport/"
+// /* OTA升级报告路径格式： OTA_UPREPORT_PATH + task_id + / + filename*/
+// #define OTA_UPREPORT_REMOTE_PATH "/home/cktt/script/"
+// #define OTA_UPREPORT_LOCAL_PATH "/upgrade/cktt/upgradereport/"
 
 
 /* WAVE文件路径格式： WAVE_FILE_PATH + 年月日 + / + 年月日时 + / + WAVE文件 */

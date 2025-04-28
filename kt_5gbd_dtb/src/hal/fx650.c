@@ -211,7 +211,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
     return 0;
 }
 
-static int check_network_connection(char *net, const char *hostname)
+static int check_network_connection(const char *net, const char *hostname)
 {
     char cmd[256];
 
