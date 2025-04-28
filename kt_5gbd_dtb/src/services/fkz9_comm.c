@@ -76,12 +76,12 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hb_data->usDevAddr = CLIENT_DEV_ADDR;
     CustomTime t;
     get_system_time(&t);
-    hb_data->ucYear = t.year - 2000;
-    hb_data->ucMonth = t.month;
-    hb_data->ucDay = t.day;
-    hb_data->ucHour = t.hour;
-    hb_data->ucMinute = t.minute;
-    hb_data->ucSecond = t.second;
+    hb_data->ucYear = t.usYear - 2000;
+    hb_data->ucMonth = t.ucMonth;
+    hb_data->ucDay = t.ucDay;
+    hb_data->ucHour = t.ucHour;
+    hb_data->ucMinute = t.ucHour;
+    hb_data->ucSecond = t.ucSecond;
     crc = (MsgDataFramCrc*)(hb_data + 1);
     crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen - sizeof(MsgDataFramCrc));
 
