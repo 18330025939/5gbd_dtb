@@ -31,7 +31,7 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
         struct timeval timeout = {1, 0}; // 1秒后重试
         event_base_once(client->base, -1, EV_TIMEOUT, tcp_client_reconnect, client, &timeout);
     } else {
-        client->is_connected = false;
+        // client->is_connected = false;
         printf("Max reconnect attempts reached. Exiting.\n");
         tcp_client_disconnect(client);
         // tcp_client_destroy(client);
@@ -128,7 +128,7 @@ void *tcp_client_send_entry(void *arg)
     while (client->is_connected) {
         int ret = dequeue(&client->tx_queue, buf, &len);
         if (ret) {
-            // sleep(100);
+            sleep(50);
             continue;
         }
         bufferevent_write(client->bev, buf, len);

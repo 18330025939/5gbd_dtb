@@ -22,10 +22,7 @@ typedef struct st_AsyncMQTTClient AsyncMQTTClient;
 
 #define MQTT_CLIENT_ID     "RT-A100"
 
-// #define FTP_USERNAME       "cktt"
-// #define FTP_PASSWORD       "cktt"
-// #define FTP_CTRL_PORT       21
-// #define FTP_DATA_PORT       20
+#define CLIENT_DEV_ADDR   0x2002
 
 #if 0 //在其他头文件有定义
 #define MSG_DATA_FRAM_HDR         0xAAAA

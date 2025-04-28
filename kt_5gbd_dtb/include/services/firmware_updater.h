@@ -20,6 +20,10 @@
 #define SERVER_USERNAME "cktt"
 #define SERVER_PASSWORD "cktt"
 
+/* OTA升级报告路径格式： OTA_UPREPORT_PATH + task_id + / + filename*/
+#define OTA_UPREPORT_REMOTE_PATH "/upgrade/"
+#define OTA_UPREPORT_LOCAL_PATH "/upgrade/cktt/upgradereport/"
+
 struct FwUpdateInfo
 {
     char path[128];

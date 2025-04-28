@@ -216,9 +216,9 @@ function get_ota_report_info()
                 time=`date "+%Y-%m-%d %H:%M:%S"`
                 report=`base64 $2 | tr -d '\n\r'`
             else
-                if [ ! -f "$mission_file" ]; then
-                    touch "$mission_file"
-                fi
+                # if [ ! -f "$mission_file" ]; then
+                #     touch "$mission_file"
+                # fi
                 echo "start the ota task when next reboot" >> $file 2>&1
                 time=`date "+%Y-%m-%d %H:%M:%S"`
                 report=`base64 $file | tr -d '\n\r'`
@@ -226,7 +226,7 @@ function get_ota_report_info()
                 # if [ $res -ne 0 ]; then
                 #     touch /home/cktt/script/"$task_id"_ota_report
                 # fi 
-                echo $task_id $file >> $mission_file
+                # echo $task_id $file >> $mission_file
             fi
         fi
     fi

@@ -74,7 +74,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->ucSign = MQTT_MSG_SIGN_HEARTBEAT_REQ;
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg);
     hb_data = (HeartBeatDataSeg*)(hdr + 1);
-    hb_data->usDevAddr = 0;
+    hb_data->usDevAddr = CLIENT_DEV_ADDR;
     get_system_time(&(hb_data->stTime));
     crc = (MsgDataFramCrc*)(hb_data + 1);
     crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen);
@@ -140,9 +140,6 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         return;
     }
 
-    init_queue(&ctx->tx_queue, MAX_MSG_SIZE);
-    List_Init_Thread(&ctx->ev_list);
-    // init_queue(ctx->rx_queue, MAX_MSG_SIZE);
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
     mqtt_client = mqtt_client_create(url, MQTT_CLIENT_ID, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
     mqtt_client->ops->register_cb(mqtt_client, on_message_cb);
@@ -150,10 +147,12 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     if(ret) {
         printf("mqtt connect failed\n");
         ctx->is_running = false;
-        clean_queue(&ctx->tx_queue);
         mqtt_client_destroy(mqtt_client);
         return;
     }
+
+    init_queue(&ctx->tx_queue, MAX_MSG_SIZE);
+    List_Init_Thread(&ctx->ev_list);
     ctx->mqtt_client = mqtt_client;
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
     ctx->is_running = true;

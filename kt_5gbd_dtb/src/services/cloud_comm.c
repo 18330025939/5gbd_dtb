@@ -325,12 +325,12 @@ int create_ota_heartbeat_data(char *data)
     if (data == NULL) {
         return -1;
     }
-
-    root = cJSON_CreateObject();    
+ 
     int ret = get_ota_heartbeat_info(&heart_beat);
     if (ret) {
         return -1;
     }
+    root = cJSON_CreateObject(); 
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     // sprintf(str, "%hu", heart_beat.dev_addr);
     cJSON_AddStringToObject(root, "deviceAddress", heart_beat.dev_addr);
@@ -892,7 +892,7 @@ void clound_comm_init(CloundCommContext *ctx)
     client->ops->register_cb(client, proc_message_cb);
     client->ops->connect(client);
     ctx->client = client;
-
+    ctx->running = true;
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
     pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
     if ((pthread_mutex_init(&ctx->down_task.mutex, NULL) == 0) && 
@@ -900,7 +900,6 @@ void clound_comm_init(CloundCommContext *ctx)
         pthread_create(&ctx->down_task.thread, NULL, download_upgrade_entry, ctx);
     }
     gp_cloud_comm_ctx = ctx;
-    ctx->running = true;
 }
 
 void clound_comm_uninit(CloundCommContext *ctx)

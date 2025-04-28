@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <pthread.h>
@@ -26,7 +27,7 @@ int fkz9_fw_trans_func(void *arg)
     }
 
     char remote_path[128] = {'\0'};
-    snprintf(remote_path, sizeof(remote_path), "%s/%2d/", UPGRADE_FILE_REMOTE_PATH, pInfo->id);
+    snprintf(remote_path, sizeof(remote_path), "%s/%2d/%s", UPGRADE_FILE_REMOTE_PATH, pInfo->id, pInfo->name);
     ret = ssh_client.upload_file(&ssh_client, pInfo->path, remote_path);
     if (ret) {
         //上传失败是否再次上传
@@ -36,10 +37,10 @@ int fkz9_fw_trans_func(void *arg)
     }
 
     char cmd[256] = {'\0'};
-    snprintf(cmd, sizeof(cmd), "md5sum %s/%s", remote_path, pInfo->name);
+    snprintf(cmd, sizeof(cmd), "md5sum %s", remote_path);
     char resp[256] = {'\0'};
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-    if (strcmp(pInfo->md5, resp) != 0) {
+    if ((ret) || (strcmp(pInfo->md5, resp) != 0)) {
         //校验失败是否再次上传
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute md5 of the file,l_md5:%s,r_md5%sfailed.\n", pInfo->md5, resp);
@@ -68,8 +69,8 @@ int fkz9_fw_update_func(void *arg)
         return -1;
     }
 
-    char cmd[256] = {'\0'};
-    snprintf(cmd, sizeof(cmd), "updater.sh report_info");
+    char cmd[128] = {'\0'};
+    snprintf(cmd, sizeof(cmd), "/home/cktt/script/updater.sh report_info");
     char resp[256] = {'\0'};
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if (ret) {
@@ -79,8 +80,18 @@ int fkz9_fw_update_func(void *arg)
         return -1;
     }
 
-    char report_path[128];
-    ret = ssh_client.download_file(&ssh_client, pInfo->path, report_path);
+    char report_file[64];
+    snprintf(report_file, sizeof(report_file), "*_%2d_*.log", pInfo->id);
+    snprintf(cmd, sizeof(cmd), "find %s%2d -name \"%s\"", OTA_UPREPORT_REMOTE_PATH, pInfo->id, report_file);
+    ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.execute ota_report find failed.\n");
+        return -1;
+    }
+    char local_path[128] = {'\0'};
+    snprintf(local_path, sizeof(local_path), "%s%2d/%s", OTA_UPREPORT_LOCAL_PATH, pInfo->id, basename(resp));
+    ret = ssh_client.download_file(&ssh_client, resp, local_path);
     if (ret) {
         //下载失败
         SSHClient_Destroy(&ssh_client);

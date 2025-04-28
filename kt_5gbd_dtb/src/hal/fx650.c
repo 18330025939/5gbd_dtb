@@ -132,7 +132,7 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
         ssize_t n = ctx->uart->base.ops->read(&ctx->uart->base, resp, resp_len);
         // if (n <= 0) continue;
         resp[n] = '\0';
-	    printf("%s --,%ld\n", resp, n);
+	    // printf("%s --,%ld\n", resp, n);
 
         // 检查是否收到OK或ERROR
         if (strstr(resp, "OK\r\n")) {
@@ -211,6 +211,16 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
     return 0;
 }
 
+static int check_network_connection(char *net, const char *hostname)
+{
+    char cmd[256];
+
+    sprintf(cmd, "ping -I %s -c 1 %s > /dev/null 2>&1", net, hostname);
+    int ret = system(cmd);
+
+    return ret == 0;
+}
+
 // 执行DHCP获取IP
 static int run_dhcp_client(const char* net) 
 {
@@ -241,6 +251,13 @@ static int run_dhcp_client(const char* net)
     if((ret = system(cmd)) == -1) {
         return ret;
     }
+    do {
+        sleep(100);
+        if (check_network_connection(net, "www.baidu.com")) {
+            break;
+        }
+    } while (1);
+
     return 0;
 }
 
@@ -293,8 +310,11 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
         fprintf(stderr, "Network port name not found.\n");
         return FX650_ERR_INIT;
     }
-
     printf("Network port name: %s\n", ctx->net_name);   
+    if (check_network_connection(ctx->net_name, "www.baidu.com")) {
+        return FX650_OK;
+    }
+
     SerialPortInfo fx650_port_info = {
         .speed = 115200, 
         .data_bits = 8, 
