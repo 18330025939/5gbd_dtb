@@ -68,6 +68,8 @@ int mqtt_connect(AsyncMQTTClient* client)
     pthread_mutex_lock(&client->lock);
     int rc = MQTTAsync_connect(client->handle, &opts);
     pthread_mutex_unlock(&client->lock);
+
+    printf("mqtt_connect username=%s, password=%s\n, rc=%ld", opts.username, opts.password, rc);
     return rc;
 }
 
@@ -150,6 +152,8 @@ AsyncMQTTClient* mqtt_client_create(const char *addr, const char *id, const char
     client->ops = &client_ops;
     client->is_conn = false;
 
+    printf("mqtt_client_create addr=%s, id=%s, username=%s, password=%s\n", client->config->address,
+                   client->config->client_id, client->config->user_name, client->config->password);
     if ((rc = MQTTAsync_create(&client->handle, client->config->address, client->config->client_id, 
                         MQTTCLIENT_PERSISTENCE_NONE, NULL)) != MQTTASYNC_SUCCESS) {
         printf("Failed to create client object, return code %d\n", rc);
