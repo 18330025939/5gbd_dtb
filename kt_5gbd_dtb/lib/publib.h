@@ -5,6 +5,16 @@
 #include <sys/time.h>
 
 
+
+#define BSWAP16(x) (uint16_t)((((x) >> 8) & 0x00FF) | (((x) << 8) & 0xFF00))
+
+#define BSWAP32(x) (uint32_t)( \
+    (((x) >> 24) & 0x000000FF) | \
+    (((x) >> 8)  & 0x0000FF00) | \
+    (((x) << 8)  & 0x00FF0000) | \
+    (((x) << 24) & 0xFF000000))
+
+    
 typedef struct st_CustomTime
 {
     uint16_t usYear;

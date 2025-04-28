@@ -85,13 +85,13 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hb_data->ucMinute = t.ucHour;
     hb_data->ucSecond = t.ucSecond;
     crc = (MsgDataFramCrc*)(hb_data + 1);
-    crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen - sizeof(MsgDataFramCrc));
+    crc->usCRC = checkSum_8((uint8_t*)hdr, len - sizeof(MsgDataFramCrc));
     crc->usCRC = bswap_16(crc->usCRC);
     // printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
     mqtt_client = ctx->mqtt_client;
     char topic[50] = {0};
     snprintf(topic, sizeof(topic), "fkz9/%d%s", CLIENT_DEV_ADDR, MQTT_HEARTBEAT_REQ_TOPIC);
-    mqtt_client->ops->publish(mqtt_client, topic, buf, hdr->usLen);
+    mqtt_client->ops->publish(mqtt_client, topic, buf, len);
 
     return;
 }
