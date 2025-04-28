@@ -102,7 +102,11 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     }
     pthread_mutex_unlock(&client->lock);
 
-    printf("mqtt_publish topic=%s, payload=%s, len=%ld, rc=%d\n", topic, (char*)payload, len, rc);
+    for (int i = 0, i < len; i++)
+    {
+        printf("0x%x  ", ((uint8_t*)payload)[i]);
+    }
+    printf("mqtt_publish topic=%s, len=%ld, rc=%d\n", topic, len, rc);
     return rc;
 }
 

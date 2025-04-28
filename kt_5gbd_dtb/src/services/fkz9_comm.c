@@ -74,11 +74,18 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usLen = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg) + sizeof(MsgDataFramCrc);
     hb_data = (HeartBeatDataSeg*)(hdr + 1);
     hb_data->usDevAddr = CLIENT_DEV_ADDR;
-    get_system_time(&(hb_data->stTime));
+    CustomTime t;
+    get_system_time(&t);
+    hb_data->ucYear = t.year - 2000;
+    hb_data->ucMonth = t.month;
+    hb_data->ucDay = t.day;
+    hb_data->ucHour = t.hour;
+    hb_data->ucMinute = t.minute;
+    hb_data->ucSecond = t.second;
     crc = (MsgDataFramCrc*)(hb_data + 1);
-    crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen);
+    crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen - sizeof(MsgDataFramCrc));
 
-    printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
+    // printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
     mqtt_client = ctx->mqtt_client;
     char topic[50] = {0};
     snprintf(topic, sizeof(topic), "fkz9/%d%s", CLIENT_DEV_ADDR, MQTT_HEARTBEAT_REQ_TOPIC);
