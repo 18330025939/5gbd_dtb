@@ -60,20 +60,20 @@ int mqtt_connect(AsyncMQTTClient* client)
     AsyncClientConfig *config = client->config;
     
     // 配置连接参数
-    MQTTAsync_connectOptions opts = MQTTAsync_connectOptions_initializer;
-    opts.keepAliveInterval = config->keep_alive;
-    opts.cleansession = config->clean_session;
-    opts.username = config->user_name;
-    opts.password = config->password;
-    opts.context = client->handle;
-    opts.onSuccess = on_connect_success;
-    opts.onFailure = on_connect_failure;
+    MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
+    conn_opts.keepAliveInterval = config->keep_alive;
+    conn_opts.cleansession = config->clean_session;
+    conn_opts.username = config->user_name;
+    conn_opts.password = config->password;
+    conn_opts.context = client;
+    conn_opts.onSuccess = on_connect_success;
+    conn_opts.onFailure = on_connect_failure;
     
     pthread_mutex_lock(&client->lock);
-    int rc = MQTTAsync_connect(client->handle, &opts);
+    int rc = MQTTAsync_connect(client->handle, &conn_opts);
     pthread_mutex_unlock(&client->lock);
 
-    printf("mqtt_connect username=%s, password=%s\n, rc=%d\n", opts.username, opts.password, rc);
+    printf("mqtt_connect username=%s, password=%s\n, rc=%d\n", conn_opts.username, conn_opts.password, rc);
     return rc;
 }
 
@@ -94,7 +94,7 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     msg.qos = config->qos;
     msg.retained = 0;
     pub_opts.onSuccess = on_publish_success;
-    pub_opts.context = client->handle;
+    pub_opts.context = client;
 
     printf("mqtt_publish topic=%s, payload=%s, len=%d, client->is_conn=%s\n", topic, (char*)payload, len, client->is_conn == true ? "true" : "false");
     pthread_mutex_lock(&client->lock);
@@ -121,15 +121,15 @@ int mqtt_subscribe(AsyncMQTTClient* client, const char* topic)
     AsyncClientConfig *config = client->config;
     int rc = -1;
     
-    MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
-    opts.onSuccess = on_subscribe_success;
-	opts.onFailure = on_subscribe_failure;
-	opts.context = client->handle;
+    MQTTAsync_responseOptions sub_opts = MQTTAsync_responseOptions_initializer;
+    sub_opts.onSuccess = on_subscribe_success;
+	sub_opts.onFailure = on_subscribe_failure;
+	sub_opts.context = client;
 
     printf("mqtt_subscribe topic=%s\n", topic);
     pthread_mutex_lock(&client->lock);
     if (client->is_conn == true) {
-        rc = MQTTAsync_subscribe(client->handle, topic, config->qos, &opts);
+        rc = MQTTAsync_subscribe(client->handle, topic, config->qos, &sub_opts);
     }
     pthread_mutex_unlock(&client->lock);
     return rc;
@@ -178,7 +178,7 @@ AsyncMQTTClient* mqtt_client_create(const char *addr, const char *id, const char
         goto err_exit;
     }
 
-    if ((rc = MQTTAsync_setCallbacks(client->handle, client->handle, NULL, message_arrived_cb,  
+    if ((rc = MQTTAsync_setCallbacks(client->handle, client, NULL, message_arrived_cb,  
                         NULL)) != MQTTASYNC_SUCCESS) {
         printf("Failed to set callback, return code %d\n", rc);
         goto err_exit;                    
