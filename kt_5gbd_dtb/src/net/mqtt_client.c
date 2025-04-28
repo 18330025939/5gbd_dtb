@@ -59,7 +59,7 @@ int mqtt_connect(AsyncMQTTClient* client)
     MQTTAsync_connectOptions opts = MQTTAsync_connectOptions_initializer;
     opts.keepAliveInterval = config->keep_alive;
     opts.cleansession = config->clean_session;
-    opts.username  config->user_name;
+    opts.username = config->user_name;
     opts.password = config->password;
     opts.context = client->handle;
     opts.onSuccess = on_connect_success;
