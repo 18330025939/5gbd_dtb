@@ -251,12 +251,6 @@ static int run_dhcp_client(const char* net)
     if((ret = system(cmd)) == -1) {
         return ret;
     }
-    do {
-        sleep(100);
-        if (check_network_connection(net, "www.baidu.com")) {
-            break;
-        }
-    } while (1);
 
     return 0;
 }
@@ -264,6 +258,7 @@ static int run_dhcp_client(const char* net)
 FX650_Error fx650_connect_network(Fx650Ctx* ctx) 
 {
     int ret = 0;
+
     ret = check_sim_status(ctx);
     if (ret) {
         return FX650_ERR_SIM_NOT_READY;
@@ -343,6 +338,9 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
 
     // 关闭回显
     // ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), AT_TIMEOUT_MS);
+
+    ret = fx650_connect_network(ctx);
+    
     return ret;
 }
 

@@ -880,7 +880,6 @@ void clound_comm_init(CloundCommContext *ctx)
         printf("fx650_init failed. %d\n", ret);
         return;
     }
-    fx650_connect_network(ctx->fx650);
     ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
     laneTo_init(ctx->laneTo);
 
