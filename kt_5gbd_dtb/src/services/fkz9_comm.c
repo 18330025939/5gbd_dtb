@@ -71,7 +71,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr = (MsgFramHdr*)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR;
     hdr->ucSign = MQTT_MSG_SIGN_HEARTBEAT_REQ;
-    hdr->usLen = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg);
+    hdr->usLen = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg) + sizeof(MsgDataFramCrc);
     hb_data = (HeartBeatDataSeg*)(hdr + 1);
     hb_data->usDevAddr = CLIENT_DEV_ADDR;
     get_system_time(&(hb_data->stTime));
@@ -81,8 +81,8 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
     mqtt_client = ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%d%s", ctx->fkz9_dev_addr, MQTT_HEARTBEAT_REQ_TOPIC);
-    mqtt_client->ops->publish(mqtt_client, topic, buf, hdr->usLen + sizeof(MsgDataFramCrc));
+    snprintf(topic, sizeof(topic), "fkz9/%d%s", CLIENT_DEV_ADDR, MQTT_HEARTBEAT_REQ_TOPIC);
+    mqtt_client->ops->publish(mqtt_client, topic, buf, hdr->usLen);
 
     return;
 }

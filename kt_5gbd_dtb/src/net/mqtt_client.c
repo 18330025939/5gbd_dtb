@@ -96,12 +96,13 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     pub_opts.onSuccess = on_publish_success;
     pub_opts.context = client;
 
-    printf("mqtt_publish topic=%s, payload=%s, len=%d, client->is_conn=%s\n", topic, (char*)payload, len, client->is_conn == true ? "true" : "false");
     pthread_mutex_lock(&client->lock);
     if (client->is_conn == true) {
         rc = MQTTAsync_sendMessage(client->handle, topic, &msg, &pub_opts);
     }
     pthread_mutex_unlock(&client->lock);
+
+    printf("mqtt_publish topic=%s, payload=%s, len=%ld, rc=%d\n", topic, (char*)payload, len, rc);
     return rc;
 }
 

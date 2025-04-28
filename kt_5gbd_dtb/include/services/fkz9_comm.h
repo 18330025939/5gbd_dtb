@@ -45,8 +45,8 @@ typedef struct st_MsgDataFramCrc
 #endif
 
 /* */
-#define MQTT_HEARTBEAT_REQ_TOPIC   "/5G/4G/0x21"
-#define MQTT_HEARTBEAT_RESP_TOPIC  "/4G/5G/0x22"
+#define MQTT_HEARTBEAT_REQ_TOPIC   "/5G/4G/21"
+#define MQTT_HEARTBEAT_RESP_TOPIC  "/4G/5G/22"
 
 #define MQTT_MSG_SIGN_HEARTBEAT_REQ    0x15
 #define MQTT_MSG_SIGN_HEARTBEAT_RESP   0x16
