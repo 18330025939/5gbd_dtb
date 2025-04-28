@@ -141,7 +141,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     }
 
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
-    mqtt_client = mqtt_client_create(url, MQTT_CLIENT_ID, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
+    mqtt_client = mqtt_client_create(url, MQTT_CLIENT_ID, MQTT_TEST_SERVER_USERNAME, MQTT_TEST_SERVER_PASSWORD);
     mqtt_client->ops->register_cb(mqtt_client, on_message_cb);
     int ret = mqtt_client->ops->connect(mqtt_client);
     if(ret) {
