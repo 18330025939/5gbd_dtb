@@ -68,7 +68,6 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     }
 
     Fkz9CommContext *ctx = (Fkz9CommContext *)arg;
-    mqtt_client = ctx->mqtt_client;
     hdr = (MsgFramHdr*)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR;
     hdr->ucSign = MQTT_MSG_SIGN_HEARTBEAT_REQ;
@@ -80,6 +79,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     crc->usCRC = checkSum_8((uint8_t*)hdr, hdr->usLen);
 
     printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
+    mqtt_client = ctx->mqtt_client;
     if (mqtt_client->is_conn) {
         char topic[50] = {0};
         snprintf(topic, sizeof(topic), "fkz9/%d%s", ctx->fkz9_dev_addr, MQTT_HEARTBEAT_REQ_TOPIC);
@@ -93,7 +93,7 @@ static void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, voi
 {
     Fkz9CommContext *ctx = NULL;
     
-    if (arg == NULL) {
+    if (arg == NULL || task_cb == NULL) {
         return ;
     }
     
@@ -154,10 +154,9 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         mqtt_client_destroy(mqtt_client);
         return;
     }
-
+    ctx->mqtt_client = mqtt_client;
     init_queue(&ctx->tx_queue, MAX_MSG_SIZE);
     List_Init_Thread(&ctx->ev_list);
-    ctx->mqtt_client = mqtt_client;
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
     ctx->is_running = true;
 }

@@ -77,20 +77,27 @@ int mqtt_connect(AsyncMQTTClient* client)
     return rc;
 }
 
+void on_publish_success(void* context, MQTTAsync_successData* response)
+{
+    printf("publish success\n");
+}
 /* 消息发布 */
 int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload, size_t len) 
 {
-    AsyncClientConfig *config = (AsyncClientConfig *)&client->config;
+    AsyncClientConfig *config = client->config;
     
     MQTTAsync_message msg = MQTTAsync_message_initializer;
-    // MQTTAsync_responseOptions pub_opts = MQTTAsync_responseOptions_initializer;
+    MQTTAsync_responseOptions pub_opts = MQTTAsync_responseOptions_initializer;
     msg.payload = (void*)payload;
     msg.payloadlen = len;
     msg.qos = config->qos;
     msg.retained = 0;
+    pub_opts.onSuccess = on_publish_success;
+    pub_opts.context = client->handle;
 
+    printf("mqtt_publish topic=%s, payload=%s, len=%d\n", topic, (char*)payload, len);
     pthread_mutex_lock(&client->lock);
-    int rc = MQTTAsync_sendMessage(client->handle, topic, &msg, NULL);
+    int rc = MQTTAsync_sendMessage(client->handle, topic, &msg, &pub_opts);
     pthread_mutex_unlock(&client->lock);
     return rc;
 }
@@ -108,13 +115,14 @@ static void on_subscribe_failure(void* context, MQTTAsync_failureData* response)
 /* 消息订阅 */
 int mqtt_subscribe(AsyncMQTTClient* client, const char* topic) 
 {
-    AsyncClientConfig *config = (AsyncClientConfig *)&client->config;
+    AsyncClientConfig *config = client->config;
     
     MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
     opts.onSuccess = on_subscribe_success;
 	opts.onFailure = on_subscribe_failure;
-	opts.context = client;
+	opts.context = client->handle;
 
+    printf("mqtt_subscribe topic=%s\n", topic);
     pthread_mutex_lock(&client->lock);
     int rc = MQTTAsync_subscribe(client->handle, topic, config->qos, &opts);
     pthread_mutex_unlock(&client->lock);
