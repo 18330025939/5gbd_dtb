@@ -240,11 +240,11 @@ int get_ota_heartbeat_info(void *arg)
 #endif
 
     char resp[256];
-    ret = ssh_client.execute(&ssh_client, "./updater.sh r base_info", 
+    ret = ssh_client.execute(&ssh_client, "./updater.sh base_info", 
             resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute get_ota_heartbeat_info failed.\n");
+        fprintf(stderr, "ssh_client.execute ./updater.sh base_info failed.\n");
         return -1;
     }
     sscanf(resp, "%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
@@ -253,11 +253,11 @@ int get_ota_heartbeat_info(void *arg)
             pHb_info->total_mem, pHb_info->used_mem,
             pHb_info->up_time, pHb_info->cur_time);
     
-    ret = ssh_client.execute(&ssh_client, "./updater.sh r unit_info", 
+    ret = ssh_client.execute(&ssh_client, "./updater.sh unit_info", 
             resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute get_ota_heartbeat_info failed.\n");
+        fprintf(stderr, "ssh_client.execute ./updater.sh unit_info failed.\n");
         return -1;
     }
     
@@ -375,11 +375,11 @@ int get_ota_report_info(void *arg)
     }
 
     char resp[256];
-    ret = ssh_client.execute(&ssh_client, "./updater.sh r report_info", 
+    ret = ssh_client.execute(&ssh_client, "./updater.sh report_info", 
             resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute get_ota_heartbeat_info failed.\n");
+        fprintf(stderr, "ssh_client.execute ./updater.sh report_info failed.\n");
         return -1;
     }
 
@@ -857,7 +857,7 @@ void *timer_task_entry(void *arg)
     base = event_base_new();
     ctx->base = base;
     add_timer_task(arg, nav_data_msg_task_cb, 1000);
-    add_timer_task(arg, ota_heartbeat_task_cb, 1000);
+    add_timer_task(arg, ota_heartbeat_task_cb, 60000);
 
     event_base_dispatch(base);  // 启动事件循环
     
