@@ -6,7 +6,7 @@ gpsd_config_file=/etc/default/gpsd
 function ntp_config()
 {
     if [ ! -f "$ntp_config_file" ];then
-        echo "ntp config file not exit"
+        echo "ntp config file not exit."
         return 1
     fi
 
@@ -21,7 +21,7 @@ function ntp_config()
 function gpsd_config()
 {
     if [ ! -f "$gpsd_config_file" ]; then
-        echo "gpsd config file not exit"
+        echo "gpsd config file not exit."
         return 1
     fi
 
@@ -32,7 +32,7 @@ function gpsd_config()
         sed -i "s/^GPSD_OPTIONS=\"\"/GPSD_OPTIONS=\"$gpsd_options\"/" $gpsd_config_file
     fi
 
-    retrun 0
+    return 0
 }
 
 function enable_server()
