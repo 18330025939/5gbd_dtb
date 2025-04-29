@@ -41,10 +41,10 @@ static void on_message_cb(const char* topic, const void* payload, size_t payload
     }
 
     pHdr = (MsgFramHdr *)payload;
-    uint16_t crc = checkSum_8((uint8_t *)payload, pHdr->usLen - sizeof(MsgDataFramCrc));
-    pCrc = (MsgDataFramCrc *)(payload + pHdr->usLen - sizeof(MsgDataFramCrc));
+    uint16_t crc = checkSum_8((uint8_t *)payload, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
+    pCrc = (MsgDataFramCrc *)(payload + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
 
-    if (pHdr->usHdr != MSG_DATA_FRAM_HDR || bswap_16(crc) != pCrc->usCRC) {
+    if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
         return ;
     }
     switch (pHdr->ucSign) {

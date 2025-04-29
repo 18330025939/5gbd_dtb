@@ -631,51 +631,51 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr = (MsgFramHdr *)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR;
     hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
-    hdr->usLen = sizeof(MsgFramHdr) + sizeof(NAVDataSeg);
+    uint16_t len = sizeof(MsgFramHdr) + sizeof(NAVDataSeg) + sizeof(MsgDataFramCrc);
+    hdr->usLen = bswap_16(len);
     // printf("hdr->usLen %d, sizeof(NAVDataSeg) %ld\n", hdr->usLen, sizeof(NAVDataSeg));
     nav_data = (NAVDataSeg *)(buf + sizeof(MsgFramHdr));
     get_system_time(&t);
     TIME_TO_STR(&t, str);
     printf("time %s, sg_data.message_id %s, sg_data.latitude %.8lf\n", str, sg_data.message_id, sg_data.latitude);
     nav_data->usDevAddr = 0;
-    nav_data->usYear = sg_data.utc_year;
+    nav_data->usYear = bswap_16(sg_data.utc_year);
     nav_data->ucMonth = sg_data.utc_month;
     nav_data->ucDay = sg_data.utc_day;
     nav_data->ucHour = sg_data.utc_hour;
     nav_data->ucMinute = sg_data.utc_minutes;
-    nav_data->usMilSec = sg_data.utc_millisecond; 
-    nav_data->dLatitude = sg_data.latitude;
-    nav_data->dLongitude = sg_data.longitude;
-    nav_data->fAltitude = sg_data.altitude_msl;
-    nav_data->lVn = sg_data.vn;
-    nav_data->lVe = sg_data.ve;
-    nav_data->lVd = sg_data.vd;
-    nav_data->ulSpeed = sg_data.ground_speed;
-    nav_data->ulTraveDis = sg_data.traveled_distance;    
-    nav_data->lRoll = sg_data.roll;
-    nav_data->lPitch = sg_data.pitch;
-    nav_data->lHeading = sg_data.heading;
-    nav_data->usNorthPos = sg_data.north_uncertainty;
-    nav_data->usEastPos = sg_data.east_uncertainty;
-    nav_data->usDownPos = sg_data.down_uncertainty;
-    nav_data->usVnSpeed = sg_data.vn_uncertainty;
-    nav_data->usVeSpeed = sg_data.ve_uncertainty;
-    nav_data->usVdSpeed = sg_data.vd_uncertainty;
-    nav_data->usRollAngle = sg_data.roll_uncertainty;
-    nav_data->usPitchAngle = sg_data.pitch_uncertainty;
-    nav_data->usYawAngle = sg_data.yaw_uncertainty;
-    nav_data->sRollMisAngle = sg_data.misalign_angle_roll;
-    nav_data->sPitchMisAngle = sg_data.misalign_angle_pitch;
-    nav_data->sYawMisAngle = sg_data.misalign_angle_yaw;
-    nav_data->usStationID = sg_data.reference_station_id;
-    nav_data->ucTimeDiff = sg_data.time_since_last_diff;
+    nav_data->usMilSec = bswap_16(sg_data.utc_millisecond); 
+    nav_data->dLatitude = bswap_64(sg_data.latitude);
+    nav_data->dLongitude = bswap_64(sg_data.longitude);
+    nav_data->fAltitude = bswap_32(sg_data.altitude_msl);
+    nav_data->lVn = bswap_32(sg_data.vn);
+    nav_data->lVe = bswap_32(sg_data.ve);
+    nav_data->lVd = bswap_32(sg_data.vd);
+    nav_data->ulSpeed = bswap_32(sg_data.ground_speed);
+    nav_data->ulTraveDis = bswap_32(sg_data.traveled_distance);    
+    nav_data->lRoll = bswap_32(sg_data.roll);
+    nav_data->lPitch = bswap_32(sg_data.pitch);
+    nav_data->lHeading = bswap_32(sg_data.heading);
+    nav_data->usNorthPos = bswap_16(sg_data.north_uncertainty);
+    nav_data->usEastPos = bswap_16(sg_data.east_uncertainty);
+    nav_data->usDownPos = bswap_16(sg_data.down_uncertainty);
+    nav_data->usVnSpeed = bswap_16(sg_data.vn_uncertainty);
+    nav_data->usVeSpeed = bswap_16(sg_data.ve_uncertainty);
+    nav_data->usVdSpeed = bswap_16(sg_data.vd_uncertainty);
+    nav_data->usRollAngle = bswap_16(sg_data.roll_uncertainty);
+    nav_data->usPitchAngle = bswap_16(sg_data.pitch_uncertainty);
+    nav_data->usYawAngle = bswap_16(sg_data.yaw_uncertainty);
+    nav_data->sRollMisAngle = bswap_16(sg_data.misalign_angle_roll);
+    nav_data->sPitchMisAngle = bswap_16(sg_data.misalign_angle_pitch);
+    nav_data->sYawMisAngle = bswap_16(sg_data.misalign_angle_yaw);
+    nav_data->usStationID = bswap_16(sg_data.reference_station_id);
+    nav_data->ucTimeDiff = bswap_16(sg_data.time_since_last_diff);
     crc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(NAVDataSeg));
-    crc->usCRC = checkSum_8(buf, hdr->usLen);
+    crc->usCRC = checkSum_8(buf, len - sizeof(MsgDataFramCrc));
+    crc->usCRC = bswap_16(crc->usCRC);
     // printf("crc->usCRC 0x%x\n", crc->usCRC);
     TcpClient *client = ctx->client;
-    if (client->is_connected) {
-        client->ops->send(client, buf, hdr->usLen + sizeof(MsgDataFramCrc));
-    }
+    client->ops->send(client, buf, len);
 
     return;
 }
@@ -696,9 +696,10 @@ int func_wave_file_resp(void *arg)
     pHdr = (MsgFramHdr *)buf;
     pHdr->usHdr = MSG_SIGN_WAVE_FILE_REQ;
     pHdr->ucSign = MSG_SIGN_WAVE_FILE_RESP;
-    pHdr->usLen = sizeof(MsgFramHdr);
+    uint16_t len = sizeof(MsgFramHdr) + sizeof(WaveFileResp) + sizeof(MsgDataFramCrc);
+    pHdr->usLen = bswap_16(len);    
     pResp = (WaveFileResp *)(buf + sizeof(MsgFramHdr));
-    pResp->usDevAddr = 0;
+    pResp->usDevAddr = bswap_16(CLIENT_DEV_ADDR);
     CustomTime t;
     get_system_time(&t);
     pResp->ucYear = t.usYear - 2000;
@@ -709,15 +710,15 @@ int func_wave_file_resp(void *arg)
     pResp->ucCode = 0;
 
     pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(WaveFileResp));
-    pCrc->usCRC = checkSum_8((uint8_t *)pHdr, pHdr->usLen);
+    pCrc->usCRC = checkSum_8((uint8_t *)pHdr, len - sizeof(MsgDataFramCrc));
+    pCrc->usCRC = bswap_16(pCrc->usCRC);
 
-    if (ctx->client->is_connected) {
-        ctx->client->ops->send(client, buf, pHdr->usLen + sizeof(MsgDataFramCrc));
-    }
+    client = ctx->client;
+    client->ops->send(client, buf, len);
 
     char remote_path[128];
     char local_path[128];
-    uint16_t dev_addr = 0;
+    uint16_t dev_addr = CLIENT_DEV_ADDR;
     snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d/%4d-wavedat-%4d%2d%2d%2d%2d.dat.gz", dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, 
                 pResp->ucHour, dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, pResp->ucHour, pResp->ucMinute);
     int ret = ftp_upload(FTP_SERVER_URL, local_path, remote_path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
@@ -807,10 +808,10 @@ void *event_task_entry(void *arg)
             continue;
         }
         pHdr = (MsgFramHdr *)buf;
-        uint16_t crc = checkSum_8((uint8_t *)buf, pHdr->usLen);
-        pCrc = (MsgDataFramCrc *)(buf + pHdr->usLen);
+        uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
+        pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
 
-        if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != pCrc->usCRC) {
+        if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
 

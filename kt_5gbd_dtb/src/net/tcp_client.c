@@ -148,7 +148,9 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
     for (int i = 0; i < len; i++) {
         printf("%02x ", data[i]);
     }
-    enqueue(&client->tx_queue, data, len);
+    if (client->is_connected) {
+        enqueue(&client->tx_queue, data, len);
+    }
 }
 
 // 断开连接
