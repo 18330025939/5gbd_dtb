@@ -144,8 +144,6 @@ char *GetSysTimeStr(int isWithDate)
 	return p;
 }
 
-
-
 void get_system_time(CustomTime *t)
 {
     time_t rawtime;
@@ -164,4 +162,32 @@ void get_system_time(CustomTime *t)
     t->ucHour = timeinfo->tm_hour;
     t->ucMinute = timeinfo->tm_min;
     t->ucSecond = timeinfo->tm_sec;
+}
+
+int _system_(const char *cmd, char *pRetMsg, int msg_len)
+{
+
+	FILE *fp;
+	int ret = -1;
+
+	if (cmd == NULL)
+		return -1;
+
+	if ((fp = popen(cmd, "r")) == NULL)
+		return -2;
+	else {
+        if (pRetMsg != NULL) {
+            memset(pRetMsg, 0, msg_len);
+            do{}
+            while (fgets(pRetMsg, msg_len, fp) != NULL);
+        }
+	}
+
+	if ((ret = pclose(fp)) == -1)
+		return -3;
+
+    if (pRetMsg != NULL) {
+	    pRetMsg[strlen(pRetMsg)-1] = '\0';
+    }
+	return 0;
 }

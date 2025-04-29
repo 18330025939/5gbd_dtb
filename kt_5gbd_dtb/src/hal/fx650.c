@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <dirent.h>
+#include "publib.h"
 #include "serial.h"
 #include "fx650.h"
 
@@ -213,10 +214,11 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
 
 static int check_network_connection(const char *net, const char *hostname)
 {
-    char cmd[256];
+    char cmd[128];
+    char resp[256];
 
     sprintf(cmd, "ping -I %s -c 1 %s > /dev/null 2>&1", net, hostname);
-    int ret = system(cmd);
+    int ret = _system_(cmd, resp, sizeof(resp));
 
     return ret == 0;
 }
@@ -340,7 +342,7 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
     // ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), AT_TIMEOUT_MS);
 
     ret = fx650_connect_network(ctx);
-    
+
     return ret;
 }
 

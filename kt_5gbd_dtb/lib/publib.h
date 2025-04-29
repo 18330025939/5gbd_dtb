@@ -14,7 +14,7 @@
     (((x) << 8)  & 0x00FF0000) | \
     (((x) << 24) & 0xFF000000))
 
-    
+
 typedef struct st_CustomTime
 {
     uint16_t usYear;
@@ -34,5 +34,6 @@ int BeTimeOutM(struct timeval *stv, int ms);
 int BeTimeOutMN(struct timeval *stv, int ms);
 uint32_t calcTimeOff(struct timeval end, struct timeval begin);
 char *GetSysTimeStr(int isWithDate);
+int _system_(const char *cmd, char *pRetMsg, int msg_len);
 #endif
 

@@ -35,7 +35,6 @@ void (*MqttMessageCallback)(const char*, const void*, size_t);
 // 异步客户端结构体
 struct st_AsyncMQTTClient {
     MQTTAsync handle;               // Paho异步客户端句柄
-    MQTTAsync_connectOptions conn_opts;
     AsyncClientConfig *config;      // 客户端配置
     AsyncClientOps *ops;
 
@@ -45,6 +44,6 @@ struct st_AsyncMQTTClient {
     pthread_mutex_t lock;                
 } ;
 
-AsyncMQTTClient* mqtt_client_create(const char *addr, const char *id, const char *username, const char *password) ;
+AsyncMQTTClient* mqtt_client_create(AsyncClientConfig *config);//(const char *addr, const char *id, const char *username, const char *password) ;
 void mqtt_client_destroy(AsyncMQTTClient* client);
 #endif

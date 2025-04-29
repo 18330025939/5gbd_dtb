@@ -149,7 +149,18 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     }
 
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
-    mqtt_client = mqtt_client_create(url, MQTT_CLIENT_ID, MQTT_TEST_SERVER_USERNAME, MQTT_TEST_SERVER_PASSWORD);
+
+    AsyncClientConfig client_config = {
+        .address = url,
+        .client_id = MQTT_CLIENT_ID,
+        .user_name = MQTT_TEST_SERVER_USERNAME,
+        .password = MQTT_TEST_SERVER_PASSWORD,
+        .keep_alive = KEEP_ALIVE_TIME,
+        .qos = QOS,
+        .clean_session = 1
+    };
+
+    mqtt_client = mqtt_client_create(&client_config);//(url, MQTT_CLIENT_ID, MQTT_TEST_SERVER_USERNAME, MQTT_TEST_SERVER_PASSWORD);
     if (mqtt_client == NULL) {
         return;
     }

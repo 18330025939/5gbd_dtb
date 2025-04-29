@@ -159,18 +159,18 @@ static AsyncClientConfig client_config = {
 } ;
 
 /* 初始化 */
-AsyncMQTTClient* mqtt_client_create(const char *addr, const char *id, const char *username, const char *password) 
+AsyncMQTTClient* mqtt_client_create(AsyncClientConfig *config)//const char *addr, const char *id, const char *username, const char *password) 
 {
     int rc;
     AsyncMQTTClient* client = calloc(1, sizeof(AsyncMQTTClient));
     pthread_mutex_init(&client->lock, NULL);
 
-    client->config = &client_config;
+    client->config = config;// &client_config;
 
-    client->config->address = strdup(addr);
-    client->config->client_id = strdup(id);
-    client->config->user_name = strdup(username);
-    client->config->password = strdup(password);
+    // client->config->address = config->address; //strdup(addr);
+    // client->config->client_id =  config->client_id; //strdup(id);
+    // client->config->user_name = config->user_name; //strdup(username);
+    // client->config->password = config->password; //strdup(password);
 
     client->ops = &client_ops;
     client->is_conn = false;
@@ -208,10 +208,10 @@ void mqtt_client_destroy(AsyncMQTTClient* client)
     MQTTAsync_destroy(&client->handle);
     pthread_mutex_unlock(&client->lock);
     pthread_mutex_destroy(&client->lock);
-    free(client->config->address);
-    free(client->config->client_id);
-    free(client->config->user_name);
-    free(client->config->password);
+    // free(client->config->address);
+    // free(client->config->client_id);
+    // free(client->config->user_name);
+    // free(client->config->password);
     free(client);
     client = NULL;
 }

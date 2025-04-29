@@ -42,33 +42,33 @@ uint16_t checkSum_8(uint8_t *buf, uint16_t len)
     return ret;
 }
 
-int _system_(const char *cmd, char *pRetMsg, int msg_len)
-{
+// int _system_(const char *cmd, char *pRetMsg, int msg_len)
+// {
 
-	FILE *fp;
-	int ret = -1;
+// 	FILE *fp;
+// 	int ret = -1;
 
-	if (cmd == NULL)
-		return -1;
+// 	if (cmd == NULL)
+// 		return -1;
 
-	if ((fp = popen(cmd, "r")) == NULL)
-		return -2;
-	else {
-        if (pRetMsg != NULL) {
-            memset(pRetMsg, 0, msg_len);
-            do{}
-            while (fgets(pRetMsg, msg_len, fp) != NULL);
-        }
-	}
+// 	if ((fp = popen(cmd, "r")) == NULL)
+// 		return -2;
+// 	else {
+//         if (pRetMsg != NULL) {
+//             memset(pRetMsg, 0, msg_len);
+//             do{}
+//             while (fgets(pRetMsg, msg_len, fp) != NULL);
+//         }
+// 	}
 
-	if ((ret = pclose(fp)) == -1)
-		return -3;
+// 	if ((ret = pclose(fp)) == -1)
+// 		return -3;
 
-    if (pRetMsg != NULL) {
-	    pRetMsg[strlen(pRetMsg)-1] = '\0';
-    }
-	return 0;
-}
+//     if (pRetMsg != NULL) {
+// 	    pRetMsg[strlen(pRetMsg)-1] = '\0';
+//     }
+// 	return 0;
+// }
 
 // void get_system_time(CustomTime *t)
 // {
@@ -240,11 +240,11 @@ int get_ota_heartbeat_info(void *arg)
 #endif
 
     char resp[256];
-    ret = ssh_client.execute(&ssh_client, "./updater.sh base_info", 
+    ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", 
             resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute ./updater.sh base_info failed.\n");
+        fprintf(stderr, "ssh_client.execute updater.sh base_info failed.\n");
         return -1;
     }
     sscanf(resp, "%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
@@ -253,11 +253,11 @@ int get_ota_heartbeat_info(void *arg)
             pHb_info->total_mem, pHb_info->used_mem,
             pHb_info->up_time, pHb_info->cur_time);
     
-    ret = ssh_client.execute(&ssh_client, "./updater.sh unit_info", 
+    ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute ./updater.sh unit_info failed.\n");
+        fprintf(stderr, "ssh_client.execute updater.sh unit_info failed.\n");
         return -1;
     }
     
@@ -356,7 +356,7 @@ int create_ota_heartbeat_data(char *data)
     return 0;
 }
 
-int get_ota_report_info(void *arg)
+int get_ota_report_info(struct FwDownInfo *info, void *arg)
 {
     SSHClient ssh_client;
     struct st_OtaReport *pReport = NULL;
@@ -375,11 +375,13 @@ int get_ota_report_info(void *arg)
     }
 
     char resp[256];
-    ret = ssh_client.execute(&ssh_client, "./updater.sh report_info", 
-            resp, sizeof(resp));
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh download_info %2d %s %s %s", 
+                info->id, info->url, info->md5, info->type);
+    ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute ./updater.sh report_info failed.\n");
+        fprintf(stderr, "ssh_client.execute updater.sh report_info failed.\n");
         return -1;
     }
 
@@ -390,7 +392,7 @@ int get_ota_report_info(void *arg)
     return 0;
 }
 
-int create_ota_report_data(char *data)
+int create_ota_report_data(struct FwDownInfo *info, char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
@@ -401,7 +403,7 @@ int create_ota_report_data(char *data)
 
     memset(&report, 0, sizeof(OtaReport));
     root = cJSON_CreateObject();
-    get_ota_report_info((void *)&report);
+    get_ota_report_info(info, (void *)&report);
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
     cJSON_AddStringToObject(root, "taskId", report.task_id);
@@ -414,16 +416,10 @@ int create_ota_report_data(char *data)
 }
 
 
-void do_upgrade_firmware(struct FwUpdateInfo *pInfo)
+int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 {
     struct FwUpdater *start = &__start_firmware_update;
     struct FwUpdater *fw_up = NULL;
-    // struct List *up_list = NULL;
-    // struct ListNode *pNode = NULL;
-
-    // if (up_list->count > 0) {
-    //     return NULL;
-    // }
 
     for (; start != &__stop_firmware_update; start++) {
         if (strcmp(start->dev_name, "fkz9") == 0) {
@@ -432,9 +428,12 @@ void do_upgrade_firmware(struct FwUpdateInfo *pInfo)
         }
     }
 
-    // while((pNode = List_GetHead(up_list)) != NULL) {
-        // pTask = (struct UpdateTask *)pNode;
+
     int ret = fw_up->trans_func((void *)pInfo);
+    if (ret) {
+        fprintf(stderr, "fw_up->trans_func failed.\n");
+        return ret;
+    }
     if (fw_up->update_func != NULL) {
         ret = fw_up->update_func((void *)pInfo);
         if (ret) {
@@ -445,9 +444,26 @@ void do_upgrade_firmware(struct FwUpdateInfo *pInfo)
             }
         }
     }
-        // List_DelHead(up_list);
-    // }
+
+    return ret;
 }
+
+// void ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
+void do_ota_report(struct FwDownInfo *info)
+{
+    char buf[512];
+    char *resp = NULL;
+    
+    int ret = create_ota_report_data(buf, info);
+    if (ret) {
+        return ;
+    }
+    http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
+    printf("%s\n", resp);
+
+    free(resp);
+}
+
 
 int do_downlaod_firmware(struct List *task_list)
 {
@@ -479,7 +495,10 @@ int do_downlaod_firmware(struct List *task_list)
                 strncpy(up_info.md5, pInfo->md5, sizeof(up_info.md5));
                 strncpy(up_info.path, local_path, sizeof(up_info.path));
                 strncpy(up_info.name, file_name, sizeof(up_info.name));
-                do_upgrade_firmware(&up_info);
+                ret = do_upgrade_firmware(&up_info);
+                if (!ret) {
+                    do_ota_report(pInfo);
+                }
             }
 
             List_DelHead(task_list);
@@ -595,23 +614,7 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
     free(resp);
 }
 
-void ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
-{
-    char buf[512];
-    char *resp = NULL;
-    
-    int ret = create_ota_report_data(buf);
-    if (ret) {
-        return ;
-    }
-    http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
-    printf("%s\n", resp);
-
-    free(resp);
-}
-
 void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
-// int proc_nav_data_msg(void *arg)
 {
     MsgFramHdr *hdr = NULL;
     NAVDataSeg *nav_data = NULL;
@@ -673,7 +676,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     crc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(NAVDataSeg));
     crc->usCRC = checkSum_8(buf, len - sizeof(MsgDataFramCrc));
     crc->usCRC = bswap_16(crc->usCRC);
-    // printf("crc->usCRC 0x%x\n", crc->usCRC);
+
     TcpClient *client = ctx->client;
     client->ops->send(client, buf, len);
 
