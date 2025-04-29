@@ -10,8 +10,11 @@ function ntp_config()
         return 1
     fi
 
+    back_file=$ntp_config_file.bak
+    
     if [ -z "$(grep "server 127.127.28.0 minpoll 4 maxpoll 4" $ntp_config_file)" ]; then
-        echo "server 127.127.28.0 minpoll 4 maxpoll 4" >> $ntp_config_file
+        cp $ntp_config_file $back_file
+        echo "server 127.127.28.0 minpoll 4 maxpoll 4" > $ntp_config_file
         echo "fudge 127.127.28.0 refid BDS stratum 1" >> $ntp_config_file
     fi
 
@@ -26,6 +29,7 @@ function gpsd_config()
     fi
 
     devices="/dev/ttyS4"
+    stty -F $devices 115200
     gpsd_options="-n -b -s 115200 -G -S 2947 -F /var/run/gpsd.sock"
     if [ -z "$(grep "$devices" $gpsd_config_file)" ]; then
         sed -i "s#^DEVICES=\"\"#DEVICES=\"$devices\"#" $gpsd_config_file
@@ -39,6 +43,7 @@ function enable_server()
 {
     ntp_config
     gpsd_config
+    systemctl restart ntp gpsd
     systemctl enable ntp gpsd
 }
 
