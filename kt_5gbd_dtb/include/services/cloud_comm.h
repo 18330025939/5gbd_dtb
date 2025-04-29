@@ -214,7 +214,7 @@ typedef enum
 struct FwDownInfo
 {
     uint16_t id;
-    char url[128];
+    char url[64];
     char md5[64];
     char type[20];
 } ;

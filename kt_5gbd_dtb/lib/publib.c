@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 #include "publib.h"
 
 uint64_t get_timestamp_ms(void) 
