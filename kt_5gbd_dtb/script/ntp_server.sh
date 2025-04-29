@@ -26,7 +26,7 @@ function gpsd_config()
     fi
 
     devices="/dev/ttyS4"
-    gpsd_options="-n -G -S 2947 -F /var/run/gpsd.sock"
+    gpsd_options="-n -b -s 115200 -G -S 2947 -F /var/run/gpsd.sock"
     if [ -z "$(grep "$devices" $gpsd_config_file)" ]; then
         sed -i "s#^DEVICES=\"\"#DEVICES=\"$devices\"#" $gpsd_config_file
         sed -i "s#^GPSD_OPTIONS=\"\"#GPSD_OPTIONS=\"$gpsd_options\"#" $gpsd_config_file
