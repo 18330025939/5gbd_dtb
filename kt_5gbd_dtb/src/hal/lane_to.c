@@ -475,23 +475,15 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
         bytes_read = read(ctx->sockfd, buffer, sizeof(buffer));
     }
     if (bytes_read > 0) {
-        printf("buf, %s, sock %d\n", buffer, ctx->sockfd);
+        // printf("buf, %s, sock %d\n", buffer, ctx->sockfd);
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);
         if (start != NULL && end != NULL && end > start) {
-            if (ctx->uart) {
-                token = strtok(buffer, "$");
-            } else {
-                token = strtok(buffer, "GPS Data: $");
-            }
+            token = strtok(buffer, "$");
             while (token != NULL) {
                 // printf("%s---%ld\n", token, strlen(token));
                 message_parser_entry(token);
-                if (ctx->uart) {
-                    token = strtok(NULL, "$");
-                } else {
-                    token = strtok(NULL, "GPS Data: $");
-                }
+                token = strtok(NULL, "$");
             }
         } 
     }
