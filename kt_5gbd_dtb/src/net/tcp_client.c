@@ -128,7 +128,7 @@ void *tcp_client_send_entry(void *arg)
     while (client->is_connected) {
         int ret = dequeue(&client->tx_queue, buf, &len);
         if (ret) {
-            sleep(50);
+            // sleep(50);
             continue;
         }
         bufferevent_write(client->bev, buf, len);
@@ -145,11 +145,12 @@ static void tcp_client_connect(TcpClient* client)
 // 发送数据
 static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len) 
 {
-    for (int i = 0; i < len; i++) {
-        printf("%02x ", data[i]);
-    }
+    // for (int i = 0; i < len; i++) {
+    //     printf("%02x ", data[i]);
+    // }
     if (client->is_connected) {
         enqueue(&client->tx_queue, data, len);
+        printf("tcp_client_send ok\n");
     }
 }
 

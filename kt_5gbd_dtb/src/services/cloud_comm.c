@@ -42,54 +42,6 @@ uint16_t checkSum_8(uint8_t *buf, uint16_t len)
     return ret;
 }
 
-// int _system_(const char *cmd, char *pRetMsg, int msg_len)
-// {
-
-// 	FILE *fp;
-// 	int ret = -1;
-
-// 	if (cmd == NULL)
-// 		return -1;
-
-// 	if ((fp = popen(cmd, "r")) == NULL)
-// 		return -2;
-// 	else {
-//         if (pRetMsg != NULL) {
-//             memset(pRetMsg, 0, msg_len);
-//             do{}
-//             while (fgets(pRetMsg, msg_len, fp) != NULL);
-//         }
-// 	}
-
-// 	if ((ret = pclose(fp)) == -1)
-// 		return -3;
-
-//     if (pRetMsg != NULL) {
-// 	    pRetMsg[strlen(pRetMsg)-1] = '\0';
-//     }
-// 	return 0;
-// }
-
-// void get_system_time(CustomTime *t)
-// {
-//     time_t rawtime;
-// 	struct tm *timeinfo;
-
-//     if (t == NULL) {
-//         return;
-//     }
-
-// 	time (&rawtime);
-// 	timeinfo = localtime(&rawtime);
-
-//     t->usYear = timeinfo->tm_year + 1900;
-//     t->ucMonth = timeinfo->tm_mon + 1;
-//     t->ucDay = timeinfo->tm_mday;
-//     t->ucHour = timeinfo->tm_hour;
-//     t->ucMinute = timeinfo->tm_min;
-//     t->ucSecond = timeinfo->tm_sec;
-// }
-
 static void GetFileName(const char *url, char *filename)
 {
     char *token = strtok((char *)url, "/");
@@ -627,7 +579,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
         return ;
     }
     
-    RUN_LED_TOGGLE();
+    // RUN_LED_TOGGLE();
     CloundCommContext *ctx = (CloundCommContext *)arg;
     laneTo_read_nav_data(ctx->laneTo);
     memset(buf, 0, sizeof(buf));
