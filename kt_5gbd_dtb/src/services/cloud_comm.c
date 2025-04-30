@@ -25,8 +25,8 @@ extern SGData sg_data;
 extern struct FwUpdater __start_firmware_update;
 extern struct FwUpdater __stop_firmware_update;
 
-extern struct MsgProcInf __start_messgae_processing;
-extern struct MsgProcInf __stop_messgae_processing;
+extern struct MsgProcInf __start_message_processing;
+extern struct MsgProcInf __stop_message_processing;
 
 static CloundCommContext *gp_cloud_comm_ctx = NULL;
 
@@ -732,7 +732,7 @@ int func_wave_file_req(void *arg)
     return 0;
 }
 
-REGISTER_MESSAGE_PROCESSINFG_INTERFACE(wave_file, MSG_SIGN_WAVE_FILE_REQ, func_wave_file_req, func_wave_file_resp);
+REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_file, MSG_SIGN_WAVE_FILE_REQ, func_wave_file_req, func_wave_file_resp);
 
 void proc_message_cb(char *buf, size_t len)
 {
@@ -752,7 +752,7 @@ void *event_task_entry(void *arg)
     size_t len = 0;
     MsgFramHdr *pHdr = NULL;
     MsgDataFramCrc *pCrc = NULL;
-    struct MsgProcInf *start = &__start_messgae_processing;
+    struct MsgProcInf *start = &__start_message_processing;
 
     if (arg == NULL) {
         return NULL;
@@ -766,12 +766,12 @@ void *event_task_entry(void *arg)
         pHdr = (MsgFramHdr *)buf;
         uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-        printf("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x\n",bswap_16(pHdr->usHdr), pCrc->usCRC, crc);
+        printf("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x\n",bswap_16(pHdr->usHdr), bswap_16(pCrc->usCRC), crc);
         if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
 
-        for (; start != &__stop_messgae_processing; start++) {
+        for (; start != &__stop_message_processing; start++) {
             printf("start->sign 0x%x, pHdr->ucSign 0x%x\n", start->sign, pHdr->ucSign);
             if (start->sign == pHdr->ucSign) {
                 int ret = start->pFuncEntry(buf);

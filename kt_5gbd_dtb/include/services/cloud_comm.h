@@ -141,8 +141,8 @@ struct MsgProcInf {
     int (*pFuncCb)(void *);
 } __attribute__((aligned(8)));
 
-#define REGISTER_MESSAGE_PROCESSINFG_INTERFACE(name, msg_sign, func_entry, func_cb)\
-    __attribute__((used, __section__("messgae_processing"))) static struct MsgProcInf meg_proc_##name = { \
+#define REGISTER_MESSAGE_PROCESSING_INTERFACE(name, msg_sign, func_entry, func_cb)\
+    __attribute__((used, __section__("message_processing"))) static struct MsgProcInf msg_proc_##name = { \
         .sign = msg_sign, \
         .pFuncEntry = func_entry, \
         .pFuncCb = func_cb \
