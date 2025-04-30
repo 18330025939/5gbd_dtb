@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <curl/curl.h>
 #include <dirent.h>
 #include "publib.h"
 #include "serial.h"
@@ -212,15 +213,29 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
     return 0;
 }
 
-static int check_network_connection(const char *net, const char *hostname)
+static int check_network_connection(void)
 {
-    char cmd[128];
-    char resp[256];
+    CURL *curl;
+    CURLcode res;
+    int connected = 0;
 
-    sprintf(cmd, "ping -I %s -c 1 %s > /dev/null 2>&1", net, hostname);
-    int ret = _system_(cmd, resp, sizeof(resp));
+    curl = curl_easy_init();
 
-    return ret == 0;
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "https://www.baidu.com");
+        curl_easy_setopt(curl, CURLOPT_NOBODY, 1); 
+
+        res = curl_easy_perform(curl);
+        if (res == CURLE_OK) {
+            connected = 1;
+        } else {
+            fprintf(stderr, "curl_easy_perform() failed: %sn", curl_easy_strerror(res));
+        }
+
+        curl_easy_cleanup(curl);
+    }
+
+    return connected;
 }
 
 // 执行DHCP获取IP
@@ -307,11 +322,11 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
         fprintf(stderr, "Network port name not found.\n");
         return FX650_ERR_INIT;
     }
-    printf("Network port name: %s\n", ctx->net_name);   
-    if (check_network_connection(ctx->net_name, "www.baidu.com")) {
+  
+    if (check_network_connection()) {
         return FX650_OK;
     }
-
+    printf("Network port name: %s\n", ctx->net_name);  
     SerialPortInfo fx650_port_info = {
         .speed = 115200, 
         .data_bits = 8, 

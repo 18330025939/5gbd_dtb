@@ -139,6 +139,46 @@ static void *timer_task_entry(void *arg)
     return NULL;
 }
 
+int init_updater_environment(void)
+{
+    SSHClient ssh_client;
+
+    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
+    int ret = ssh_client.connect(&ssh_client);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.connect failed.\n");
+        return -1;
+    }
+
+    char resp[256];
+    ret = ssh_client.execute(&ssh_client, "find /home/cktt/script/ -name \"updater.sh\"", 
+            resp, sizeof(resp));
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.execute find updater.sh failed.\n");
+        return -1;
+    } else {
+        if (strstr(resp, "updater.sh")) {
+            SSHClient_Destroy(&ssh_client);
+            return 0;
+        }
+    }
+    
+    char loacl_path[128];
+    _system_("pwd", resp, sizeof(resp));
+    snprintf(loacl_path, sizeof(loacl_path), "%s/updater.sh", resp);
+    ret = ssh_client.upload_file(&ssh_client, loacl_path, "/home/cktt/script/updater.sh");
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.upload_file updater.sh failed.\n");
+        return -1;
+    }
+
+    SSHClient_Destroy(&ssh_client);
+    return 0;
+}
+
 void fkz9_comm_init(Fkz9CommContext *ctx)
 {
     AsyncMQTTClient *mqtt_client = NULL;
@@ -172,6 +212,9 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         mqtt_client_destroy(mqtt_client);
         return;
     }
+    char resp[128];
+    _system_("pwd", resp, sizeof(resp));
+    printf("pwd %s\n", resp);
     ctx->mqtt_client = mqtt_client;
     init_queue(&ctx->tx_queue, MAX_MSG_SIZE);
     List_Init_Thread(&ctx->ev_list);

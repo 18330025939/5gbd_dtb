@@ -44,7 +44,6 @@ function enable_server()
     ntp_config
     gpsd_config
     systemctl restart ntp gpsd
-    systemctl enable ntp gpsd
 }
 
 function disable_server()
