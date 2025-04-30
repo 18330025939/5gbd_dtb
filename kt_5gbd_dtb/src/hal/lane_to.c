@@ -477,7 +477,8 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     if (bytes_read > 0) {
         printf("buf, %s, sock %d\n", buffer, ctx->sockfd);
         start = strstr(buffer, SG_MSG_ID);
-        end = strstr(buffer, PBLKEND_MSG_ID);
+        // end = strstr(buffer, PBLKEND_MSG_ID);
+        end = strchr(start, "\n");
         if (start != NULL && end != NULL && end > start) {
             token = strtok(buffer, "$");
             while (token != NULL) {
