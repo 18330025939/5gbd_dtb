@@ -10,7 +10,7 @@ typedef struct st_TcpClient TcpClient;
 typedef struct st_LaneToCtx LaneToCtx;
 typedef struct st_Fx650Ctx Fx650Ctx;
 
-#define CLOUD_SERVER_IP   "152.136.10.158"
+#define CLOUD_SERVER_IP   "192.168.42.100"//"152.136.10.158"
 #define CLOUD_SERVER_PORT 3901
 #define CLOUD_SERVER_USERNAME "123"
 #define CLOUD_SERVER_PASSWORD "123"
