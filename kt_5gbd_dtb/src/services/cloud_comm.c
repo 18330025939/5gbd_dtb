@@ -770,9 +770,9 @@ void *event_task_entry(void *arg)
         if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
-
+        printf("pHdr->ucSign 0x%x start %x stop %x", pHdr->ucSign, (uint64_t*)(&__start_message_processing), (uint64_t*)&__stop_message_processing);
         for (; start != &__stop_message_processing; start++) {
-            printf("start->sign 0x%x, pHdr->ucSign 0x%x\n", start->sign, pHdr->ucSign);
+            printf("start->sign 0x%x\n", start->sign);
             if (start->sign == pHdr->ucSign) {
                 int ret = start->pFuncEntry(buf);
                 if (ret == 0 && start->pFuncCb != NULL) {
