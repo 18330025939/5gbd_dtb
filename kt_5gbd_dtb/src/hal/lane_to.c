@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <arpa/inet.h>
 #include "serial.h"
 #include "lane_to.h"
 
