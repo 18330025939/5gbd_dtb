@@ -471,10 +471,11 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     if (ctx->uart) {
         serial = &ctx->uart->base;
         bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
-    } else if (ctx->sockfd > 0) {
+    } else {
         bytes_read = read(ctx->sockfd, buffer, sizeof(buffer));
     }
     if (bytes_read > 0) {
+        printf("buf, %s\n", buffer);
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);
         if (start != NULL && end != NULL && end > start) {
