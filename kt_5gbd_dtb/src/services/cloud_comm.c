@@ -753,6 +753,7 @@ void *event_task_entry(void *arg)
     MsgFramHdr *pHdr = NULL;
     MsgDataFramCrc *pCrc = NULL;
     struct MsgProcInf *start = &__start_message_processing;
+    struct MsgProcInf *end = &__stop_message_processing;
 
     if (arg == NULL) {
         return NULL;
@@ -770,8 +771,8 @@ void *event_task_entry(void *arg)
         if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
-        printf("pHdr->ucSign 0x%x start %x stop %x", pHdr->ucSign, (uint64_t*)(&__start_message_processing), (uint64_t*)&__stop_message_processing);
-        for (; start != &__stop_message_processing; start++) {
+        printf("pHdr->ucSign 0x%x start %ln stop %ln\n", pHdr->ucSign, (uint64_t*)(start), (uint64_t*)end);
+        for (; start != end; start++) {
             printf("start->sign 0x%x\n", start->sign);
             if (start->sign == pHdr->ucSign) {
                 int ret = start->pFuncEntry(buf);
