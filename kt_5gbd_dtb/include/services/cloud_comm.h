@@ -139,7 +139,7 @@ struct MsgProcInf {
     uint8_t sign;
     int (*pFuncEntry)(void *);
     int (*pFuncCb)(void *);
-} __attribute__((aligned(8)));
+} ;
 
 #define REGISTER_MESSAGE_PROCESSING_INTERFACE(name, msg_sign, func_entry, func_cb)\
     __attribute__((used, __section__("message_processing"))) static struct MsgProcInf msg_proc_##name = { \

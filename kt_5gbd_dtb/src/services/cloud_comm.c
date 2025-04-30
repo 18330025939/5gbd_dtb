@@ -22,11 +22,12 @@
 #include "cloud_comm.h"
 
 extern SGData sg_data;
-extern struct FwUpdater __start_firmware_update;
-extern struct FwUpdater __stop_firmware_update;
 
 extern struct MsgProcInf __start_message_processing;
 extern struct MsgProcInf __stop_message_processing;
+
+extern struct FwUpdater __start_firmware_update;
+extern struct FwUpdater __stop_firmware_update;
 
 static CloundCommContext *gp_cloud_comm_ctx = NULL;
 
