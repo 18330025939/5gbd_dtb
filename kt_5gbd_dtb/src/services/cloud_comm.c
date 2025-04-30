@@ -699,6 +699,7 @@ int func_wave_file_req(void *arg)
         return -1;
     }
     
+    printf("func_wave_file_req\n");
     pReq = (WaveFileReq *)((uint8_t *)arg + sizeof(MsgFramHdr));
     char r_folder[128];
     uint16_t year = pReq->ucYear + 2000; 
@@ -739,7 +740,7 @@ void proc_message_cb(char *buf, size_t len)
         return ;
     }
 
-    printf("proc_message_cb %s, %ld\n", buf, len);
+    printf("proc_message_cb %ld\n", len);
     enqueue(&gp_cloud_comm_ctx->event_queue, (uint8_t *)buf, len);
 }
 
@@ -765,7 +766,7 @@ void *event_task_entry(void *arg)
         pHdr = (MsgFramHdr *)buf;
         uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-
+        printf("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x\n",pHdr->usHdr, pCrc->usCRC);
         if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
