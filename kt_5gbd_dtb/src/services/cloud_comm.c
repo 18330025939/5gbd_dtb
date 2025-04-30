@@ -767,11 +767,11 @@ void *event_task_entry(void *arg)
         pHdr = (MsgFramHdr *)buf;
         uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-        // printf("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x\n",bswap_16(pHdr->usHdr), bswap_16(pCrc->usCRC), crc);
+        printf("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x\n",bswap_16(pHdr->usHdr), bswap_16(pCrc->usCRC), crc);
         if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
-        
+        printf("pHdr->ucSign 0x%x\n", pHdr->ucSign);
         for (; start != end; start++) {
             printf("start->sign 0x%x\n", start->sign);
             if (start->sign == pHdr->ucSign) {
