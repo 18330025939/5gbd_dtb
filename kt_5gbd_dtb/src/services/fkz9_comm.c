@@ -160,15 +160,6 @@ int init_updater_environment(void)
         return -1;
     } else {
         printf("find updater.sh resp %s\n", resp);
-        if (strstr(resp, "/home/cktt/script/") == NULL) {
-            printf("create /home/cktt/script/ dir\n");
-            ret = ssh_client.execute(&ssh_client, "mkdir -p /home/cktt/script/", resp, sizeof(resp));
-            if (ret) {
-                SSHClient_Destroy(&ssh_client);
-                fprintf(stderr, "ssh_client.execute mkdir -p /home/cktt/script/ failed.\n");
-                return -1;
-            }
-        }
         if (strstr(resp, "updater.sh")) {
             SSHClient_Destroy(&ssh_client);
             return 0;
@@ -182,6 +173,14 @@ int init_updater_environment(void)
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.upload_file updater.sh failed.\n");
+        return -1;
+    }
+
+    ret = ssh_client.execute(&ssh_client, "chmod +x /home/cktt/script/updater.sh", 
+            resp, sizeof(resp));
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        fprintf(stderr, "ssh_client.execute chmod +x updater.sh failed.\n");
         return -1;
     }
 

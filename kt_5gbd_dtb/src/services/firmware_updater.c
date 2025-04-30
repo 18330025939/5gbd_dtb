@@ -70,7 +70,7 @@ int fkz9_fw_update_func(void *arg)
     }
 
     char cmd[128] = {'\0'};
-    snprintf(cmd, sizeof(cmd), "/home/cktt/script/updater.sh report_info");
+    snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh report_info");
     char resp[256] = {'\0'};
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if (ret) {
