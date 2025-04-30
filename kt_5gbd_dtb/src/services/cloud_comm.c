@@ -732,7 +732,7 @@ int func_wave_file_req(void *arg)
     return 0;
 }
 
-REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_file, MSG_SIGN_WAVE_FILE_REQ, func_wave_file_req, func_wave_file_resp);
+REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_file, 0xAE, func_wave_file_req, func_wave_file_resp);
 
 void proc_message_cb(char *buf, size_t len)
 {
@@ -767,11 +767,11 @@ void *event_task_entry(void *arg)
         pHdr = (MsgFramHdr *)buf;
         uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-        printf("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x\n",bswap_16(pHdr->usHdr), bswap_16(pCrc->usCRC), crc);
+        // printf("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x\n",bswap_16(pHdr->usHdr), bswap_16(pCrc->usCRC), crc);
         if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
-        printf("pHdr->ucSign 0x%x start %ln stop %ln\n", pHdr->ucSign, (uint64_t*)(start), (uint64_t*)end);
+        
         for (; start != end; start++) {
             printf("start->sign 0x%x\n", start->sign);
             if (start->sign == pHdr->ucSign) {

@@ -37,7 +37,7 @@ struct FwUpdateInfo
 
 struct FwUpdater
 {
-    char *dev_name;
+    const char *dev_name;
     int (*trans_func)(void *);
     int (*update_func)(void *);
     int (*update_cb)(void *);
