@@ -457,16 +457,21 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
 {
     char buffer[4096];
     // size_t buffer_index = 0;
-    SerialPort *serial = &ctx->uart->base;
+    SerialPort *serial = NULL;
     char *end = NULL;
     char *start = NULL;
+    ssize_t bytes_read = 0;
     
     if (ctx->running == false) {
         printf("laneTo not running\n");
         return;
     }
-
-    ssize_t bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
+    if (ctx->uart) {
+        serial = &ctx->uart->base;
+        bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
+    } else if (ctx->sockfd > 0) {
+        bytes_read = read(ctx->sockfd, buffer, sizeof(buffer));
+    }
     if (bytes_read > 0) {
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);

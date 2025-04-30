@@ -8,6 +8,8 @@
 
 #define LANETO_DEV_NAME "/dev/ttyS4"
 
+#define SHM_SOCKET_PATH "/var/run/gpsd.sock"
+
 #pragma pack(push, 1)
 typedef struct {
     uint8_t sync1;        // 固定为0x50
@@ -304,6 +306,7 @@ typedef struct st_LaneToCtx {
     // char dev_name[20];
     // pthread_t recv_thread;
     bool running;
+    int sockfd;
 } LaneToCtx;
 
 UartPort *laneTo_port;

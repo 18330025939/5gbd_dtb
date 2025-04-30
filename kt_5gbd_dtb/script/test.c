@@ -2,19 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
-#define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 2947
+#define SOCKET_PATH "/var/run/gpsd.sock"
 #define BUFFER_SIZE 1024
 
 int main() {
     int sockfd;
-    struct sockaddr_in server_addr;
+    struct sockaddr_un server_addr;
     char buffer[BUFFER_SIZE];
 
     // 创建套接字
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sockfd < 0) {
         perror("socket");
         exit(1);
@@ -22,9 +22,8 @@ int main() {
 
     // 设置服务器地址
     memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    server_addr.sun_family = AF_UNIX;
+    strncpy(server_addr.sun_path, SOCKET_PATH, sizeof(server_addr.sun_path) - 1);
 
     // 连接到服务器
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
@@ -34,22 +33,25 @@ int main() {
     }
 
     // 发送命令
-    const char *command = "?WATCH={\"enable\":true,\"json\":true}\n";
-    if (send(sockfd, command, strlen(command), 0) < 0) {
-        perror("send");
+    const char *command = "?WATCH={\"enable\":true,\"raw\":3}\n";
+    if (write(sockfd, command, strlen(command)) < 0) {
+        perror("write");
         close(sockfd);
         exit(1);
     }
 
-    // 读取数据
+    // 每秒读取一次数据
     while (1) {
-        int bytes_received = recv(sockfd, buffer, BUFFER_SIZE - 1, 0);
+        int bytes_received = read(sockfd, buffer, BUFFER_SIZE - 1);
         if (bytes_received < 0) {
-            perror("recv");
+            perror("read");
             break;
         }
         buffer[bytes_received] = '\0';
         printf("GPS Data: %s", buffer);
+
+        // 等待 1 秒
+        sleep(1);
     }
 
     // 关闭套接字
