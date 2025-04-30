@@ -463,6 +463,7 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     char *start = NULL;
     ssize_t bytes_read = 0;
     char *token = NULL;
+    char *rest = NULL;
     
     if (ctx->running == false) {
         printf("laneTo not running\n");
@@ -476,16 +477,21 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     }
     if (bytes_read > 0) {
         buffer[bytes_read] = '\0';
-        printf("buf, %s, sock %d\n", buffer, ctx->sockfd);
+        // printf("buf, %s, sock %d\n", buffer, ctx->sockfd);
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);
         // end = strchr(start, "\n");
         if (start != NULL && end != NULL && end > start) {
-            token = strtok(buffer, "$");
-            while (token != NULL) {
-                printf("%s---%ld\n", token, strlen(token));
-                message_parser_entry(token);
-                token = strtok(NULL, "$");
+            char *data = strndup(start, end - start);
+            if (data) {
+                rest = data;
+                token = strtok_r(data, "$", &rest);
+                while (token != NULL) {
+                    // printf("%s---%ld\n", token, strlen(token));
+                    message_parser_entry(token);
+                    token = strtok_r(NULL, "$", &rest);
+                }
+                free(data);
             }
         } 
     }
