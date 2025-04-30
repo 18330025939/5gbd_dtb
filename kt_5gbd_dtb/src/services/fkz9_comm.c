@@ -160,6 +160,9 @@ int init_updater_environment(void)
         return -1;
     } else {
         printf("find updater.sh resp %s\n", resp);
+        if (strstr(resp, "/home/cktt/script/") == NULL) {
+            ret = ssh_client.execute(&ssh_client, "mkdir -p /home/cktt/script/", resp, sizeof(resp));
+        }
         if (strstr(resp, "updater.sh")) {
             SSHClient_Destroy(&ssh_client);
             return 0;
