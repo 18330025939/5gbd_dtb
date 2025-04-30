@@ -475,7 +475,7 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
         bytes_read = read(ctx->sockfd, buffer, sizeof(buffer));
     }
     if (bytes_read > 0) {
-        printf("buf, %s\n", buffer);
+        printf("buf, %s, sock %d\n", buffer, ctx->sockfd);
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);
         if (start != NULL && end != NULL && end > start) {
@@ -533,6 +533,7 @@ int init_shm_data_sock(LaneToCtx *ctx)
     }
 
     ctx->sockfd = sockfd;
+    printf("shm  data sock init success.\n");
     return 0;
 }
 
