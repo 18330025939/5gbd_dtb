@@ -732,7 +732,7 @@ int func_wave_file_req(void *arg)
     return 0;
 }
 
-REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_file, 0xAE, func_wave_file_req, func_wave_file_resp);
+REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_file, 174, func_wave_file_req, func_wave_file_resp);
 
 void proc_message_cb(char *buf, size_t len)
 {
