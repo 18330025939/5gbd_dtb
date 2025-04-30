@@ -1,66 +1,58 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/types.h>
+#include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
-// 定义 gpsd 的共享内存结构体
-struct gps_fix {
-    double latitude;       // 纬度
-    double longitude;      // 经度
-    double altitude;       // 海拔
-    double speed;          // 速度
-    double climb;          // 上升速度
-    double track;          // 航向
-    double magvar;         // 磁偏角
-    double time;           // 时间
-    double ept;            // 时间误差
-    double eph;            // 水平位置误差
-    double epv;            // 垂直位置误差
-    double ehdop;          // 水平精度因子
-    double evdop;          // 垂直精度因子
-    double epdop;          // 位置精度因子
-    int mode;              // 模式
-    int satellites;        // 卫星数量
-    char status[32];       // 状态
-    char device[32];       // 设备名
-};
+#define SERVER_IP "127.0.0.1"
+#define SERVER_PORT 2947
+#define BUFFER_SIZE 1024
 
 int main() {
-    key_t key = 0x47505344;  // GPS 数据的共享内存键值
-    int shmid = shmget(key, sizeof(struct gps_fix), 0666);
-    if (shmid == -1) {
-        perror("shmget");
+    int sockfd;
+    struct sockaddr_in server_addr;
+    char buffer[BUFFER_SIZE];
+
+    // 创建套接字
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+        perror("socket");
         exit(1);
     }
 
-    struct gps_fix *data = (struct gps_fix *)shmat(shmid, NULL, 0);
-    if (data == (struct gps_fix *)-1) {
-        perror("shmat");
+    // 设置服务器地址
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+
+    // 连接到服务器
+    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        perror("connect");
+        close(sockfd);
         exit(1);
     }
 
-    printf("Shared memory data:\n");
-    printf("Latitude: %f\n", data->latitude);
-    printf("Longitude: %f\n", data->longitude);
-    printf("Altitude: %f\n", data->altitude);
-    printf("Speed: %f\n", data->speed);
-    printf("Climb: %f\n", data->climb);
-    printf("Track: %f\n", data->track);
-    printf("Magvar: %f\n", data->magvar);
-    printf("Time: %f\n", data->time);
-    printf("EPT: %f\n", data->ept);
-    printf("EPH: %f\n", data->eph);
-    printf("EPV: %f\n", data->epv);
-    printf("EHDOP: %f\n", data->ehdop);
-    printf("EVDOP: %f\n", data->evdop);
-    printf("EPDOP: %f\n", data->epdop);
-    printf("Mode: %d\n", data->mode);
-    printf("Satellites: %d\n", data->satellites);
-    printf("Status: %s\n", data->status);
-    printf("Device: %s\n", data->device);
+    // 发送命令
+    const char *command = "?WATCH={\"enable\":true,\"json\":true}\n";
+    if (send(sockfd, command, strlen(command), 0) < 0) {
+        perror("send");
+        close(sockfd);
+        exit(1);
+    }
 
-    shmdt(data);
+    // 读取数据
+    while (1) {
+        int bytes_received = recv(sockfd, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes_received < 0) {
+            perror("recv");
+            break;
+        }
+        buffer[bytes_received] = '\0';
+        printf("GPS Data: %s", buffer);
+    }
+
+    // 关闭套接字
+    close(sockfd);
     return 0;
 }
