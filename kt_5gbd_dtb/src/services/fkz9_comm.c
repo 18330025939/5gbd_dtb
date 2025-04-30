@@ -213,6 +213,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         mqtt_client_destroy(mqtt_client);
         return;
     }
+    init_updater_environment();
     ctx->mqtt_client = mqtt_client;
     init_queue(&ctx->tx_queue, MAX_MSG_SIZE);
     List_Init_Thread(&ctx->ev_list);
