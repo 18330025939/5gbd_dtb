@@ -461,6 +461,7 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     char *end = NULL;
     char *start = NULL;
     ssize_t bytes_read = 0;
+    char *token = NULL;
     
     if (ctx->running == false) {
         printf("laneTo not running\n");
@@ -476,11 +477,19 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);
         if (start != NULL && end != NULL && end > start) {
-            char *token = strtok(buffer, "$");
+            if (ctx->uart) {
+                token = strtok(buffer, "$");
+            } else {
+                token = strtok(buffer, "GPS Data: $");
+            }
             while (token != NULL) {
                 // printf("%s---%ld\n", token, strlen(token));
                 message_parser_entry(token);
-                token = strtok(NULL, "$");
+                if (ctx->uart) {
+                    token = strtok(NULL, "$");
+                } else {
+                    token = strtok(NULL, "GPS Data: $");
+                }
             }
         } 
     }
@@ -488,30 +497,73 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     return ;
 }
 
+int init_shm_data_sock(LaneToCtx *ctx)
+{
+    int sockfd = -1;
+    struct sockaddr_in server_addr;
+
+    ctx->sockfd = -1;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+        perror("socket");
+        return -1;
+    }
+
+    // 设置服务器地址
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SHM_DATA_SERVER_PORT);
+    server_addr.sin_addr.s_addr = inet_addr(SHM_DATA_SERVER_IP);
+
+    // 连接到服务器
+    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        fprintf(stderr, "Shared data sock connection failed.\n");
+        close(sockfd);
+        return -1;
+    }
+
+    // 发送命令
+    const char *command = "?WATCH={\"enable\":true,\"raw\":3}\n";
+    if (send(sockfd, command, strlen(command), 0) < 0) {
+        fprintf(stderr, "Shared data sock config failed.\n");
+        close(sockfd);
+        return -1;
+    }
+
+    ctx->sockfd = sockfd;
+    return 0;
+}
+
 int laneTo_init(LaneToCtx *ctx)
 {   
+    UartPort *laneTo_port = NULL;
+
     if (ctx == NULL) {
         return -1;
     }
 
-    SerialPortInfo laneto_port_info = {
-        .speed = 115200, 
-        .data_bits = 8, 
-        .stop_bits = 1, 
-        .parity = 'N', 
-        .fctl = 0
-    };
-    laneTo_port = uart_port_create();
-    if (laneTo_port == NULL) {
-        return -1;
-    }
-
-    ctx->uart = laneTo_port;
-    int ret = laneTo_port->base.ops->open(&laneTo_port->base, LANETO_DEV_NAME);
+    ctx->uart = NULL;
+    int ret = init_shm_data_sock(ctx);
     if (ret) {
-        return -1;
+        SerialPortInfo laneto_port_info = {
+            .speed = 115200, 
+            .data_bits = 8, 
+            .stop_bits = 1, 
+            .parity = 'N', 
+            .fctl = 0
+        };
+        laneTo_port = uart_port_create();
+        if (laneTo_port == NULL) {
+            return -1;
+        }
+
+        ctx->uart = laneTo_port;
+        int ret = laneTo_port->base.ops->open(&laneTo_port->base, LANETO_DEV_NAME);
+        if (ret) {
+            return -1;
+        }
+        laneTo_port->base.ops->configure(&laneTo_port->base, &laneto_port_info);
     }
-    laneTo_port->base.ops->configure(&laneTo_port->base, &laneto_port_info);
     ctx->running = true;
     printf("laneTo_init ok!\n");
     return 0;
@@ -524,8 +576,13 @@ void laneTo_uninit(LaneToCtx *ctx)
         return ;
     }
     ctx->running = false;
-    laneTo_port = ctx->uart;
-    laneTo_port->base.ops->close(&laneTo_port->base);
+    if (ctx->uart) {
+        laneTo_port = ctx->uart;
+        laneTo_port->base.ops->close(&laneTo_port->base);
+    }
+    if (ctx->sockfd != -1) {
+         close(ctx->sockfd);
+    }
     free(laneTo_port);
     free(ctx);
 }

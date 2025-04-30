@@ -8,7 +8,8 @@
 
 #define LANETO_DEV_NAME "/dev/ttyS4"
 
-#define SHM_SOCKET_PATH "/var/run/gpsd.sock"
+#define SHM_DATA_SERVER_IP "127.0.0.1"
+#define SHM_DATA_SERVER_PORT 2947
 
 #pragma pack(push, 1)
 typedef struct {
@@ -308,8 +309,6 @@ typedef struct st_LaneToCtx {
     bool running;
     int sockfd;
 } LaneToCtx;
-
-UartPort *laneTo_port;
 
 void laneTo_read_nav_data(LaneToCtx *ctx);
 int laneTo_init(LaneToCtx *ctx);
