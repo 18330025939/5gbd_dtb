@@ -170,8 +170,8 @@ static int check_network_segment(Fx650Ctx* ctx)
     }
 
     if (strstr(resp, "192.168.42.") != NULL) {
-        fprintf(stderr, "FX650 module network segment abnormality.\n");
-        if (send_at_command(ctx, "AT+GTDHCPCFG=\"setipinfo\",\"192.168.10.1",\"192.168.10.2\",\"192.168.10.254\",\"255.255.255.0\",\"192.168.10.255\"\r\n", 
+        printf("FX650 module network segment abnormality.\n");
+        if (send_at_command(ctx, "AT+GTDHCPCFG=\"setipinfo\",\"192.168.10.1\",\"192.168.10.2\",\"192.168.10.254\",\"255.255.255.0\",\"192.168.10.255\"\r\n", 
                 resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
         }
@@ -297,7 +297,7 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
 
     ret = check_network_segment(ctx);
     if (ret) {
-        rerurn FX650_ERR_NET_SEGMENT;
+        return FX650_ERR_NET_SEGMENT;
     }
 
     ret = check_sim_status(ctx);
@@ -309,7 +309,7 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
     if(ret) {
         return FX650_ERR_APN_NOT_READY;
     }
-    
+
     ret = activate_dia(ctx, 1);
     if (ret) {
         fprintf(stderr, "Activation of RNDIS failed,attempt to deactivate and reactivate.\n");
