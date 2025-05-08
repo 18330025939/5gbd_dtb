@@ -161,6 +161,25 @@ static int check_sim_status(Fx650Ctx* ctx)
     return 0;
 }
 
+// 检查网段
+static int check_network_segment(Fx650Ctx* ctx) 
+{
+    char resp[AT_MAX_RESPONSE_LEN];
+    if (send_at_command(ctx, "AT+GTDHCPCFG?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+        return -1;
+    }
+
+    if (strstr(resp, "192.168.42.") != NULL) {
+        fprintf(stderr, "FX650 module network segment abnormality.\n");
+        if (send_at_command(ctx, "AT+GTDHCPCFG=\"setipinfo\",\"192.168.10.1",\"192.168.10.2\",\"192.168.10.254\",\"255.255.255.0\",\"192.168.10.255\"\r\n", 
+                resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 // 设置APN
 /*  cmiot：中国移动的4G和5G网络。
     5gnet：中国联通的4G和5G网络。
@@ -276,14 +295,21 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
 {
     int ret = 0;
 
+    ret = check_network_segment(ctx);
+    if (ret) {
+        rerurn FX650_ERR_NET_SEGMENT;
+    }
+
     ret = check_sim_status(ctx);
     if (ret) {
         return FX650_ERR_SIM_NOT_READY;
     }
+
     ret = set_apn(ctx, "5gnet");
     if(ret) {
         return FX650_ERR_APN_NOT_READY;
     }
+    
     ret = activate_dia(ctx, 1);
     if (ret) {
         fprintf(stderr, "Activation of RNDIS failed,attempt to deactivate and reactivate.\n");

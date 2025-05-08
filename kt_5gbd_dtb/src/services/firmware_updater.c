@@ -103,12 +103,12 @@ int fkz9_fw_update_func(void *arg)
     return ret;
 }
 
-int fkz9_fw_update_cb(void * arg)
+int fkz9_fw_update_cb(void *arg)
 {
     SSHClient ssh_client;
     struct FwUpdateInfo *pInfo = NULL;
     
-    if (arg  == NULL) {
+    if (arg == NULL) {
         return -1;
     }
 
@@ -129,6 +129,6 @@ int fkz9_fw_update_cb(void * arg)
     return ret;
 }
 
-REGISTER_FIRMWARE_UPDATE_INTERFACE(fkz9, fkz9_fw_trans_func, fkz9_fw_update_func, fkz9_fw_update_cb);
+REGISTER_FIRMWARE_UPDATE_INTERFACE(fkz9, fkz9_fw_trans_func, fkz9_fw_update_func, NULL);
 
 

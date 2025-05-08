@@ -61,6 +61,8 @@ function ntp_server_check()
     fi
 
     enable_server
+
+    sleep 5
 }
 
 
