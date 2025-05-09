@@ -75,7 +75,7 @@ static int SSHClient_Execute(SSHClient *client, const char *command, char *outpu
         return -1;
     }
 
-    char buffer[1024];
+    char buffer[1024] = {0};
     int nbytes = 0;
     int recv_bytes = 0;
     while ((nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0)) > 0) {
