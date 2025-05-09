@@ -239,10 +239,10 @@ int get_ota_heartbeat_info(void *arg)
         token = strtok(NULL, ";");
     }
 #if 1
-    pHb_info->units[0].sw_ver = "25";
-    pHb_info->units[1].sw_ver = "70";
-    pHb_info->units[2].sw_ver = "70";
-    pHb_info->units[3].sw_ver = "80";
+    strcpy(pHb_info->units[0].sw_ver, "25");
+    strcpy(pHb_info->units[1].sw_ver, "70");
+    strcpy(pHb_info->units[2].sw_ver, "70");
+    strcpy(pHb_info->units[3].sw_ver, "80");
 #endif
 
 #endif
