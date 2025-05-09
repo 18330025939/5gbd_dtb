@@ -220,7 +220,7 @@ int get_ota_heartbeat_info(void *arg)
     
     char tmp_resp[256];
     strcpy(tmp_resp, resp);
-    char *token = strtok((char *)resp, ";");
+    char *token = strtok(resp, ";");
     while (token != NULL) {
         pHb_info->unit_num++;
         printf("pHb_info->unit_num %d\n", pHb_info->unit_num);
@@ -230,7 +230,7 @@ int get_ota_heartbeat_info(void *arg)
     
     int i = 0;
     printf("unit_info tmp_resp %s\n", tmp_resp);
-    token = strtok((char *)tmp_resp, ";");
+    token = strtok(tmp_resp, ";");
     while (token != NULL) {
         sscanf(token, "%[^:]:%[^,],%s", pHb_info->units[i].unit_name,
                 pHb_info->units[i].sw_ver, pHb_info->units[i].hw_ver);
