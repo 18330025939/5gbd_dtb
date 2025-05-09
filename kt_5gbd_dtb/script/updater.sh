@@ -244,7 +244,7 @@ function get_heartbeat_base_info()
     up_time=`uptime -s`
     cur_time=`date "+%Y-%m-%d %H:%M:%S"`
 
-    echo "$devaddr,$cpu_info,$total_disk,$used_disk,$total_memory,$used_memory,$up_time,$cur_time"  
+    echo "$devaddr,$cpu_info,$total_disk,$used_disk,$total_memory,$used_memory,$up_time,$cur_time,"  
 }
 
 function get_heartbeat_unit_info()

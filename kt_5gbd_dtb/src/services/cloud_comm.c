@@ -202,7 +202,7 @@ int get_ota_heartbeat_info(void *arg)
         fprintf(stderr, "ssh_client.execute updater.sh base_info failed.\n");
         return -1;
     }
-    sscanf(resp, "%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%s",
+    sscanf(resp, "%d,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
             pHb_info->dev_addr, pHb_info->cpu_info, 
             pHb_info->total_disk, pHb_info->used_disk, 
             pHb_info->total_mem, pHb_info->used_mem,
@@ -211,7 +211,6 @@ int get_ota_heartbeat_info(void *arg)
     memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
-    printf("unit_info %s\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute updater.sh unit_info failed.\n");
@@ -223,12 +222,14 @@ int get_ota_heartbeat_info(void *arg)
         pHb_info->unit_num++;
         token = strtok(NULL, ";");
     }
+    printf("pHb_info->unit_num %d\n", pHb_info->unit_num);
     pHb_info->units = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->unit_num);
     
     int i = 0;
+    printf("unit_info %s\n", resp);
     token = strtok((char *)resp, ";");
     while (token != NULL) {
-        sscanf(token, "%[^:]:%[^,],%s", pHb_info->units[i].unit_name,
+        sscanf(token, "%[^:]:%d,%d", pHb_info->units[i].unit_name,
                 pHb_info->units[i].sw_ver, pHb_info->units[i].hw_ver);
         i++;
         token = strtok(NULL, ";");
@@ -247,10 +248,10 @@ cJSON *create_unit_info_object(UnitInfo * unit_info, uint8_t type)
     obj = cJSON_CreateObject();
     if (type == 1) {
         cJSON_AddStringToObject(obj, "software", unit_info->unit_name);
-        snprintf(version, sizeof(version), "V%s", unit_info->sw_ver);
+        snprintf(version, sizeof(version), "V%d", unit_info->sw_ver);
     } else {
         cJSON_AddStringToObject(obj, "hardware", unit_info->unit_name);
-        snprintf(version, sizeof(version), "V%s", unit_info->hw_ver);
+        snprintf(version, sizeof(version), "V%d", unit_info->hw_ver);
     }
     cJSON_AddStringToObject(obj, "version", version);
     
@@ -292,7 +293,7 @@ int create_ota_heartbeat_data(char *data)
     root = cJSON_CreateObject(); 
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     // sprintf(str, "%hu", heart_beat.dev_addr);
-    cJSON_AddStringToObject(root, "deviceAddress", heart_beat.dev_addr);
+    cJSON_AddDataToObject(root, "deviceAddress", heart_beat.dev_addr);
     cJSON_AddStringToObject(root, "usageCpu", heart_beat.cpu_info);
     cJSON_AddStringToObject(root, "usageMemory", heart_beat.used_mem);
     cJSON_AddStringToObject(root, "totalMemory", heart_beat.total_mem);

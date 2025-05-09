@@ -172,17 +172,17 @@ typedef struct st_MsgCommContext
     struct DownUpgradeTask down_task;
 } CloundCommContext;
 
+#define STRING_LEN_MAX 32
 typedef struct st_UnitInfo
 {
-    char unit_name[20];
-    char hw_ver[20];
-    char sw_ver[20];
+    char unit_name[STRING_LEN_MAX];
+    uint8_t hw_ver;
+    uint8_t sw_ver;
 } UnitInfo;
 
-#define STRING_LEN_MAX 32
 typedef struct st_OtaHeartBeat
 {
-    char dev_addr[STRING_LEN_MAX];
+    uint16_t dev_addr;
     char cpu_info[STRING_LEN_MAX];
     char used_mem[STRING_LEN_MAX];
     char total_mem[STRING_LEN_MAX];
