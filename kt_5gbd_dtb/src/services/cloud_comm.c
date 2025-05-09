@@ -99,6 +99,7 @@ int get_ota_heartbeat_info(void *arg)
     }
 #endif
 #if 1
+    printf("get_ota_heart_beat_info\n");
     pHb_info = (struct st_OtaHeartBeat*)arg;
     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
@@ -303,6 +304,7 @@ int create_ota_heartbeat_data(char *data)
     cJSON_AddItemToObject(root, "softwareList", unit_info);
 
     buf = cJSON_Print(root);
+    printf("ota heart beat data: %s\n", buf);
     strncpy(data, buf, strlen(buf));
     cJSON_Delete(root);
     free(buf);
