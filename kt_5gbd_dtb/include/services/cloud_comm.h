@@ -176,8 +176,8 @@ typedef struct st_MsgCommContext
 typedef struct st_UnitInfo
 {
     char unit_name[STRING_LEN_MAX];
-    uint8_t hw_ver;
-    uint8_t sw_ver;
+    char hw_ver[STRING_LEN_MAX];
+    char sw_ver[STRING_LEN_MAX];
 } UnitInfo;
 
 typedef struct st_OtaHeartBeat
