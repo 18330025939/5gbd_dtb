@@ -17,8 +17,8 @@
 
 
 #define SERVER_IP  "192.168.42.50"
-#define SERVER_USERNAME "cktt"
-#define SERVER_PASSWORD "cktt"
+#define SERVER_USERNAME "root"//"cktt"
+#define SERVER_PASSWORD "root"//"cktt"
 
 /* OTA升级报告路径格式： OTA_UPREPORT_PATH + task_id + / + filename*/
 #define OTA_UPREPORT_REMOTE_PATH "/upgrade/"

@@ -10,7 +10,7 @@ ifndef release.version
 endif
 
 ifndef build.level
-  build.level = $(shell date +%Y%m%d%H%M%S)
+  build.level = $(shell date)
 endif
 
 SED_COMMAND = sed \
