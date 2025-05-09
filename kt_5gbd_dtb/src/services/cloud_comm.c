@@ -293,7 +293,7 @@ int create_ota_heartbeat_data(char *data)
     root = cJSON_CreateObject(); 
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     // sprintf(str, "%hu", heart_beat.dev_addr);
-    cJSON_AddDataToObject(root, "deviceAddress", heart_beat.dev_addr);
+    cJSON_AddNumberToObject(root, "deviceAddress", heart_beat.dev_addr);
     cJSON_AddStringToObject(root, "usageCpu", heart_beat.cpu_info);
     cJSON_AddStringToObject(root, "usageMemory", heart_beat.used_mem);
     cJSON_AddStringToObject(root, "totalMemory", heart_beat.total_mem);
