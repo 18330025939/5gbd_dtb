@@ -211,7 +211,7 @@ int get_ota_heartbeat_info(void *arg)
     memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
-    printf("unit_info resp %s\n", resp)
+    printf("unit_info resp %s\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute updater.sh unit_info failed.\n");
@@ -219,7 +219,7 @@ int get_ota_heartbeat_info(void *arg)
     }
     
     char tmp_resp[256];
-    strncpy(tmp_resp, resp, sizeof(tmp_resp));
+    strcpy(tmp_resp, resp);
     char *token = strtok((char *)resp, ";");
     while (token != NULL) {
         pHb_info->unit_num++;
