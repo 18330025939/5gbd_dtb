@@ -82,7 +82,7 @@ static int SSHClient_Execute(SSHClient *client, const char *command, char *outpu
         strncat(output, buffer, nbytes);
         recv_bytes += nbytes;
     }
-    // output[recv_bytes] = '\0';
+    output[recv_bytes] = '\0';
 
     ssh_channel_send_eof(channel);
     ssh_channel_close(channel);

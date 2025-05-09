@@ -194,15 +194,17 @@ int get_ota_heartbeat_info(void *arg)
 #endif
 
     char resp[512];
+    memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", 
             resp, sizeof(resp));
-    printf("base_info %s\n", resp);
+    printf("base_info %s\n", strstrip(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute updater.sh base_info failed.\n");
         return -1;
     }
-    sscanf(resp, " %[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
+
+    sscanf(strstrip(resp), " %[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
             pHb_info->dev_addr, pHb_info->cpu_info, 
             pHb_info->total_disk, pHb_info->used_disk, 
             pHb_info->total_mem, pHb_info->used_mem,
@@ -211,7 +213,7 @@ int get_ota_heartbeat_info(void *arg)
     memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
-    printf("unit_info resp %s\n", resp);
+    printf("unit_info resp %s\n", strstrip(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute updater.sh unit_info failed.\n");
@@ -220,7 +222,7 @@ int get_ota_heartbeat_info(void *arg)
     
     char tmp_resp[256];
     strcpy(tmp_resp, resp);
-    char *token = strtok(resp, ";");
+    char *token = strtok(strstrip(resp), ";");
     while (token != NULL) {
         pHb_info->unit_num++;
         printf("pHb_info->unit_num %d, token %s\n", pHb_info->unit_num, token);
@@ -230,7 +232,7 @@ int get_ota_heartbeat_info(void *arg)
     
     int i = 0;
     printf("unit_info tmp_resp %s\n", tmp_resp);
-    token = strtok(tmp_resp, ";");
+    token = strtok(strstrip(tmp_resp), ";");
     while (token != NULL) {
         sscanf(token, "%[^:]:%[^,],%s", pHb_info->units[i].unit_name,
                 pHb_info->units[i].sw_ver, pHb_info->units[i].hw_ver);
