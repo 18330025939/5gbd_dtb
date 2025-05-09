@@ -143,7 +143,7 @@ int init_updater_environment(void)
 {
     SSHClient ssh_client;
 
-    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_TEST_SERVER_USERNAME, MQTT_TEST_SERVER_PASSWORD);
+    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);

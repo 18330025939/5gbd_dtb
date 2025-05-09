@@ -10,8 +10,6 @@
 #include "fkz9_comm.h"
 #include "led.h"
 #include "ssh_client.h"
-#include "VersionInfo.h"
-
 
 void signal_handler(evutil_socket_t fd, short events, void *arg)
 {
