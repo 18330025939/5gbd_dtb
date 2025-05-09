@@ -202,8 +202,8 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     AsyncClientConfig client_config = {
         .address = url,
         .client_id = MQTT_CLIENT_ID,
-        .user_name = MQTT_TEST_SERVER_USERNAME,
-        .password = MQTT_TEST_SERVER_PASSWORD,
+        .user_name = MQTT_SERVER_USERNAME,
+        .password = MQTT_SERVER_PASSWORD,
         .keep_alive = KEEP_ALIVE_TIME,
         .qos = QOS,
         .clean_session = 1

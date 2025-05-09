@@ -249,7 +249,7 @@ static int check_network_connection(void)
         if (res == CURLE_OK) {
             connected = 1;
         } else {
-            fprintf(stderr, "curl_easy_perform() failed: %sn", curl_easy_strerror(res));
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         }
 
         curl_easy_cleanup(curl);
@@ -295,12 +295,12 @@ static int run_dhcp_client(const char* net)
 FX650_Error fx650_connect_network(Fx650Ctx* ctx) 
 {
     int ret = 0;
-
+#if 0
     ret = check_network_segment(ctx);
     if (ret) {
         return FX650_ERR_NET_SEGMENT;
     }
-
+#endif
     ret = check_sim_status(ctx);
     if (ret) {
         return FX650_ERR_SIM_NOT_READY;
