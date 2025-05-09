@@ -223,7 +223,7 @@ int get_ota_heartbeat_info(void *arg)
     char *token = strtok(resp, ";");
     while (token != NULL) {
         pHb_info->unit_num++;
-        printf("pHb_info->unit_num %d\n", pHb_info->unit_num);
+        printf("pHb_info->unit_num %d, token %s\n", pHb_info->unit_num, token);
         token = strtok(NULL, ";");
     }
     pHb_info->units = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->unit_num);
@@ -826,7 +826,7 @@ void *timer_task_entry(void *arg)
     ctx = (CloundCommContext *)arg;
     base = event_base_new();
     ctx->base = base;
-    add_timer_task(arg, nav_data_msg_task_cb, 1000);
+    // add_timer_task(arg, nav_data_msg_task_cb, 1000);
     add_timer_task(arg, ota_heartbeat_task_cb, 6000);
 
     event_base_dispatch(base);  // 启动事件循环
