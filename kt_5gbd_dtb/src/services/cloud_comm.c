@@ -280,6 +280,7 @@ int create_ota_heartbeat_data(char *data)
         return -1;
     }
  
+    printf("create_ota_heartbeat_data\r\n");
     int ret = get_ota_heartbeat_info(&heart_beat);
     if (ret) {
         return -1;
