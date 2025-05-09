@@ -100,7 +100,7 @@ int get_ota_heartbeat_info(void *arg)
 #endif
 #if 1
     pHb_info = (struct st_OtaHeartBeat*)arg;
-    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
+    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
@@ -319,7 +319,7 @@ int get_ota_report_info(struct FwDownInfo *info, void *arg)
     }
 
     pReport = (struct st_OtaReport*)arg;
-    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
+    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
@@ -709,7 +709,7 @@ int func_wave_file_req(void *arg)
                 year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
     char file_name[32];
     snprintf(file_name, sizeof(file_name), "%4d-wavedat-%4d%2d%2d%2d.dat.gz", pReq->usDevAddr, year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
-    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
+    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
