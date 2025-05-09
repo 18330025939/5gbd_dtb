@@ -203,7 +203,7 @@ int get_ota_heartbeat_info(void *arg)
         return -1;
     }
     sscanf(resp, "%hu,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
-            pHb_info->dev_addr, pHb_info->cpu_info, 
+            &(pHb_info->dev_addr), pHb_info->cpu_info, 
             pHb_info->total_disk, pHb_info->used_disk, 
             pHb_info->total_mem, pHb_info->used_mem,
             pHb_info->up_time, pHb_info->cur_time);
@@ -230,7 +230,7 @@ int get_ota_heartbeat_info(void *arg)
     token = strtok((char *)resp, ";");
     while (token != NULL) {
         sscanf(token, "%[^:]:%hhu,%hhu", pHb_info->units[i].unit_name,
-                pHb_info->units[i].sw_ver, pHb_info->units[i].hw_ver);
+                &(pHb_info->units[i].sw_ver), &(pHb_info->units[i].hw_ver));
         i++;
         token = strtok(NULL, ";");
     }
