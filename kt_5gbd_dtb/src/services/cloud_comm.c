@@ -202,7 +202,7 @@ int get_ota_heartbeat_info(void *arg)
         fprintf(stderr, "ssh_client.execute updater.sh base_info failed.\n");
         return -1;
     }
-    sscanf(resp, "%d,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
+    sscanf(resp, "%hu,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
             pHb_info->dev_addr, pHb_info->cpu_info, 
             pHb_info->total_disk, pHb_info->used_disk, 
             pHb_info->total_mem, pHb_info->used_mem,
@@ -229,7 +229,7 @@ int get_ota_heartbeat_info(void *arg)
     printf("unit_info %s\n", resp);
     token = strtok((char *)resp, ";");
     while (token != NULL) {
-        sscanf(token, "%[^:]:%d,%d", pHb_info->units[i].unit_name,
+        sscanf(token, "%[^:]:%hhu,%hhu", pHb_info->units[i].unit_name,
                 pHb_info->units[i].sw_ver, pHb_info->units[i].hw_ver);
         i++;
         token = strtok(NULL, ";");
@@ -823,7 +823,7 @@ void *timer_task_entry(void *arg)
     base = event_base_new();
     ctx->base = base;
     add_timer_task(arg, nav_data_msg_task_cb, 1000);
-    add_timer_task(arg, ota_heartbeat_task_cb, 60000);
+    add_timer_task(arg, ota_heartbeat_task_cb, 6000);
 
     event_base_dispatch(base);  // 启动事件循环
     
