@@ -14,7 +14,7 @@
 #include "queue.h"
 #include "can.h"
 
-/*接收*/
+/* 接收 */
 static void* rx_thread_func(void* arg)
 {
     CANDevice* dev = (CANDevice*)arg;
@@ -32,7 +32,7 @@ static void* rx_thread_func(void* arg)
     return NULL;
 }
 
-/*发送*/
+/* 发送 */
 static void* tx_thread_func(void* arg)
 {
     CANDevice* dev = (CANDevice*)arg;
@@ -200,7 +200,6 @@ static struct CANDeviceOps can_ops = {
     .set_filter = can_device_set_filter,
     .register_callback = can_device_register_callback
 } ;
-
 
 CANDevice* can_device_create(void) 
 {

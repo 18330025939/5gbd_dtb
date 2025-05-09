@@ -185,3 +185,4 @@ void SSHClient_Destroy(SSHClient *client)
         ssh_free(client->session);
     }
 }
+

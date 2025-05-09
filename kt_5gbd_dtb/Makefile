@@ -1,6 +1,22 @@
 all: host_lib host_third host_src 
 	@echo "root build done"
 
+MAJOR_VERSION := $(shell cat version.major)
+MINOR_VERSION := $(shell cat version.minor)
+PATCH_VERSION := $(shell cat version.patch)
+
+ifndef release.version
+  release.version = $(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
+endif
+
+ifndef build.level
+  build.level = $(shell date +%Y%m%d%H%M%S)
+endif
+
+SED_COMMAND = sed \
+    -e "s/@CLIENT_VERSION@/${release.version}/g" \
+	-e "s/@BUILD_TIMESTAMP@/${build.level}/g"
+
 host_lib:
 	@echo "build root/lib"
 	make -C $(KT_5GBD_DTB)/lib

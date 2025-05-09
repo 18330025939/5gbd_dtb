@@ -15,7 +15,7 @@
 #define MAX_LINE_LEN 256
 #define PRODUCT_PREFIX "PRODUCT="
 
-// 检查uevent文件中是否存在匹配的PRODUCT字段
+/* 检查uevent文件中是否存在匹配的PRODUCT字段 */
 static int check_uevent_product(const char *uevent_path, const char *target_vid, const char *target_pid) 
 {
     FILE *fp = fopen(uevent_path, "r");
@@ -60,7 +60,7 @@ static int check_uevent_product(const char *uevent_path, const char *target_vid,
     return found;
 }
 
-// 获取匹配的网卡名称
+/* 获取匹配的网卡名称 */
 static char* find_interface_by_vid_pid(const char *vid, const char *pid) 
 {
     DIR *net_dir;
@@ -109,7 +109,7 @@ static char* find_interface_by_vid_pid(const char *vid, const char *pid)
     return found_ifname;
 }
 
-// 发送AT指令核心函数
+/* 发送AT指令 */
 static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
                                   char* resp, size_t resp_len,
                                   uint32_t timeout_ms) 
@@ -146,7 +146,7 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
     }
 }
 
-// 检查SIM卡状态
+/* 检查SIM卡状态 */
 static int check_sim_status(Fx650Ctx* ctx) 
 {
     char resp[AT_MAX_RESPONSE_LEN];
@@ -161,7 +161,7 @@ static int check_sim_status(Fx650Ctx* ctx)
     return 0;
 }
 
-// 检查网段
+/* 检查网段 */
 static int check_network_segment(Fx650Ctx* ctx) 
 {
     char resp[AT_MAX_RESPONSE_LEN];
@@ -180,7 +180,7 @@ static int check_network_segment(Fx650Ctx* ctx)
     return 0;
 }
 
-// 设置APN
+/* 设置APN */ 
 /*  cmiot：中国移动的4G和5G网络。
     5gnet：中国联通的4G和5G网络。
     ctlte：中国电信的4G和5G网络。
@@ -202,7 +202,7 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
     return 0;
 }
 
-// 激活拨号
+/* 激活拨号 */
 static int activate_dia(Fx650Ctx* ctx, uint8_t status) 
 {
     char cmd[128];
@@ -232,6 +232,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
     return 0;
 }
 
+/* 检查网络连接 */
 static int check_network_connection(void)
 {
     CURL *curl;
@@ -257,7 +258,7 @@ static int check_network_connection(void)
     return connected;
 }
 
-// 执行DHCP获取IP
+/* 执行DHCP获取IP */
 static int run_dhcp_client(const char* net) 
 {
     char cmd[128];

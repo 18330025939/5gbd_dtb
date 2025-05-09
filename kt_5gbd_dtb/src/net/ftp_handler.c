@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <curl/curl.h>
 
-// FTP上传回调函数
+/* FTP上传回调函数 */
 static size_t upload_read_callback(void *ptr, size_t size, size_t nmemb, void *userp) 
 {
     FILE *fp = (FILE *)userp;
@@ -16,7 +16,7 @@ static size_t upload_read_callback(void *ptr, size_t size, size_t nmemb, void *u
     return read_size;
 }
 
-// FTP下载回调函数
+/* FTP下载回调函数 */
 static size_t download_write_callback(void *ptr, size_t size, size_t nmemb, void *userp) 
 {
     FILE *fp = (FILE *)userp;
@@ -27,7 +27,7 @@ static size_t download_write_callback(void *ptr, size_t size, size_t nmemb, void
     return written;
 }
 
-// FTP上传文件
+/* FTP上传文件 */
 int ftp_upload(const char *url, const char *local_path, const char *remote_path, const char *user, const char *pass) 
 {
     CURL *curl;
@@ -92,7 +92,7 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
     return 0;
 }
 
-// FTP下载文件
+/* FTP下载文件 */
 int ftp_download(const char *url, const char *local_path, const char *remote_path, const char *user, const char *pass) 
 {
     CURL *curl;
@@ -153,7 +153,7 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
 }
 
 
-// 回调函数，用于处理服务器返回的数据
+/*  回调函数，用于处理服务器返回的数据 */
 static size_t post_write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
     size_t real_size = size * nmemb;
     char **response_ptr = (char **)userp;
@@ -164,7 +164,7 @@ static size_t post_write_callback(void *contents, size_t size, size_t nmemb, voi
     return real_size;
 }
 
-// 发送 POST 请求的函数
+/* 发送 POST 请求的函数 */
 int http_post_request(const char *url, const char *json_data, char **response) 
 {
     CURL *curl;
@@ -195,3 +195,4 @@ int http_post_request(const char *url, const char *json_data, char **response)
 
     return 0;
 }
+

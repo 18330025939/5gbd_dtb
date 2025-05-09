@@ -7,7 +7,7 @@
 #include <sys/ioctl.h>
 #include "led.h"
 
-// 初始化GPIO控制器
+/* 初始化GPIO控制器 */
 static int GpioController_Init(GpioController *controller, char *gpio_num) 
 {
     char path[64];
@@ -52,7 +52,7 @@ static int GpioController_Init(GpioController *controller, char *gpio_num)
     return 0;
 }
 
-// 设置GPIO方向
+/* 设置GPIO方向 */
 static int GpioController_SetDirection(GpioController *controller, const char *direction) 
 {
     if (controller->fd_dir < 0) {
@@ -68,7 +68,7 @@ static int GpioController_SetDirection(GpioController *controller, const char *d
     return 0;
 }
 
-// 设置GPIO值
+/* 设置GPIO值 */
 static int GpioController_SetValue(GpioController *controller, int value) 
 {
     char buf[2];
@@ -88,7 +88,7 @@ static int GpioController_SetValue(GpioController *controller, int value)
     return 0;
 }
 
-// 获取GPIO值
+/* 获取GPIO值 */
 static int GpioController_GetValue(GpioController *controller, int *value) 
 {
     char buf;
@@ -112,7 +112,7 @@ static int GpioController_GetValue(GpioController *controller, int *value)
     return 0;
 }
 
-// 清理GPIO控制器
+/* 清理GPIO控制器 */
 static void GpioController_Cleanup(GpioController *controller) 
 {
     char path[64];
@@ -156,19 +156,19 @@ int led_init(LedController *controller, char *gpio_num)
     return 0;
 }
 
-// 打开LED
+/* 设置LED为高电平 */
 int led_set_high(LedController *controller) 
 {
     return GpioController_SetValue(&controller->gpio_controller, 1);
 }
 
-// 关闭LED
+/* 设置LED为低电平 */
 int led_set_low(LedController *controller) 
 {
     return GpioController_SetValue(&controller->gpio_controller, 0);
 }
 
-// 切换LED状态
+/* 切换LED状态 */
 int led_toggle(LedController *controller) 
 {
     int state;
@@ -178,13 +178,13 @@ int led_toggle(LedController *controller)
     return GpioController_SetValue(&controller->gpio_controller, !state);
 }
 
-// 获取LED状态
+/* 获取LED状态 */
 int led_get_state(LedController *controller, int *state) 
 {
     return GpioController_GetValue(&controller->gpio_controller, state);
 }
 
-// 清理LED控制器
+/* 清理LED控制器 */
 void led_destroy(LedController *controller) 
 {
     GpioController_Cleanup(&controller->gpio_controller);

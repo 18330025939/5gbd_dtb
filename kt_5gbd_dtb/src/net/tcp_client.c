@@ -20,7 +20,7 @@
 
 void *tcp_client_send_entry(void *arg);
 static void tcp_client_disconnect(TcpClient* client);
-// 重连机制
+/* 重连机制 */
 void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 {
     TcpClient* client = (TcpClient*)arg;
@@ -38,7 +38,7 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
     }
 }
 
-// 服务器消息回调函数
+/* 服务器消息回调函数 */
 static void tcp_client_read_cb(struct bufferevent* bev, void* arg)
 {
     TcpClient* client = (TcpClient*)arg;
@@ -52,7 +52,7 @@ static void tcp_client_read_cb(struct bufferevent* bev, void* arg)
     }
 }
 
-// 事件回调函数
+/* 事件回调函数 */
 static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg)
 {
     TcpClient* client = (TcpClient*)arg;
@@ -75,7 +75,7 @@ static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg
     }
 }
 
-// 客户端连接线程
+/* 客户端连接线程 */ 
 void *tcp_client_connect_entry(void *arg)
 {
     TcpClient* client = (TcpClient*)arg;
@@ -142,7 +142,7 @@ static void tcp_client_connect(TcpClient* client)
     pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
 }
 
-// 发送数据
+/* 发送数据 */
 static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len) 
 {
     // for (int i = 0; i < len; i++) {
@@ -154,7 +154,7 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
     }
 }
 
-// 断开连接
+/* 断开连接 */
 static void tcp_client_disconnect(TcpClient* client) 
 {
     client->is_connected = false;
@@ -175,6 +175,7 @@ TcpClientOps tcp_client_ops = {
     .send = tcp_client_send
 };
 
+/* 创建客户端 */
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 {
     TcpClient* client = (TcpClient*)malloc(sizeof(TcpClient));
@@ -190,7 +191,7 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
     return client;
 }
 
-// 销毁客户端
+/* 销毁客户端 */
 void tcp_client_destroy(TcpClient* client) 
 {
     printf("tcp_client_destroy\n");
