@@ -182,7 +182,7 @@ typedef struct st_UnitInfo
 
 typedef struct st_OtaHeartBeat
 {
-    uint16_t dev_addr;
+    char dev_addr[STRING_LEN_MAX];
     char cpu_info[STRING_LEN_MAX];
     char used_mem[STRING_LEN_MAX];
     char total_mem[STRING_LEN_MAX];
