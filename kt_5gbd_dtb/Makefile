@@ -1,4 +1,4 @@
-all: host_lib host_third host_src 
+all: VersionInfo.h host_lib host_third host_src 
 	@echo "root build done"
 
 MAJOR_VERSION := $(shell cat version.major)
@@ -16,6 +16,9 @@ endif
 SED_COMMAND = sed \
     -e "s/@CLIENT_VERSION@/${release.version}/g" \
 	-e "s/@BUILD_TIMESTAMP@/${build.level}/g"
+
+VersionInfo.h: VersionInfo.h.in
+	$(SED_COMMAND) $< > $@
 
 host_lib:
 	@echo "build root/lib"
