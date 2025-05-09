@@ -223,9 +223,9 @@ int get_ota_heartbeat_info(void *arg)
     char *token = strtok((char *)resp, ";");
     while (token != NULL) {
         pHb_info->unit_num++;
+        printf("pHb_info->unit_num %d\n", pHb_info->unit_num);
         token = strtok(NULL, ";");
     }
-    printf("pHb_info->unit_num %d\n", pHb_info->unit_num);
     pHb_info->units = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->unit_num);
     
     int i = 0;
@@ -289,6 +289,7 @@ int create_ota_heartbeat_data(char *data)
     }
  
     printf("create_ota_heartbeat_data\r\n");
+    memset(&(heart_beat), 0x00, sizeof(OtaHeartBeat));
     int ret = get_ota_heartbeat_info(&heart_beat);
     if (ret) {
         return -1;
