@@ -203,7 +203,7 @@ int get_ota_heartbeat_info(void *arg)
         return -1;
     }
 
-    sscanf(strstrip(resp), " %[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
+    sscanf(resp, " %[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
             pHb_info->dev_addr, pHb_info->cpu_info, 
             pHb_info->total_disk, pHb_info->used_disk, 
             pHb_info->total_mem, pHb_info->used_mem,
