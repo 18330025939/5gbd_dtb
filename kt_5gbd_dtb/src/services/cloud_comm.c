@@ -196,6 +196,7 @@ int get_ota_heartbeat_info(void *arg)
     char resp[256];
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", 
             resp, sizeof(resp));
+    printf("base_info %s\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute updater.sh base_info failed.\n");
@@ -209,6 +210,7 @@ int get_ota_heartbeat_info(void *arg)
     
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
+    printf("unit_info %s\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute updater.sh unit_info failed.\n");
@@ -233,7 +235,7 @@ int get_ota_heartbeat_info(void *arg)
 #endif
     SSHClient_Destroy(&ssh_client);
 
-    return -1;
+    return 0;
 }
 
 cJSON *create_unit_info_object(UnitInfo * unit_info, uint8_t type)
