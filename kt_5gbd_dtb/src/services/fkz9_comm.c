@@ -14,6 +14,7 @@
 #include "cloud_comm.h"
 #include "ssh_client.h"
 #include "fkz9_comm.h"
+#include "firmware_updater.h"
 
 static void heartbeat_resp(uint8_t *arg)
 {
@@ -143,7 +144,7 @@ int init_updater_environment(void)
 {
     SSHClient ssh_client;
 
-    SSHClient_Init(&ssh_client, MQTT_SERVER_IP, MQTT_SERVER_USERNAME, MQTT_SERVER_PASSWORD);
+    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);

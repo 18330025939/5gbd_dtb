@@ -17,7 +17,7 @@ static void on_connect_success(void* context, MQTTAsync_successData* response)
     // }
     pthread_mutex_unlock(&client->lock);
     
-    printf("Successful connection\n");
+    printf("MQTT service connection successful.\n");
 }
 
 /* 连接失败回调 */
@@ -33,7 +33,7 @@ static void on_connect_failure(void* context, MQTTAsync_failureData* response)
     //     client->on_connected(client->user_ctx, response->code, msg);
     // }
     pthread_mutex_unlock(&client->lock);
-    printf("Connect failed, rc %d\n", response ? response->code : 0);
+    printf("MQTT service connection failed, rc %d\n", response ? response->code : 0);
 }
 
 /* 消息到达回调 */
@@ -73,7 +73,7 @@ int mqtt_connect(AsyncMQTTClient* client)
     int rc = MQTTAsync_connect(client->handle, &conn_opts);
     pthread_mutex_unlock(&client->lock);
 
-    printf("mqtt_connect username=%s, password=%s\n, rc=%d\n", conn_opts.username, conn_opts.password, rc);
+    printf("mqtt_connect username=%s, password=%s, rc=%d\n", conn_opts.username, conn_opts.password, rc);
     return rc;
 }
 
