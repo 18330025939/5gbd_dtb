@@ -196,7 +196,7 @@ int get_ota_heartbeat_info(void *arg)
     char resp[512] = {0};
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", 
             resp, sizeof(resp));
-    printf("base_info '%s'\n", resp);
+    // printf("base_info '%s'\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute updater.sh base_info failed.\n");
@@ -212,7 +212,7 @@ int get_ota_heartbeat_info(void *arg)
     memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
-    printf("unit_info resp '%s'\n", resp);
+    // printf("unit_info resp '%s'\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         fprintf(stderr, "ssh_client.execute updater.sh unit_info failed.\n");
@@ -224,13 +224,13 @@ int get_ota_heartbeat_info(void *arg)
     char *token = strtok(resp, ";");
     while (token != NULL) {
         pHb_info->unit_num++;
-        printf("pHb_info->unit_num %d, token %s\n", pHb_info->unit_num, token);
+        // printf("pHb_info->unit_num %d, token %s\n", pHb_info->unit_num, token);
         token = strtok(NULL, ";");
     }
     pHb_info->units = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->unit_num);
     
     int i = 0;
-    printf("unit_info tmp_resp %s\n", tmp_resp);
+    // printf("unit_info tmp_resp %s\n", tmp_resp);
     token = strtok(tmp_resp, ";");
     while (token != NULL) {
         sscanf(token, "%[^:]:%[^,],%s", pHb_info->units[i].unit_name,
@@ -238,6 +238,13 @@ int get_ota_heartbeat_info(void *arg)
         i++;
         token = strtok(NULL, ";");
     }
+#if 1
+    pHb_info->units[0].sw_ver = "25";
+    pHb_info->units[1].sw_ver = "70";
+    pHb_info->units[2].sw_ver = "70";
+    pHb_info->units[3].sw_ver = "80";
+#endif
+
 #endif
     SSHClient_Destroy(&ssh_client);
 
@@ -247,7 +254,7 @@ int get_ota_heartbeat_info(void *arg)
 cJSON *create_unit_info_object(UnitInfo * unit_info, uint8_t type)
 {
     cJSON *obj = NULL;
-    char version[64];
+    char version[64] = {0};
 
     obj = cJSON_CreateObject();
     if (type == 1) {
@@ -339,8 +346,8 @@ int get_ota_report_info(struct FwDownInfo *info, void *arg)
         return -1;
     }
 
-    char resp[256];
-    char cmd[256];
+    char resp[256] = {0};
+    char cmd[256] = {0};
     snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh download_info %2d %s %s %s", 
                 info->id, info->url, info->md5, info->type);
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
@@ -361,6 +368,7 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
+    char *buf = NULL;
 
     if (data == NULL) {
         return -1;
@@ -374,8 +382,10 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
     cJSON_AddStringToObject(root, "taskId", report.task_id);
     cJSON_AddStringToObject(root, "executionTime", report.time);
     cJSON_AddStringToObject(root, "executionReport", report.report);
-    data = cJSON_Print(root);
+    buf = cJSON_Print(root);
+    strncpy(data, buf, strlen(buf));
     cJSON_Delete(root);
+    free(buf);
 
     return 0;
 }
@@ -828,7 +838,7 @@ void *timer_task_entry(void *arg)
     base = event_base_new();
     ctx->base = base;
     // add_timer_task(arg, nav_data_msg_task_cb, 1000);
-    add_timer_task(arg, ota_heartbeat_task_cb, 6000);
+    add_timer_task(arg, ota_heartbeat_task_cb, 60000);
 
     event_base_dispatch(base);  // 启动事件循环
     
