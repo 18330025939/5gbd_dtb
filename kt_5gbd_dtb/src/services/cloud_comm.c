@@ -193,7 +193,7 @@ int get_ota_heartbeat_info(void *arg)
     }
 #endif
 
-    char resp[256];
+    char resp[512];
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", 
             resp, sizeof(resp));
     printf("base_info %s\n", resp);
@@ -202,12 +202,13 @@ int get_ota_heartbeat_info(void *arg)
         fprintf(stderr, "ssh_client.execute updater.sh base_info failed.\n");
         return -1;
     }
-    sscanf(resp, "%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,]",
+    sscanf(resp, "%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%s",
             pHb_info->dev_addr, pHb_info->cpu_info, 
             pHb_info->total_disk, pHb_info->used_disk, 
             pHb_info->total_mem, pHb_info->used_mem,
             pHb_info->up_time, pHb_info->cur_time);
     
+    memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
     printf("unit_info %s\n", resp);

@@ -179,7 +179,7 @@ typedef struct st_UnitInfo
     char sw_ver[20];
 } UnitInfo;
 
-#define STRING_LEN_MAX 64
+#define STRING_LEN_MAX 32
 typedef struct st_OtaHeartBeat
 {
     char dev_addr[STRING_LEN_MAX];
