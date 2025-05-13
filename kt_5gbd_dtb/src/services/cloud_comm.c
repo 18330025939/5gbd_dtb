@@ -60,6 +60,31 @@ int get_ota_heartbeat_info(void *arg)
     if (arg == NULL) {
         return -1;
     }
+ 
+    printf("get_ota_heart_beat_info\n");
+#if 1
+    pHb_info = (struct st_OtaHeartBeat*)arg;
+    strcpy(pHb_info->dev_addr, "0356");
+    strcpy(pHb_info->cpu_info, "10");
+    strcpy(pHb_info->used_mem, "618000384");
+    strcpy(pHb_info->total_mem, "4007825408");
+    strcpy(pHb_info->used_disk, "5513216");
+    strcpy(pHb_info->total_disk, "535805952");
+    strcpy(pHb_info->up_time, "2025-05-09 11:09:00");
+    strcpy(pHb_info->cur_time, "2025-05-09 18:26:50");
+    strcpy(pHb_info->units[0].hw_ver, "2");
+    strcpy(pHb_info->units[0].sw_ver, "35");
+    strcpy(pHb_info->units[0].unit_name, "中央处理单元");
+    strcpy(pHb_info->units[0].hw_ver, "10");
+    strcpy(pHb_info->units[1].sw_ver, "80");
+    strcpy(pHb_info->units[0].unit_name, "采集单元");
+    strcpy(pHb_info->units[0].hw_ver, "2");
+    strcpy(pHb_info->units[2].sw_ver, "80");
+    strcpy(pHb_info->units[0].unit_name, "控制单元");
+    strcpy(pHb_info->units[0].hw_ver, "1");
+    strcpy(pHb_info->units[3].sw_ver, "90");
+    strcpy(pHb_info->units[0].unit_name, "网络单元");
+#endif
 #if 0
     pHb_info = (struct st_OtaHeartBeat*)arg;
     SSHClient_Init(&ssh_client, TEST_SERVER_IP, TEST_SERVER_USERNAME, TEST_SERVER_PASSWORD);
@@ -98,8 +123,7 @@ int get_ota_heartbeat_info(void *arg)
         return -1;
     }
 #endif
-#if 1
-    printf("get_ota_heart_beat_info\n");
+#if 0
     pHb_info = (struct st_OtaHeartBeat*)arg;
     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
@@ -238,16 +262,9 @@ int get_ota_heartbeat_info(void *arg)
         i++;
         token = strtok(NULL, ";");
     }
-#if 1
-    strcpy(pHb_info->units[0].sw_ver, "25");
-    strcpy(pHb_info->units[1].sw_ver, "70");
-    strcpy(pHb_info->units[2].sw_ver, "70");
-    strcpy(pHb_info->units[3].sw_ver, "80");
-#endif
 
-#endif
     SSHClient_Destroy(&ssh_client);
-
+#endif
     return 0;
 }
 
