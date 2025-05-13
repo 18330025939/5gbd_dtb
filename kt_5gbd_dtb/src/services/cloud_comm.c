@@ -72,18 +72,20 @@ int get_ota_heartbeat_info(void *arg)
     strcpy(pHb_info->total_disk, "535805952");
     strcpy(pHb_info->up_time, "2025-05-09 11:09:00");
     strcpy(pHb_info->cur_time, "2025-05-09 18:26:50");
+    pHb_info->unit_num = 4;
+    pHb_info->units = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->unit_num);
     strcpy(pHb_info->units[0].hw_ver, "2");
     strcpy(pHb_info->units[0].sw_ver, "35");
     strcpy(pHb_info->units[0].unit_name, "中央处理单元");
-    strcpy(pHb_info->units[0].hw_ver, "10");
+    strcpy(pHb_info->units[1].hw_ver, "10");
     strcpy(pHb_info->units[1].sw_ver, "80");
-    strcpy(pHb_info->units[0].unit_name, "采集单元");
-    strcpy(pHb_info->units[0].hw_ver, "2");
+    strcpy(pHb_info->units[1].unit_name, "采集单元");
+    strcpy(pHb_info->units[2].hw_ver, "2");
     strcpy(pHb_info->units[2].sw_ver, "80");
-    strcpy(pHb_info->units[0].unit_name, "控制单元");
-    strcpy(pHb_info->units[0].hw_ver, "1");
+    strcpy(pHb_info->units[2].unit_name, "控制单元");
+    strcpy(pHb_info->units[3].hw_ver, "1");
     strcpy(pHb_info->units[3].sw_ver, "90");
-    strcpy(pHb_info->units[0].unit_name, "网络单元");
+    strcpy(pHb_info->units[3].unit_name, "网络单元");
 #endif
 #if 0
     pHb_info = (struct st_OtaHeartBeat*)arg;
