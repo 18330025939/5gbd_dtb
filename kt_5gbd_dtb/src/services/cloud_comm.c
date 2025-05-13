@@ -469,9 +469,10 @@ int do_downlaod_firmware(struct List *task_list)
 {
     struct FwDownInfo *pInfo = NULL;
     struct ListNode *pNode = NULL;
-    char file_name[64];
-    char local_path[128];
-    char cmd[64];
+    char file_name[64] = {0};
+    char local_path[128] = {0};
+    char remp_url[128] = {0};
+    char cmd[64] = {0};
     struct FwUpdateInfo up_info;
 
     if (task_list == NULL) {
@@ -482,7 +483,8 @@ int do_downlaod_firmware(struct List *task_list)
         while((pNode = List_GetHead(task_list)) != NULL) {
             pInfo = (struct FwDownInfo *)pNode->arg;
 
-            GetFileName(pInfo->url, file_name);
+            strcpy(remp_url, pInfo->url);
+            GetFileName(remp_url, file_name);
             snprintf(cmd, sizeof(cmd), "mkdir -p %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
             _system_(cmd, NULL, 0);
             snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, file_name);
