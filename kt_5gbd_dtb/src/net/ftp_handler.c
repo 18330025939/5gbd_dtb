@@ -36,6 +36,7 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
     struct stat fileInfo;
     curl_off_t fsize;
 
+    printf("ftp_upload url:%s, local_path:%s, remote_path:%s, user:%s, pass:%s\n", url, local_path, remote_path, user, pass);
     curl = curl_easy_init();
     if (!curl) {
         fprintf(stderr, "Init the curl object failed\n");
@@ -99,6 +100,7 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
     CURLcode res;
     FILE *fp;
 
+    printf("ftp_download url:%s, local_path:%s, remote_path:%s, user:%s, pass:%s\n", url, local_path, remote_path, user, pass);
     curl = curl_easy_init();
     if (!curl) {
         fprintf(stderr, "Init the curl object failed\n");
