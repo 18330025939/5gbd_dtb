@@ -70,8 +70,8 @@ int get_ota_heartbeat_info(void *arg)
     strcpy(pHb_info->total_mem, "4007825408");
     strcpy(pHb_info->used_disk, "5513216");
     strcpy(pHb_info->total_disk, "535805952");
-    strcpy(pHb_info->up_time, "2025-05-09 11:09:00");
-    strcpy(pHb_info->cur_time, "2025-05-09 18:26:50");
+    strcpy(pHb_info->up_time, "2025-05-12 15:00:00");
+    strcpy(pHb_info->cur_time, "2025-05-12 15:44:00");
     pHb_info->unit_num = 4;
     pHb_info->units = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->unit_num);
     strcpy(pHb_info->units[0].hw_ver, "2");
@@ -343,6 +343,7 @@ int create_ota_heartbeat_data(char *data)
     strncpy(data, buf, strlen(buf));
     cJSON_Delete(root);
     free(buf);
+    free(heart_beat.units);
 
     return 0;
 }
@@ -378,6 +379,7 @@ int get_ota_report_info(struct FwDownInfo *info, void *arg)
 
     sscanf(resp, "%[^,],%[^,],%[^,],%[^,],",
             pReport->dev_addr, pReport->task_id, pReport->time, pReport->report);
+
     SSHClient_Destroy(&ssh_client);
 
     return 0;
@@ -393,9 +395,13 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
         return -1;
     }
 
+    printf("create_ota_report_data\n");
     memset(&report, 0, sizeof(OtaReport));
+    int ret = get_ota_report_info(info, (void *)&report);
+    if (ret != 0) {
+        return -1;
+    }
     root = cJSON_CreateObject();
-    get_ota_report_info(info, (void *)&report);
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
     cJSON_AddStringToObject(root, "taskId", report.task_id);
@@ -403,6 +409,7 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
     cJSON_AddStringToObject(root, "executionReport", report.report);
     buf = cJSON_Print(root);
     strncpy(data, buf, strlen(buf));
+    printf("ota report data: %s\n", buf);
     cJSON_Delete(root);
     free(buf);
 
@@ -421,7 +428,6 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
             break;
         }
     }
-
 
     int ret = fw_up->trans_func((void *)pInfo);
     if (ret) {
@@ -453,7 +459,7 @@ void do_ota_report(struct FwDownInfo *info)
         return ;
     }
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
-    printf("%s\n", resp);
+    printf("do_ota_report %s\n", resp);
 
     free(resp);
 }
@@ -463,7 +469,7 @@ int do_downlaod_firmware(struct List *task_list)
 {
     struct FwDownInfo *pInfo = NULL;
     struct ListNode *pNode = NULL;
-    char file_name[20];
+    char file_name[64];
     char local_path[128];
     char cmd[64];
     struct FwUpdateInfo up_info;
