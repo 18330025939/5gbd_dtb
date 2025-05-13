@@ -367,7 +367,7 @@ int get_ota_report_info(struct FwDownInfo *info, void *arg)
     }
 
     char resp[256] = {0};
-    char cmd[256] = {0};
+    char cmd[300] = {0};
     snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh download_info %2d %s %s %s", 
                 info->id, info->url, info->md5, info->type);
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));

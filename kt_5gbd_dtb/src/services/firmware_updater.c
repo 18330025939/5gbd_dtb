@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <pthread.h>
+#include "publib.h"
 #include "ssh_client.h"
 #include "firmware_updater.h"
 
@@ -26,7 +27,7 @@ int fkz9_fw_trans_func(void *arg)
         return -1;
     }
 
-    char remote_path[128] = {'\0'};
+    char remote_path[128] = {0};
     snprintf(remote_path, sizeof(remote_path), "%s/%2d/%s", UPGRADE_FILE_REMOTE_PATH, pInfo->id, pInfo->name);
     ret = ssh_client.upload_file(&ssh_client, pInfo->path, remote_path);
     if (ret) {
@@ -36,9 +37,9 @@ int fkz9_fw_trans_func(void *arg)
         return -1;
     }
 
-    char cmd[256] = {'\0'};
+    char cmd[256] = {0};
     snprintf(cmd, sizeof(cmd), "md5sum %s", remote_path);
-    char resp[256] = {'\0'};
+    char resp[256] = {0};
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if ((ret) || (strcmp(pInfo->md5, resp) != 0)) {
         //校验失败是否再次上传
@@ -46,6 +47,9 @@ int fkz9_fw_trans_func(void *arg)
         fprintf(stderr, "ssh_client.execute md5 of the file,l_md5:%s,r_md5%sfailed.\n", pInfo->md5, resp);
         return -1;
     }
+
+    snprintf(cmd, sizeof(cmd), "sudo rm -rf %s", pInfo->path);
+    _system_(cmd, NULL, 0);
 
     SSHClient_Destroy(&ssh_client);
     return ret;
@@ -69,9 +73,9 @@ int fkz9_fw_update_func(void *arg)
         return -1;
     }
 
-    char cmd[128] = {'\0'};
+    char cmd[128] = {0};
     snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh report_info");
-    char resp[256] = {'\0'};
+    char resp[256] = {0};
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if (ret) {
         //执行失败
@@ -89,7 +93,7 @@ int fkz9_fw_update_func(void *arg)
         fprintf(stderr, "ssh_client.execute ota_report find failed.\n");
         return -1;
     }
-    char local_path[128] = {'\0'};
+    char local_path[128] = {0};
     snprintf(local_path, sizeof(local_path), "%s%2d/%s", OTA_UPREPORT_LOCAL_PATH, pInfo->id, basename(resp));
     ret = ssh_client.download_file(&ssh_client, resp, local_path);
     if (ret) {
@@ -121,7 +125,7 @@ int fkz9_fw_update_cb(void *arg)
         return -1;
     }
 
-    char file_path[256] = {'\0'};
+    char file_path[256] = {0};
     snprintf(file_path, sizeof(file_path), "%s/%s", pInfo->path, pInfo->name);
     ret = ssh_client.download_file(&ssh_client, file_path, pInfo->path);
 
