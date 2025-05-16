@@ -25,31 +25,42 @@ extern "C" int init_spdlog(const char* logger_name, int max_size, int max_files)
     return 0;
 }
 
-extern "C" void log_info(const char* message)
+extern "C" void log_info(const char* format, ...)
 {
     if (g_rotating_logger) {
-        g_rotating_logger->info(message);
+        va_list args;
+        va_start(args, format);
+        g_rotating_logger->info(format, args);
+        va_end(args);
     }
 }
 
-extern "C" void log_error(const char* message)
+extern "C" void log_error(const char* format, ...)
 {
     if (g_rotating_logger) {
-        g_rotating_logger->error(message);
+        va_list args;
+        va_start(args, format);
+        g_rotating_logger->error(format, args);
+        va_end(args);
     }
 }
 
-extern "C" void log_warning(const char* message)
+extern "C" void log_warning(const char* format, ...)
 {
     if (g_rotating_logger) {
-        g_rotating_logger->warn(message);
+        va_list args;
+        va_start(args, format);
+        g_rotating_logger->warn(format, args);
+        va_end(args);
     }
 }
 
-extern "C" void log_debug(const char* message)
+extern "C" void log_debug(const char* format, ...)
 {
     if (g_rotating_logger) {
-        g_rotating_logger->debug(message);
+        va_list args;
+        va_start(args, format);
+        g_rotating_logger->debug(format, args);
+        va_end(args);
     }
 }
-

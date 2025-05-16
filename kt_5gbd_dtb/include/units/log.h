@@ -6,10 +6,10 @@ extern "C" {
 #endif
 
 int init_spdlog(const char* log_file_path, int max_size, int max_files);
-void log_info(const char* message);
-void log_error(const char* message);
-void log_warning(const char* message);
-void log_debug(const char* message);
+void log_info(const char* format, ...);
+void log_error(const char* format, ...);
+void log_warning(const char* format, ...);
+void log_debugconst char* format, ...);
 
 #ifdef __cplusplus
 }
