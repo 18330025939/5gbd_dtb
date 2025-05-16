@@ -1,7 +1,9 @@
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include <string>
 #include <iostream>
+#include <spdlog.h>
+#include <sinks/stdout_color_sinks.h>
+#include <sinks/rotating_file_sink.h>
+
 
 // 定义一个全局日志器
 static std::shared_ptr<spdlog::logger> g_rotating_logger;
@@ -17,7 +19,7 @@ extern "C" int init_spdlog(const char* logger_name, int max_size, int max_files)
 
         return -1;
     }
-    spdlog::set_default_logger(rotating_logger);
+    spdlog::set_default_logger(g_rotating_logger);
     spdlog::flush_on(spdlog::level::trace);
 
     return 0;
