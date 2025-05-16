@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <termios.h>
 #include <event2/event.h>
-#include "log"
+#include "log.h"
 #include "cloud_comm.h"
 #include "fkz9_comm.h"
 #include "led.h"
