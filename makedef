@@ -4,8 +4,9 @@ export CROSS_COMPILE = aarch64-linux-gnu-
 export KT_5GBD_DTB_INCLUDE = -I$(KT_5GBD_DTB)/lib \
                              -I$(KT_5GBD_DTB)/include/hal \
                              -I$(KT_5GBD_DTB)/include/net \
+                             -I$(KT_5GBD_DTB)/include/units \
                              -I$(KT_5GBD_DTB)/third_party/json \
                              -I$(KT_5GBD_DTB)/third_party/mqtt/include \
-                             -I$(KT_5GBD_DTB)/third_party/zlog/include \
+                             -I$(KT_5GBD_DTB)/third_party/spdlog/include \
                              -I$(KT_5GBD_DTB)/include/services 
 export KT_5GBD_DTB_BUILD = -O0 -Wall

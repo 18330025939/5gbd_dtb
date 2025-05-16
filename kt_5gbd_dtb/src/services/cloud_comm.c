@@ -638,11 +638,10 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
     uint16_t len = sizeof(MsgFramHdr) + sizeof(NAVDataSeg) + sizeof(MsgDataFramCrc);
     hdr->usLen = bswap_16(len);
-    // printf("hdr->usLen %d, sizeof(NAVDataSeg) %ld\n", hdr->usLen, sizeof(NAVDataSeg));
     nav_data = (NAVDataSeg *)(buf + sizeof(MsgFramHdr));
-    get_system_time(&t);
-    TIME_TO_STR(&t, str);
-    printf("time %s, sg_data.message_id %s, sg_data.latitude %.8lf\n", str, sg_data.message_id, sg_data.latitude);
+    // get_system_time(&t);
+    // TIME_TO_STR(&t, str);
+    // printf("time %s, sg_data.message_id %s, sg_data.latitude %.8lf\n", str, sg_data.message_id, sg_data.latitude);
     nav_data->usDevAddr = 0;
     nav_data->usYear = bswap_16(sg_data.utc_year);
     nav_data->ucMonth = sg_data.utc_month;
@@ -740,9 +739,7 @@ int func_wave_file_resp(void *arg)
 
 int func_wave_file_req(void *arg)
 {
-    // MsgFramHdr *pHdr = NULL;
     WaveFileReq *pReq = NULL;
-    //MsgDataFramCrc *pCrc = NULL;
     SSHClient ssh_client;
 
     if (arg == NULL) {
@@ -864,7 +861,7 @@ void *timer_task_entry(void *arg)
     ctx = (CloundCommContext *)arg;
     base = event_base_new();
     ctx->base = base;
-    // add_timer_task(arg, nav_data_msg_task_cb, 1000);
+    add_timer_task(arg, nav_data_msg_task_cb, 1000);
     add_timer_task(arg, ota_heartbeat_task_cb, 60000);
 
     event_base_dispatch(base);  // 启动事件循环

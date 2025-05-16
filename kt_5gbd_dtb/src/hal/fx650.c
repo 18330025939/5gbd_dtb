@@ -208,7 +208,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=%s,1\r", status ? "1" : "0");
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS * 2) < 0) {
         return -1;
     }
 

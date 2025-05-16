@@ -35,7 +35,6 @@ uint8_t* build_command(uint8_t cmd_id, const uint8_t *payload, uint16_t payload_
     return (uint8_t*)cmd;
 }
 
-
 uint8_t* build_set_nav_rate_command(NavRate rate, bool save_to_flash) 
 {
     uint8_t payload = rate | (save_to_flash ? 0x80 : 0x00); // 最高位表示保存配置
@@ -47,7 +46,6 @@ uint8_t* build_set_baud_command(BaudRate rate, bool save_to_flash)
     uint8_t payload = rate | (save_to_flash ? 0x80 : 0x00);
     return build_command(CMD_BAUD_RATE_SETTING, &payload, 1);
 }
-
 
 // NMEA校验和验证
 int validate_nmea_checksum(const char *nmea_str) {
@@ -61,19 +59,9 @@ int validate_nmea_checksum(const char *nmea_str) {
     return (calc_checksum == recv_checksum) ? 0 : -2;
 }
 
-
 static void sg_data_parse(void *data, const char *payload, size_t len)
 {
     SGData *sg = (SGData*)data;
-
-    // char buffer[512];
-    // strncpy(buffer, payload, len);
-    // buffer[len] = '\0';
-
-    // char *token = strtok(buffer, ",*"); // 分割到校验和前
-    // if (!token || strncmp(token, SG_MSG_ID, 5) != 0) {
-    //     return ; // 非PBSOL消息
-    // }
 
     sscanf((const char *)payload, "%[^,],%hhu,%hu,%hhu,%hhu,%hhu,%hhu,%hu,%u,%hu,%u,%u,%lf,%lf,%f,%f,%d,%d,%d,"
             "%u,%u,%d,%d,%d,%d,%d,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hd,%hd,%hd,%hu,%hhu,%hhu,%hhu",
@@ -164,19 +152,9 @@ static void sg_data_parse(void *data, const char *payload, size_t len)
     //         sg->reserved[0],
     //         sg->reserved[1]);
 
-    // char *checksum_str = strrchr(buffer, '*');
-    // if (checksum_str) {
-    //     uint8_t calc_checksum = 0;
-    //     for (char *p = buffer + 1; p < checksum_str; p++) {
-    //         calc_checksum ^= *p;
-    //     }
-    //     uint8_t recv_checksum = (uint8_t)strtoul(checksum_str + 1, NULL, 16);
-    //     if (calc_checksum != recv_checksum) return -3;
-    // }
     return ;
 }
 REGISTER_MESSAGE_PARSER(PBSOL, 1, &sg_data, sg_data_parse);
-
 
 static void gngga_data_parse(void *data, const char *payload, size_t len)
 {   
@@ -456,8 +434,7 @@ void message_parser_entry(const char *line)
 
 void laneTo_read_nav_data(LaneToCtx *ctx) 
 {
-    char buffer[6*1024];
-    // size_t buffer_index = 0;
+    char buffer[4*1024];
     SerialPort *serial = NULL;
     char *end = NULL;
     char *start = NULL;

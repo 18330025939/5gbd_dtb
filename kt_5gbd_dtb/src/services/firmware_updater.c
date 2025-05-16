@@ -48,7 +48,7 @@ int fkz9_fw_trans_func(void *arg)
         return -1;
     }
 
-    snprintf(cmd, sizeof(cmd), "sudo rm -rf %s", pInfo->path);
+    snprintf(cmd, sizeof(cmd), "rm -rf %s", pInfo->path);
     _system_(cmd, NULL, 0);
 
     SSHClient_Destroy(&ssh_client);

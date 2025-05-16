@@ -25,9 +25,8 @@ static void heartbeat_resp(uint8_t *arg)
     }
 
     hb_data = (HeartBeatDataSeg*)((uint8_t*)arg + sizeof(MsgFramHdr));
-    if (hb_data->usDevAddr == 0) {
-        return;
-    }
+    printf("heartbeat_resp, DevAddr %04d, %02d-%02d-%2d %2d:%2d:%2d\n", hb_data->usDevAddr, 
+        hb_data->ucYear, hb_data->ucMonth, hb_data->ucDay, hb_data->ucHour, hb_data->ucMinute, hb_data->ucSecond);
 
     return;
 }
