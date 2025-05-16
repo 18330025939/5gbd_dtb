@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <termios.h>
 #include <event2/event.h>
-#include "log.h"
+#include "log"
 #include "cloud_comm.h"
 #include "fkz9_comm.h"
 #include "led.h"
@@ -27,6 +27,7 @@ int main(int argc, char ** args)
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
 
+    log_info("RT-A100 build time: {} {}", __DATE__, __TIME__);
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {
         exit(1);
