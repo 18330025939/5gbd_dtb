@@ -89,7 +89,6 @@ int main(int argc, char ** args)
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
     FAULT_LED_ON();
-    destroy_spdlogger(logger);
-
+    
     exit(0);
 }

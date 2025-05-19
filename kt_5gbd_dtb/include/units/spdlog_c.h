@@ -38,15 +38,12 @@ void spdlog_log(spdlog_logger* logger, spdlog_level level, const char* fmt, ...)
 #ifdef __cplusplus
 extern "C" {
 #endif
-#if 0
+#if 1
 // 日志器句柄类型（不透明指针）
 typedef void* spdlogger;
 
 // 初始化旋转日志器 (max_size单位: MB)
 spdlogger spdlog_c_init(const char* filename, int max_size,int max_files);
-
-// 设置默认日志器
-void set_default_spdlogger(spdlogger logger);
 
 // 日志级别
 typedef enum {
@@ -58,10 +55,10 @@ typedef enum {
     LOG_CRITICAL
 } log_level;
 
-void spdlog_message(spdlogger logger, log_level level, const char* fmt, ...);
-void spdlog_debug(spdlogger logger, const char* fmt, ...);
-void spdlog_info(spdlogger logger, const char* fmt, ...);
-void spdlog_error(spdlogger logger, const char* fmt, ...);
+void spdlog_message(log_level level, const char* fmt, ...);
+void spdlog_debug(const char* fmt, ...);
+void spdlog_info(const char* fmt, ...);
+void spdlog_error(const char* fmt, ...);
 
 // 清理资源
 void destroy_spdlogger(spdlogger logger);
