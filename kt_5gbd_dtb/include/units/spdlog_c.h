@@ -5,9 +5,7 @@
 extern "C" {
 #endif
 
-typedef struct st_spdlog_logger {
-    std::shared_ptr<spdlog::logger> logger;
-} spdlog_logger;
+typedef struct st_spdlog_logger spdlog_logger;
 
 typedef enum {
     SPDLOG_C_LEVEL_TRACE = 0,

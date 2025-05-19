@@ -76,6 +76,10 @@ extern "C" void log_debug(const char* format, ...)
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include "spdlog_c.h"
 
+struct st_spdlog_logger {
+    std::shared_ptr<spdlog::logger> logger;
+} ;
+
 namespace {
     std::string format_message(const char* fmt, va_list args)
     {
