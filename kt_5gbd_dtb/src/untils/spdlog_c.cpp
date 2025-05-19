@@ -142,9 +142,10 @@ void spdlog_log(spdlog_logger* logger, spdlog_level level, const char* fmt, ...)
 #endif
 #include <memory>
 #include <unordered_map>
-#include "spdlog_wrapper.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog_c.h"
+
 
 // 存储日志器的智能指针
 static std::unordered_map<spdlogger, std::shared_ptr<spdlog::logger>> logger_map;
