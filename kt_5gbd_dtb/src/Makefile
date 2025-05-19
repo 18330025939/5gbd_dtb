@@ -10,7 +10,7 @@ LDFLAGS += -fPIC
 LIBS += -lusb-1.0 -lcurl -lssh -levent -levent_pthreads -lpthread
 LIBS += -L$(KT_5GBD_DTB)/lib -lpub 
 LIBS += -L$(KT_5GBD_DTB)/third_party/mqtt/lib -lpaho-mqtt3a
-LIBS += -L$(KT_5GBD_DTB)/third_party/spdlog/lib -lspdlog
+LIBS += -lstdc++ -L$(KT_5GBD_DTB)/third_party/spdlog/lib -lspdlog 
 
 EXEC = 5GBD_MODULE
 

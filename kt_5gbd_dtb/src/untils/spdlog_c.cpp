@@ -225,4 +225,11 @@ extern "C" {
         log_formatted(logger, LOG_ERROR, fmt, args);
         va_end(args);
     }
+
+    void destroy_spdlogger(spdlogger logger) {
+        if (logger_map.erase(logger) > 0) {
+            spdlog::drop(logger_map[logger]->name());
+        }
+    }
+    
 }

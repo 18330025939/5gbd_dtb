@@ -43,7 +43,7 @@ extern "C" {
 typedef void* spdlogger;
 
 // 初始化旋转日志器 (max_size单位: MB)
-spdlogger spdlog_c_init(const char* filename, int max_size,int max_files) 
+spdlogger spdlog_c_init(const char* filename, int max_size,int max_files);
 
 // 设置默认日志器
 void set_default_spdlogger(spdlogger logger);
@@ -64,7 +64,7 @@ void spdlog_info(spdlogger logger, const char* fmt, ...);
 void spdlog_error(spdlogger logger, const char* fmt, ...);
 
 // 清理资源
-void destroy_logger(spdlogger logger);
+void destroy_spdlogger(spdlogger logger);
 
 #ifdef __cplusplus
 }
