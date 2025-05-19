@@ -141,9 +141,10 @@ void spdlog_log(spdlog_logger* logger, spdlog_level level, const char* fmt, ...)
 }
 #endif
 #include <memory>
+#include <cstdarg>
 #include <unordered_map>
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/rotating_file_sink.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/rotating_file_sink.h>
 #include "spdlog_c.h"
 
 
@@ -176,7 +177,7 @@ static void log_formatted(spdlogger logger, log_level level, const char* fmt, va
 }
 
 extern "C" {
-    spdlogger create_rotating_logger(
+    spdlogger spdlog_c_init(
         const char* name, 
         const char* filename, 
         int max_files,
@@ -199,13 +200,13 @@ extern "C" {
         }
     }
 
-    void set_default_logger(spdlogger logger) {
+    void set_default_spdlogger(spdlogger logger) {
         if (logger_map.find(logger) != logger_map.end()) {
             spdlog::set_default_logger(logger_map[logger]);
         }
     }
 
-    void log_message(spdlogger logger, log_level level, const char* fmt, ...) {
+    void spdlog_message(spdlogger logger, log_level level, const char* fmt, ...) {
         va_list args;
         va_start(args, fmt);
         log_formatted(logger, level, fmt, args);
@@ -213,21 +214,21 @@ extern "C" {
     }
 
  // 快捷格式化方法
-    void log_debug(spdlogger logger, const char* fmt, ...) {
+    void spdlog_debug(spdlogger logger, const char* fmt, ...) {
         va_list args;
         va_start(args, fmt);
         log_formatted(logger, LOG_DEBUG, fmt, args);
         va_end(args);
     }
 
-    void log_info(spdlogger logger, const char* fmt, ...) {
+    void spdlog_info(spdlogger logger, const char* fmt, ...) {
         va_list args;
         va_start(args, fmt);
         log_formatted(logger, LOG_INFO, fmt, args);
         va_end(args);
     }
 
-    void log_error(spdlogger logger, const char* fmt, ...) {
+    void spdlog_error(spdlogger logger, const char* fmt, ...) {
         va_list args;
         va_start(args, fmt);
         log_formatted(logger, LOG_ERROR, fmt, args);

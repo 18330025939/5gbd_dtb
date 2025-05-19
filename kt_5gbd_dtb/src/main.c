@@ -27,9 +27,9 @@ int main(int argc, char ** args)
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
 
-    spdlogger logger = create_rotating_logger("rotating_logger", "/var/log/app.log", 3, 5);
-    set_default_logger(logger);
-    log_info(logger, "RT-A100 build time: %s %s", __DATE__, __TIME__);
+    spdlogger logger = spdlog_c_init("rotating_logger", "/var/log/app.log", 3, 5);
+    set_default_spdlogger(logger);
+    spdlog_info(logger, "RT-A100 build time: %s %s", __DATE__, __TIME__);
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {
         exit(1);

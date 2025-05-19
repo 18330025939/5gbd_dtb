@@ -43,10 +43,10 @@ extern "C" {
 typedef void* spdlogger;
 
 // 初始化旋转日志器 (max_size单位: MB)
-spdlogger create_rotating_logger(const char* name, const char* filename, int max_files, int max_size_mb);
+spdlogger spdlog_c_init(const char* name, const char* filename, int max_files, int max_size_mb);
 
 // 设置默认日志器
-void set_default_logger(spdlogger logger);
+void set_default_spdlogger(spdlogger logger);
 
 // 日志级别
 typedef enum {
@@ -58,13 +58,10 @@ typedef enum {
     LOG_CRITICAL
 } log_level;
 
-// 通用日志接口
-void log_message(spdlogger logger, log_level level, const char* msg);
-
-void log_message(spdlogger logger, log_level level, const char* fmt, ...);
-void log_debug(spdlogger logger, const char* fmt, ...);
-void log_info(spdlogger logger, const char* fmt, ...);
-void log_error(spdlogger logger, const char* fmt, ...);
+void spdlog_message(spdlogger logger, log_level level, const char* fmt, ...);
+void spdlog_debug(spdlogger logger, const char* fmt, ...);
+void spdlog_info(spdlogger logger, const char* fmt, ...);
+void spdlog_error(spdlogger logger, const char* fmt, ...);
 
 // 清理资源
 void destroy_logger(spdlogger logger);
