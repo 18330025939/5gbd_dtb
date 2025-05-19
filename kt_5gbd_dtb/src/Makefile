@@ -10,7 +10,7 @@ LDFLAGS += -fPIC
 LIBS += -lusb-1.0 -lcurl -lssh -levent -levent_pthreads -lpthread
 LIBS += -L$(KT_5GBD_DTB)/lib -lpub 
 LIBS += -L$(KT_5GBD_DTB)/third_party/mqtt/lib -lpaho-mqtt3a
-LIBS += -L$(KT_5GBD_DTB)/third_party/spdlog/lib -lspdlog -lfmt
+LIBS += -L$(KT_5GBD_DTB)/third_party/spdlog/lib -lspdlog
 
 EXEC = 5GBD_MODULE
 
@@ -51,7 +51,7 @@ $(EXEC): $(SRC)
 
 %.o: %.cpp
 	@if [ ! -d obj ]; then mkdir -p obj; fi
-	$(CXX) $(CFLAGS) -std=c++11 -c $< -o obj/$(notdir $@)
+	$(CXX) $(CFLAGS) -c $< -o obj/$(notdir $@)
 
 clean:
 	-@rm -f $(EXEC) *.o

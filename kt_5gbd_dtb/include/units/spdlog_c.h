@@ -1,6 +1,6 @@
 #ifndef SPDLOG_C_H
 #define SPDLOG_C_H
-
+#if 0
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,6 +30,44 @@ void spdlog_log(spdlog_logger* logger, spdlog_level level, const char* fmt, ...)
 #define spdlog_warn(logger, ...)  spdlog_log(logger, SPDLOG_C_LEVEL_WARN, __VA_ARGS__)
 #define spdlog_error(logger, ...) spdlog_log(logger, SPDLOG_C_LEVEL_ERROR, __VA_ARGS__)
 #define spdlog_critical(logger, ...) spdlog_log(logger, SPDLOG_C_LEVEL_CRITICAL, __VA_ARGS__)
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// 日志器句柄类型（不透明指针）
+typedef void* spdlogger;
+
+// 初始化旋转日志器 (max_size单位: MB)
+spdlogger create_rotating_logger(const char* name, const char* filename, int max_files, int max_size_mb);
+
+// 设置默认日志器
+void set_default_logger(spdlogger logger);
+
+// 日志级别
+typedef enum {
+    LOG_TRACE,
+    LOG_DEBUG,
+    LOG_INFO,
+    LOG_WARN,
+    LOG_ERROR,
+    LOG_CRITICAL
+} log_level;
+
+// 通用日志接口
+void log_message(spdlogger logger, log_level level, const char* msg);
+
+void log_message(spdlogger logger, log_level level, const char* fmt, ...);
+void log_debug(spdlogger logger, const char* fmt, ...);
+void log_info(spdlogger logger, const char* fmt, ...);
+void log_error(spdlogger logger, const char* fmt, ...);
+
+// 清理资源
+void destroy_logger(spdlogger logger);
 
 #ifdef __cplusplus
 }

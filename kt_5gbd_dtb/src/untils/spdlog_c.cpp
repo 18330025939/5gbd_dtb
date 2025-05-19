@@ -65,7 +65,7 @@ extern "C" void log_debug(const char* format, ...)
         va_end(args);
     }
 }
-#endif 
+
 // spdlog_c.cpp
 #include <cstdarg>
 #include <cstdio>
@@ -138,4 +138,98 @@ void spdlog_log(spdlog_logger* logger, spdlog_level level, const char* fmt, ...)
     va_end(args);
 
     logger->logger->log(static_cast<spdlog::level::level_enum>(level), msg);
+}
+#endif
+#include <memory>
+#include <unordered_map>
+#include "spdlog_wrapper.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+
+// 存储日志器的智能指针
+static std::unordered_map<spdlogger, std::shared_ptr<spdlog::logger>> logger_map;
+static size_t logger_counter = 0;
+
+// 转换日志级别
+static spdlog::level::level_enum convert_level(log_level level) {
+    switch(level) {
+        case LOG_TRACE:    return spdlog::level::trace;
+        case LOG_DEBUG:    return spdlog::level::debug;
+        case LOG_INFO:     return spdlog::level::info;
+        case LOG_WARN:     return spdlog::level::warn;
+        case LOG_ERROR:    return spdlog::level::err;
+        case LOG_CRITICAL: return spdlog::level::critical;
+        default:           return spdlog::level::info;
+    }
+}
+
+static void log_formatted(spdlogger logger, log_level level, const char* fmt, va_list args) {
+    char buffer[1024];  // 根据需求调整缓冲区大小
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    
+    if (logger == nullptr) {
+        spdlog::log(convert_level(level), buffer);
+    } else if (logger_map.find(logger) != logger_map.end()) {
+        logger_map[logger]->log(convert_level(level), buffer);
+    }
+}
+
+extern "C" {
+    spdlogger create_rotating_logger(
+        const char* name, 
+        const char* filename, 
+        int max_files,
+        int max_size_mb
+    ) {
+        try {
+            auto logger = spdlog::rotating_logger_mt(
+                name, 
+                filename, 
+                max_size_mb * 1024 * 1024,  // 转换为字节
+                max_files
+            );
+            logger->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] %v");
+            
+            spdlogger handle = reinterpret_cast<spdlogger>(++logger_counter);
+            logger_map[handle] = logger;
+            return handle;
+        } catch (const spdlog::spdlog_ex& ex) {
+            return nullptr;
+        }
+    }
+
+    void set_default_logger(spdlogger logger) {
+        if (logger_map.find(logger) != logger_map.end()) {
+            spdlog::set_default_logger(logger_map[logger]);
+        }
+    }
+
+    void log_message(spdlogger logger, log_level level, const char* fmt, ...) {
+        va_list args;
+        va_start(args, fmt);
+        log_formatted(logger, level, fmt, args);
+        va_end(args);
+    }
+
+ // 快捷格式化方法
+    void log_debug(spdlogger logger, const char* fmt, ...) {
+        va_list args;
+        va_start(args, fmt);
+        log_formatted(logger, LOG_DEBUG, fmt, args);
+        va_end(args);
+    }
+
+    void log_info(spdlogger logger, const char* fmt, ...) {
+        va_list args;
+        va_start(args, fmt);
+        log_formatted(logger, LOG_INFO, fmt, args);
+        va_end(args);
+    }
+
+    void log_error(spdlogger logger, const char* fmt, ...) {
+        va_list args;
+        va_start(args, fmt);
+        log_formatted(logger, LOG_ERROR, fmt, args);
+        va_end(args);
+    }
 }
