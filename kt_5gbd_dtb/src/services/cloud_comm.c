@@ -20,6 +20,7 @@
 #include "ssh_client.h"
 #include "firmware_updater.h"
 #include "cloud_comm.h"
+#include "spdlog_c.h"
 
 extern SGData sg_data;
 

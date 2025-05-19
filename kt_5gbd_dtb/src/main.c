@@ -35,10 +35,12 @@ int main(int argc, char ** args)
     spdlog_info(logger, "RT-A100 build time: %s %s", __DATE__, __TIME__);
 #else
 
-    spdlog_debug("Appliction start...");
+    spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
+    spdlog_info("Appliction start...");
     int ret = spdlog_c_init("/home/rk/app.log", 1048576 * 5, 5);
     printf("spdlog_c_init, ret %d\n", ret);
     spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
+    spdlog_debug("Appliction start...");
 
 #endif
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));

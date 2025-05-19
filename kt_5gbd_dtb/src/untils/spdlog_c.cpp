@@ -76,7 +76,7 @@ extern "C" void spdlog_debug(const char* format, ...)
 #include "spdlog_c.h"
 
 // 定义一个全局日志器
-static std::shared_ptr<spdlog::logger> g_rotating_logger;
+static std::shared_ptr<spdlog::logger> g_rotating_logger = nullptr;
 
 // 转换日志级别
 static spdlog::level::level_enum convert_level(log_level level) {
@@ -117,7 +117,8 @@ extern "C" {
         }
     }
 
-    void spdlog_message(log_level level, const char* fmt, ...) {
+    void spdlog_message(log_level level, const char* fmt, ...)
+    {
         va_list args;
         va_start(args, fmt);
         log_formatted(level, fmt, args);
@@ -125,21 +126,24 @@ extern "C" {
     }
 
  // 快捷格式化方法
-    void spdlog_debug(const char* fmt, ...) {
+    void spdlog_debug(const char* fmt, ...)
+    {
         va_list args;
         va_start(args, fmt);
         log_formatted(LOG_DEBUG, fmt, args);
         va_end(args);
     }
 
-    void spdlog_info(const char* fmt, ...) {
+    void spdlog_info(const char* fmt, ...)
+    {
         va_list args;
         va_start(args, fmt);
         log_formatted(LOG_INFO, fmt, args);
         va_end(args);
     }
 
-    void spdlog_error(const char* fmt, ...) {
+    void spdlog_error(const char* fmt, ...)
+    {
         va_list args;
         va_start(args, fmt);
         log_formatted(LOG_ERROR, fmt, args);
