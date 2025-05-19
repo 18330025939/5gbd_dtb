@@ -92,7 +92,7 @@ namespace {
     }
 }
 
-spdlog_logger_t* spdlog_init(const char* logger_name, const char* filename)
+spdlog_logger* spdlog_init(const char* logger_name, const char* filename)
 {
     try {
         std::shared_ptr<spdlog::logger> logger;
