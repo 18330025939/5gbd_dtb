@@ -28,7 +28,7 @@ int main(int argc, char ** args)
     Fkz9CommContext *fkz9_ctx = NULL;
 
     spdlog_logger* file_logger = spdlog_init("file_logger", "/home/rk/app.log");
-    spdlog_info("RT-A100 build time: {} {}", __DATE__, __TIME__);
+    spdlog_info(file_logger, "RT-A100 build time: %s %s", __DATE__, __TIME__);
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {
         exit(1);
