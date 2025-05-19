@@ -106,7 +106,7 @@ extern "C" {
     int spdlog_c_init(const char* filename, int max_size,int max_files) 
     {
         try {
-            auto g_rotating_logger = spdlog::rotating_logger_mt("rotating_logger", filename, max_size, max_files);
+            auto g_rotating_logger = spdlog::rotating_logger_mt("logger", filename, max_size, max_files);
             spdlog::set_level(spdlog::level::debug);
             spdlog::flush_on(spdlog::level::trace);
 
