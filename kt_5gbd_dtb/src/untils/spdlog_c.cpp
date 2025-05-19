@@ -91,32 +91,32 @@ namespace {
         return std::string(buf.data(), size);
     }
 }
-
-spdlog_logger* spdlog_init(const char* logger_name, const char* filename)
-{
-    try {
-        std::shared_ptr<spdlog::logger> logger;
-        if (filename) {
-            logger = spdlog::basic_logger_mt(logger_name, filename);
-        } else {
-            logger = spdlog::stdout_color_mt(logger_name);
+extern "C" {
+    spdlog_logger* spdlog_init(const char* logger_name, const char* filename)
+    {
+        try {
+            std::shared_ptr<spdlog::logger> logger;
+            if (filename) {
+                logger = spdlog::basic_logger_mt(logger_name, filename);
+            } else {
+                logger = spdlog::stdout_color_mt(logger_name);
+            }
+            logger->set_level(spdlog::level::trace);
+            return new spdlog_logger{logger};
+        } catch (const spdlog::spdlog_ex& ex) {
+            fprintf(stderr, "spdlog init failed: %s\n", ex.what());
+            return nullptr;
         }
-        logger->set_level(spdlog::level::trace);
-        return new spdlog_logger{logger};
-    } catch (const spdlog::spdlog_ex& ex) {
-        fprintf(stderr, "spdlog init failed: %s\n", ex.what());
-        return nullptr;
+    }
+
+    void spdlog_shutdown(spdlog_logger* logger)
+    {
+        if (logger) {
+            spdlog::drop(logger->logger->name());
+            delete logger;
+        }
     }
 }
-
-void spdlog_shutdown(spdlog_logger* logger)
-{
-    if (logger) {
-        spdlog::drop(logger->logger->name());
-        delete logger;
-    }
-}
-
 void spdlog_set_level(spdlog_logger* logger, spdlog_level level)
 {
     if (logger && logger->logger) {

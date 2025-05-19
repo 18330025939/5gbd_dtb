@@ -27,7 +27,8 @@ int main(int argc, char ** args)
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
 
-    log_info("RT-A100 build time: {} {}", __DATE__, __TIME__);
+    spdlog_logger* file_logger = spdlog_init("file_logger", "/home/rk/app.log");
+    spdlog_info("RT-A100 build time: {} {}", __DATE__, __TIME__);
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {
         exit(1);
@@ -77,6 +78,7 @@ int main(int argc, char ** args)
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
     FAULT_LED_ON();
+    spdlog_shutdown(file_logger);
 
     exit(0);
 }
