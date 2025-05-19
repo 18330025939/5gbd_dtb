@@ -77,9 +77,6 @@ extern "C" void spdlog_debug(const char* format, ...)
 
 // 定义一个全局日志器
 static std::shared_ptr<spdlog::logger> g_rotating_logger;
-// // 存储日志器的智能指针
-// static std::unordered_map<spdlogger, std::shared_ptr<spdlog::logger>> logger_map;
-// static size_t logger_counter = 0;
 
 // 转换日志级别
 static spdlog::level::level_enum convert_level(log_level level) {

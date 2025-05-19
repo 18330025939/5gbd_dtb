@@ -36,7 +36,8 @@ int main(int argc, char ** args)
 #else
 
     spdlog_debug("Appliction start...");
-    init_spdlog("/home/rk/app.log", 1048576 * 5, 5);
+    int ret = spdlog_c_init("/home/rk/app.log", 1048576 * 5, 5);
+    printf("spdlog_c_init, ret %d\n", ret);
     spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
 
 #endif
@@ -89,6 +90,6 @@ int main(int argc, char ** args)
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
     FAULT_LED_ON();
-    
+
     exit(0);
 }
