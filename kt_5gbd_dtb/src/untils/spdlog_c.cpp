@@ -1,10 +1,11 @@
-#if 0
+#if 1
 #include <string>
 #include <iostream>
 #include <cstdarg>  
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+#include "spdlog_c.h"
 
 // 定义一个全局日志器
 static std::shared_ptr<spdlog::logger> g_rotating_logger;
@@ -26,7 +27,7 @@ extern "C" int init_spdlog(const char* logger_name, int max_size, int max_files)
     return 0;
 }
 
-extern "C" void log_info(const char* format, ...)
+extern "C" void spdlog_info(const char* format, ...)
 {
     if (g_rotating_logger) {
         va_list args;
@@ -36,7 +37,7 @@ extern "C" void log_info(const char* format, ...)
     }
 }
 
-extern "C" void log_error(const char* format, ...)
+extern "C" void spdlog_error(const char* format, ...)
 {
     if (g_rotating_logger) {
         va_list args;
@@ -46,7 +47,7 @@ extern "C" void log_error(const char* format, ...)
     }
 }
 
-extern "C" void log_warning(const char* format, ...)
+extern "C" void spdlog_warning(const char* format, ...)
 {
     if (g_rotating_logger) {
         va_list args;
@@ -56,7 +57,7 @@ extern "C" void log_warning(const char* format, ...)
     }
 }
 
-extern "C" void log_debug(const char* format, ...)
+extern "C" void spdlog_debug(const char* format, ...)
 {
     if (g_rotating_logger) {
         va_list args;
@@ -65,7 +66,7 @@ extern "C" void log_debug(const char* format, ...)
         va_end(args);
     }
 }
-
+#else
 // spdlog_c.cpp
 #include <cstdarg>
 #include <cstdio>
@@ -140,6 +141,7 @@ void spdlog_log(spdlog_logger* logger, spdlog_level level, const char* fmt, ...)
     logger->logger->log(static_cast<spdlog::level::level_enum>(level), msg);
 }
 #endif
+#if 0
 #include <memory>
 #include <cstdarg>
 #include <unordered_map>
@@ -233,3 +235,4 @@ extern "C" {
     }
     
 }
+#endif

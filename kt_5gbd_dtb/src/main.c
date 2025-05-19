@@ -27,12 +27,19 @@ int main(int argc, char ** args)
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
 
+#if 0
     spdlog_debug(NULL, "Appliction start...");
 
     spdlogger logger = spdlog_c_init("/home/rk/app.log", 1048576 * 5, 5);
     set_default_spdlogger(logger);
     spdlog_info(logger, "RT-A100 build time: %s %s", __DATE__, __TIME__);
+#else
 
+    spdlog_debug("Appliction start...");
+    init_spdlog("/home/rk/app.log", 1048576 * 5, 5);
+    spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
+
+#endif
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {
         exit(1);

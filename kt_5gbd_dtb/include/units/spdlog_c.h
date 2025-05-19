@@ -38,7 +38,7 @@ void spdlog_log(spdlog_logger* logger, spdlog_level level, const char* fmt, ...)
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#if 0
 // 日志器句柄类型（不透明指针）
 typedef void* spdlogger;
 
@@ -65,7 +65,13 @@ void spdlog_error(spdlogger logger, const char* fmt, ...);
 
 // 清理资源
 void destroy_spdlogger(spdlogger logger);
-
+#else
+int init_spdlog(const char* logger_name, int max_size, int max_files);
+void spdlog_info(const char* format, ...);
+void spdlog_error(const char* format, ...);
+void spdlog_warning(const char* format, ...);
+void spdlog_debug(const char* format, ...);
+#endif
 #ifdef __cplusplus
 }
 #endif
