@@ -176,22 +176,6 @@ static void log_formatted(spdlogger logger, log_level level, const char* fmt, va
     }
 }
 
-extern "C" int init_spdlog(const char* logger_name, int max_size, int max_files) 
-{
-    try {
-        auto g_rotating_logger = spdlog::rotating_logger_mt("logger", logger_name, max_size, max_files);
-    }
-    catch (const spdlog::spdlog_ex& ex) {
-        std::cout << "Log initialization failed: " << ex.what() << std::endl;
-
-        return -1;
-    }
-    spdlog::set_default_logger(g_rotating_logger);
-    spdlog::flush_on(spdlog::level::trace);
-
-    return 0;
-}
-
 extern "C" {
     spdlogger spdlog_c_init(const char* filename, int max_size,int max_files) 
     {
