@@ -62,7 +62,7 @@ int get_ota_heartbeat_info(void *arg)
         return -1;
     }
  
-    printf("get_ota_heart_beat_info\n");
+    spdlog_debug("get_ota_heart_beat_info");
 #if 1
     pHb_info = (struct st_OtaHeartBeat*)arg;
     strcpy(pHb_info->dev_addr, "0356");
@@ -88,7 +88,7 @@ int get_ota_heartbeat_info(void *arg)
     strcpy(pHb_info->units[3].sw_ver, "90");
     strcpy(pHb_info->units[3].unit_name, "网络单元");
 #endif
-#if 0
+#if 0 //测试使用
     pHb_info = (struct st_OtaHeartBeat*)arg;
     SSHClient_Init(&ssh_client, TEST_SERVER_IP, TEST_SERVER_USERNAME, TEST_SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
@@ -135,90 +135,7 @@ int get_ota_heartbeat_info(void *arg)
         fprintf(stderr, "ssh_client.connect failed.\n");
         return -1;
     }
-#if 0
-    char resp[128];
-    ret = ssh_client.execute(&ssh_client, "psql -U cktt  -d fkz9 -t -c \"set search_path=obc; select dev_addr from device_info\" | awk -F ' ' '{print $1}'", 
-            resp, sizeof(resp));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute psql failed.\n");
-        return -1;
-    }
-    snprintf(pHb_info->dev_addr, sizeof(pHb_info->dev_addr), "%04d", resp);
 
-    ret = ssh_client.execute(&ssh_client, "top -b -n 1 | grep \"%%Cpu(s)\" | awk '{print $2}' | awk -F. '{print $1}'",
-             pHb_info->cpu_info, sizeof(pHb_info->cpu_info));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute cpu_info failed.\n");
-        return -1;
-    }
-
-    ret = ssh_client.execute(&ssh_client, "$(df -B 1 | awk '/sda1/{print $2, $3}'",
-             resp, sizeof(resp));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute disk failed.\n");
-        return -1;
-    }
-    sscanf(resp, "%lld %lld", pHb_info->total_disk, pHb_info->used_disk);
-
-    ret = ssh_client.execute(&ssh_client, "$(free -b | awk 'NR==2{print $2, $3}'",
-             resp, sizeof(resp));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute memory failed.\n");
-        return -1;
-    }
-    sscanf(resp, "%lld %lld", pHb_info->total_mem, pHb_info->used_mem);
-    
-    ret = ssh_client.execute(&ssh_client, "uptime -s",
-             pHb_info->up_time, sizeof(pHb_info->up_time));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute uptime failed.\n");
-        return -1;
-    }
-
-    ret = ssh_client.execute(&ssh_client, "date \"+%%Y-%%m-%%d %%H:%%M:%%S\"",
-             pHb_info->cur_time, sizeof(pHb_info->cur_time));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute curtime failed.\n");
-        return -1;
-    }
-
-    struct UnitCorrInfo unit_info_table[] = {
-        { .name = "中央处理单元", .sw_str = "cpu_soft_ver", .hw_str = "cpu_hard_ver" },
-        { .name = "采集单元",   .sw_str = "ad_soft_ver",    .hw_str = "ad_hard_ver" },
-        { .name = "控制单元",   .sw_str = "control_soft_ver", .hw_str = "control_hard_ver" },
-        { .name = "网络单元",   .sw_str = "net_soft_ver",   .hw_str = "net_hard_ver" }
-    };
-    char req[512];
-    snprintf(req, sizeof(req), "psql -U cktt -d fkz9 -t -A -c \"set search_path=obc; select %s,%s,%s,%s,%s,%s,%s,%s from device_info\"",
-                unit_info_table[0].sw_str, unit_info_table[0].hw_str, unit_info_table[1].sw_str, unit_info_table[1].hw_str,
-                unit_info_table[2].sw_str, unit_info_table[2].hw_str, unit_info_table[3].sw_str, unit_info_table[3].hw_str);
-
-    ret = ssh_client.execute(&ssh_client, req, resp, sizeof(resp));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute version_info failed.\n");
-        return -1;
-    }
-    pHb_info->hw_unit_num = sizeof(unit_info_table) / sizeof(unit_info_table[0]);
-    pHb_info->hw_unit = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->hw_unit_num);
-    pHb_info->sw_unit_num = sizeof(unit_info_table) / sizeof(unit_info_table[0]);;
-    pHb_info->sw_unit = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->hw_unit_num);
-    sscanf(resp, "%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%[^|]",
-            pHb_info->sw_unit[0].unit_ver, pHb_info->hw_unit[0].unit_ver,
-            pHb_info->sw_unit[1].unit_ver, pHb_info->hw_unit[1].unit_ver,
-            pHb_info->sw_unit[2].unit_ver, pHb_info->hw_unit[2].unit_ver,
-            pHb_info->sw_unit[3].unit_ver, pHb_info->hw_unit[3].unit_ver);
-    for (int i = 0, i < pHb_info->hw_unit_num; i++) {
-        strcpy(pHb_info->sw_unit[i].unit_name, unit_info_table[i].name);
-        strcpy(pHb_info->hw_unit[i].unit_name, unit_info_table[i].name);
-    }
-#endif
 
     char resp[512] = {0};
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", 
@@ -316,7 +233,7 @@ int create_ota_heartbeat_data(char *data)
         return -1;
     }
  
-    printf("create_ota_heartbeat_data\r\n");
+    spdlog_debug("create_ota_heartbeat_data");
     memset(&(heart_beat), 0x00, sizeof(OtaHeartBeat));
     int ret = get_ota_heartbeat_info(&heart_beat);
     if (ret) {
@@ -340,7 +257,7 @@ int create_ota_heartbeat_data(char *data)
     cJSON_AddItemToObject(root, "softwareList", unit_info);
 
     buf = cJSON_Print(root);
-    printf("ota heart beat data: %s\n", buf);
+    spdlog_debug("ota heart beat data: %s", buf);
     strncpy(data, buf, strlen(buf));
     cJSON_Delete(root);
     free(buf);
@@ -363,7 +280,7 @@ int get_ota_report_info(struct FwDownInfo *info, void *arg)
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.connect failed.\n");
+        spdlog_error("ssh_client.connect failed.");
         return -1;
     }
 
@@ -374,7 +291,7 @@ int get_ota_report_info(struct FwDownInfo *info, void *arg)
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute updater.sh report_info failed.\n");
+        spdlog_error("ssh_client.execute updater.sh report_info failed.");
         return -1;
     }
 
@@ -396,7 +313,7 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
         return -1;
     }
 
-    printf("create_ota_report_data\n");
+    spdlog_debug("create_ota_report_data");
     memset(&report, 0, sizeof(OtaReport));
     int ret = get_ota_report_info(info, (void *)&report);
     if (ret != 0) {
@@ -410,7 +327,7 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
     cJSON_AddStringToObject(root, "executionReport", report.report);
     buf = cJSON_Print(root);
     strncpy(data, buf, strlen(buf));
-    printf("ota report data: %s\n", buf);
+    spdlog_debug("ota report data: %s", buf);
     cJSON_Delete(root);
     free(buf);
 
@@ -432,13 +349,13 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 
     int ret = fw_up->trans_func((void *)pInfo);
     if (ret) {
-        fprintf(stderr, "fw_up->trans_func failed.\n");
+        spdlog_error("fw_up->trans_func failed.");
         return ret;
     }
     if (fw_up->update_func != NULL) {
         ret = fw_up->update_func((void *)pInfo);
         if (ret) {
-            fprintf(stderr, "up->update_func failed.\n");
+            spdlog_error("up->update_func failed.");
         } else {
             if (fw_up->update_cb != NULL) {
                 fw_up->update_cb((void *)pInfo);
@@ -460,7 +377,7 @@ void do_ota_report(struct FwDownInfo *info)
         return ;
     }
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
-    printf("do_ota_report %s\n", resp);
+    spdlog_debug("do_ota_report %s", resp);
 
     free(resp);
 }
@@ -541,7 +458,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
     if (root == NULL) {
         const char *error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL) {
-            fprintf(stderr, "Error before: %s\n", error_ptr);
+            spdlog_error("Error before: %s", error_ptr);
         }
         return -1;
     }
@@ -551,9 +468,9 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
     if (cJSON_IsString(code_obj) && (code_obj->valuestring != NULL)) {
         const char *code = code_obj->valuestring;
         if (strcmp(code, "SUCCESS") == 0) {
-            printf("send heartbeat success and receive respond\n");
+            spdlog_info("send heartbeat success and receive respond.");
         } else {
-            printf("send heartbeat failed and respond %s %s\n", code, respond);
+            spdlog_error("send heartbeat failed and respond %s %s.", code, respond);
             return -1;
         }
     }
@@ -563,7 +480,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
     if (cJSON_IsArray(task_list_obj)) {
         int length = cJSON_GetArraySize(task_list_obj);
         if (length == 0) {
-            printf("heartbeat end\n");
+            spdlog_debug("heartbeat end");
         } else {
             for (int i = 0; i < length; i++) {
                 cJSON *task_obj = cJSON_GetArrayItem(task_list_obj, i);
@@ -580,7 +497,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
                     strcpy(pInfo->type,type_obj->valuestring);
                     List_Insert(task_list, (void*)pInfo);
 
-                    printf("pInfo ID: %d, URL: %s, MD5: %s, Type: %s\n", pInfo->id, pInfo->url, pInfo->md5, pInfo->type);
+                    spdlog_debug("pInfo ID: %d, URL: %s, MD5: %s, Type: %s\n", pInfo->id, pInfo->url, pInfo->md5, pInfo->type);
                 }
             }
         }
@@ -601,7 +518,7 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
     }
 
     ret = http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
-    printf("resp to ota_heartbeat_req: %s, %d\n", resp, ret);
+    spdlog_debug("resp to ota_heartbeat_req: %s, %d.", resp, ret);
 
     if (ret == 0) {
         ctx = (CloundCommContext *)arg;
@@ -747,7 +664,7 @@ int func_wave_file_req(void *arg)
         return -1;
     }
     
-    printf("func_wave_file_req\n");
+    spdlog_debug("func_wave_file_req.");
     pReq = (WaveFileReq *)((uint8_t *)arg + sizeof(MsgFramHdr));
     char r_folder[128];
     uint16_t year = pReq->ucYear + 2000; 
@@ -760,7 +677,7 @@ int func_wave_file_req(void *arg)
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.connect failed.\n");
+        spdlog_error("ssh_client.connect failed.");
         return -1;
     }
 
@@ -772,7 +689,7 @@ int func_wave_file_req(void *arg)
     ret = ssh_client.download_file(&ssh_client, r_path, l_folder);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.download_file cp_wave_file_from_fkz9 failed.\n");
+        spdlog_error("ssh_client.download_file cp_wave_file_from_fkz9 failed.");
         return -1;
     }
 
@@ -788,7 +705,7 @@ void proc_message_cb(char *buf, size_t len)
         return ;
     }
 
-    printf("proc_message_cb %ld\n", len);
+    spdlog_debug("proc_message_cb %ld.", len);
     enqueue(&gp_cloud_comm_ctx->event_queue, (uint8_t *)buf, len);
 }
 
@@ -815,13 +732,13 @@ void *event_task_entry(void *arg)
         pHdr = (MsgFramHdr *)buf;
         uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-        printf("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x\n",bswap_16(pHdr->usHdr), bswap_16(pCrc->usCRC), crc);
+        spdlog_debug("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x.",bswap_16(pHdr->usHdr), bswap_16(pCrc->usCRC), crc);
         if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
-        printf("pHdr->ucSign 0x%x\n", pHdr->ucSign);
+        spdlog_debug("pHdr->ucSign 0x%x.", pHdr->ucSign);
         for (; start != end; start++) {
-            printf("start->sign 0x%x\n", start->sign);
+            spdlog_debug("start->sign 0x%x.", start->sign);
             if (start->sign == pHdr->ucSign) {
                 int ret = start->pFuncEntry(buf);
                 if (ret == 0 && start->pFuncCb != NULL) {
@@ -885,7 +802,7 @@ void clound_comm_init(CloundCommContext *ctx)
     ctx->fx650 = (Fx650Ctx *)malloc(sizeof(Fx650Ctx));
     FX650_Error ret = fx650_init(ctx->fx650);
     if (FX650_OK != ret) {
-        printf("fx650_init failed. %d\n", ret);
+        spdlog_error("fx650_init failed. %d.", ret);
         return;
     }
     ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
@@ -915,7 +832,7 @@ void clound_comm_uninit(CloundCommContext *ctx)
         return ;
     } 
 
-    printf("clound_comm_uninit\n");
+    spdlog_debug("clound_comm_uninit.");
     ctx->running = false;
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);

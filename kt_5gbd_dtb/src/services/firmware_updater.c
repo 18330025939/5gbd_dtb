@@ -8,6 +8,7 @@
 #include "publib.h"
 #include "ssh_client.h"
 #include "firmware_updater.h"
+#include "spdlog_c.h"
 
 int fkz9_fw_trans_func(void *arg)
 {
@@ -23,7 +24,7 @@ int fkz9_fw_trans_func(void *arg)
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.connect failed.\n");
+        spdlog_error("ssh_client.connect failed.");
         return -1;
     }
 
@@ -33,7 +34,7 @@ int fkz9_fw_trans_func(void *arg)
     if (ret) {
         //上传失败是否再次上传
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.upload_file up_file:%s failed.\n", pInfo->path);
+        spdlog_error("ssh_client.upload_file up_file:%s failed.", pInfo->path);
         return -1;
     }
 
@@ -44,7 +45,7 @@ int fkz9_fw_trans_func(void *arg)
     if ((ret) || (strcmp(pInfo->md5, resp) != 0)) {
         //校验失败是否再次上传
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute md5 of the file,l_md5:%s,r_md5%sfailed.\n", pInfo->md5, resp);
+        spdlog_error("ssh_client.execute md5 of the file,l_md5:%s,r_md5%sfailed.", pInfo->md5, resp);
         return -1;
     }
 
@@ -69,7 +70,7 @@ int fkz9_fw_update_func(void *arg)
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.connect failed.\n");
+        spdlog_error("ssh_client.connect failed.");
         return -1;
     }
 
@@ -80,7 +81,7 @@ int fkz9_fw_update_func(void *arg)
     if (ret) {
         //执行失败
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute updater.sh report_info failed.\n");
+        spdlog_error("ssh_client.execute updater.sh report_info failed.");
         return -1;
     }
 
@@ -90,7 +91,7 @@ int fkz9_fw_update_func(void *arg)
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute ota_report find failed.\n");
+        spdlog_error("ssh_client.execute ota_report find failed.");
         return -1;
     }
     char local_path[128] = {0};
@@ -99,7 +100,7 @@ int fkz9_fw_update_func(void *arg)
     if (ret) {
         //下载失败
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.download_file ota_report failed.\n");
+        spdlog_error("ssh_client.download_file ota_report failed.");
         return -1;
     }
 
@@ -121,7 +122,7 @@ int fkz9_fw_update_cb(void *arg)
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.connect failed.\n");
+        spdlog_error("ssh_client.connect failed.");
         return -1;
     }
 

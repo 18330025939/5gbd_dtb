@@ -7,6 +7,7 @@
 #include <libssh/libssh.h>
 #include <libssh/sftp.h>
 #include "ssh_client.h"
+#include "spdlog_c.h"
 
 
 static int SSHClient_Connect(SSHClient *client)
@@ -15,23 +16,23 @@ static int SSHClient_Connect(SSHClient *client)
     ssh_options_set(client->session, SSH_OPTIONS_USER, client->username);
 
     if (ssh_connect(client->session) != SSH_OK) {
-        fprintf(stderr, "Failed to connect to %s: %s\n", client->host, ssh_get_error(client->session));
+        spdlog_error("Failed to connect to %s: %s.", client->host, ssh_get_error(client->session));
         return -1;
     }
 
     if (ssh_userauth_password(client->session, NULL, client->password) != SSH_AUTH_SUCCESS) {
-        fprintf(stderr, "Authentication failed: %s\n", ssh_get_error(client->session));
+        spdlog_error("Authentication failed: %s.", ssh_get_error(client->session));
         return -1;
     }
 
     client->sftp = sftp_new(client->session);
     if (client->sftp == NULL) {
-        fprintf(stderr, "Failed to create SFTP session: %s\n", ssh_get_error(client->session));
+        spdlog_error("Failed to create SFTP session: %s.", ssh_get_error(client->session));
         return -1;
     }
 
     if (sftp_init(client->sftp) != SSH_OK) {
-        fprintf(stderr, "Failed to initialize SFTP session: %s\n", ssh_get_error(client->session));
+        spdlog_error("Failed to initialize SFTP session: %s.", ssh_get_error(client->session));
         sftp_free(client->sftp);
         return -1;
     }
@@ -58,18 +59,18 @@ static int SSHClient_Execute(SSHClient *client, const char *command, char *outpu
 {
     ssh_channel channel = ssh_channel_new(client->session);
     if (channel == NULL) {
-        fprintf(stderr, "Failed to create channel: %s\n", ssh_get_error(client->session));
+        spdlog_error("Failed to create channel: %s.", ssh_get_error(client->session));
         return -1;
     }
 
     if (ssh_channel_open_session(channel) != SSH_OK) {
-        fprintf(stderr, "Failed to open channel: %s\n", ssh_get_error(client->session));
+        spdlog_error("Failed to open channel: %s.", ssh_get_error(client->session));
         ssh_channel_free(channel);
         return -1;
     }
 
     if (ssh_channel_request_exec(channel, command) != SSH_OK) {
-        fprintf(stderr, "Failed to execute command: %s\n", ssh_get_error(client->session));
+        spdlog_error("Failed to execute command: %s.", ssh_get_error(client->session));
         ssh_channel_close(channel);
         ssh_channel_free(channel);
         return -1;
@@ -99,13 +100,13 @@ static int SSHClient_UploadFile(SSHClient *client, const char *local_path, const
 
     FILE *local_file = fopen(local_path, "rb");
     if (local_file == NULL) {
-        fprintf(stderr, "Failed to open local file: %s\n", local_path);
+        spdlog_error("Failed to open local file: %s.", local_path);
         return -1;
     }
 
     sftp_file remote_file = sftp_open(client->sftp, remote_path, O_WRONLY | O_CREAT , 0644);
     if (remote_file == NULL) {
-        fprintf(stderr, "Failed to open remote file: %s\n", ssh_get_error(client->session));
+        spdlog_error("Failed to open remote file: %s.", ssh_get_error(client->session));
         fclose(local_file);
         return -1;
     }
@@ -114,7 +115,7 @@ static int SSHClient_UploadFile(SSHClient *client, const char *local_path, const
     size_t bytes_read;
     while ((bytes_read = fread(buffer, 1, sizeof(buffer), local_file)) > 0) {
         if (sftp_write(remote_file, buffer, bytes_read) < 0) {
-            fprintf(stderr, "Failed to write to remote file: %s\n", ssh_get_error(client->session));
+            spdlog_error("Failed to write to remote file: %s.", ssh_get_error(client->session));
             fclose(local_file);
             sftp_close(remote_file);
             return -1;
@@ -134,13 +135,13 @@ static int SSHClient_DownloadFile(SSHClient *client, const char *remote_path, co
 
     sftp_file remote_file = sftp_open(client->sftp, remote_path, O_RDONLY, 0);
     if (remote_file == NULL) {
-        fprintf(stderr, "Failed to open remote file: %s\n", ssh_get_error(client->session));
+        spdlog_error("Failed to open remote file: %s.", ssh_get_error(client->session));
         return -1;
     }
 
     FILE *local_file = fopen(local_path, "wb");
     if (local_file == NULL) {
-        fprintf(stderr, "Failed to open local file: %s\n", local_path);
+        spdlog_error("Failed to open local file: %s.", local_path);
         sftp_close(remote_file);
         return -1;
     }

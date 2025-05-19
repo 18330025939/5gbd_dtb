@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include "mqtt_client.h"
+#include "spdlog_c.h"
 
 
 /* 连接成功回调 */
@@ -17,7 +18,7 @@ static void on_connect_success(void* context, MQTTAsync_successData* response)
     // }
     pthread_mutex_unlock(&client->lock);
     
-    printf("MQTT service connection successful.\n");
+    spdlog_debug(("MQTT service connection successful.");
 }
 
 /* 连接失败回调 */
@@ -33,7 +34,7 @@ static void on_connect_failure(void* context, MQTTAsync_failureData* response)
     //     client->on_connected(client->user_ctx, response->code, msg);
     // }
     pthread_mutex_unlock(&client->lock);
-    printf("MQTT service connection failed, rc %d\n", response ? response->code : 0);
+    spdlog_error("MQTT service connection failed, rc %d.", response ? response->code : 0);
 }
 
 /* 消息到达回调 */
@@ -73,13 +74,13 @@ int mqtt_connect(AsyncMQTTClient* client)
     int rc = MQTTAsync_connect(client->handle, &conn_opts);
     pthread_mutex_unlock(&client->lock);
 
-    printf("mqtt_connect username=%s, password=%s, rc=%d\n", conn_opts.username, conn_opts.password, rc);
+    spdlog_debug("mqtt_connect username=%s, password=%s, rc=%d.", conn_opts.username, conn_opts.password, rc);
     return rc;
 }
 
 void on_publish_success(void* context, MQTTAsync_successData* response)
 {
-    printf("publish success\n");
+    spdlog_debug("publish success.");
 }
 /* 消息发布 */
 int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload, size_t len) 
@@ -106,18 +107,18 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     {
         printf("0x%x  ", ((uint8_t*)payload)[i]);
     }
-    printf("mqtt_publish topic=%s, len=%ld, rc=%d\n", topic, len, rc);
+    spdlog_debug("mqtt_publish topic=%s, len=%ld, rc=%d.", topic, len, rc);
     return rc;
 }
 
 static void on_subscribe_success(void* context, MQTTAsync_successData* response)
 {
-	printf("Subscribe succeeded\n");
+	spdlog_debug("Subscribe succeeded.");
 }
 
 static void on_subscribe_failure(void* context, MQTTAsync_failureData* response)
 {
-	printf("Subscribe failed, rc %d\n", response->code);
+	spdlog_error("Subscribe failed, rc %d.", response->code);
 }
 
 /* 消息订阅 */
@@ -131,7 +132,7 @@ int mqtt_subscribe(AsyncMQTTClient* client, const char* topic)
 	sub_opts.onFailure = on_subscribe_failure;
 	sub_opts.context = client;
 
-    printf("mqtt_subscribe topic=%s\n", topic);
+    spdlog_debug("mqtt_subscribe topic=%s.", topic);
     pthread_mutex_lock(&client->lock);
     if (client->is_conn == true) {
         rc = MQTTAsync_subscribe(client->handle, topic, config->qos, &sub_opts);
@@ -175,17 +176,17 @@ AsyncMQTTClient* mqtt_client_create(AsyncClientConfig *config)//const char *addr
     client->ops = &client_ops;
     client->is_conn = false;
 
-    printf("mqtt_client_create addr=%s, id=%s, username=%s, password=%s\n", client->config->address,
+    spdlog_debug("mqtt_client_create addr=%s, id=%s, username=%s, password=%s.", client->config->address,
                    client->config->client_id, client->config->user_name, client->config->password);
     if ((rc = MQTTAsync_create(&client->handle, client->config->address, client->config->client_id, 
                         MQTTCLIENT_PERSISTENCE_NONE, NULL)) != MQTTASYNC_SUCCESS) {
-        printf("Failed to create client object, return code %d\n", rc);
+        spdlog_error("Failed to create client object, return code %d.", rc);
         goto err_exit;
     }
 
     if ((rc = MQTTAsync_setCallbacks(client->handle, client, NULL, message_arrived_cb,  
                         NULL)) != MQTTASYNC_SUCCESS) {
-        printf("Failed to set callback, return code %d\n", rc);
+        spdlog_error("Failed to set callback, return code %d.", rc);
         goto err_exit;                    
     }
     return client;
@@ -202,7 +203,7 @@ void mqtt_client_destroy(AsyncMQTTClient* client)
         return;
     }
 
-    printf("mqtt_client_destroy\n");
+    spdlog_debug("mqtt_client_destroy.");
     pthread_mutex_lock(&client->lock);
     MQTTAsync_disconnect(client->handle, NULL);
     MQTTAsync_destroy(&client->handle);

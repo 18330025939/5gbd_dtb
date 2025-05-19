@@ -22,7 +22,7 @@ void signal_handler(evutil_socket_t fd, short events, void *arg)
     int signal = fd;
 
     base = (struct event_base *)arg;
-    printf("Received signal %s (signal %d),quit...\n", strsignal(signal), signal);
+    spdlog_info("Received signal %s (signal %d),quit...", strsignal(signal), signal);
     event_base_loopexit(base, NULL);
 }
 
@@ -31,10 +31,9 @@ int main(int argc, char ** args)
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
     
-    spdlog_debug("Appliction start...");
     spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
     spdlog_c_init("/home/rk/app.log", 1048576 * 5, 5);
-    spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
+    // spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
 
 
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
@@ -56,12 +55,12 @@ int main(int argc, char ** args)
 
     struct event_base *base = event_base_new();
     if (!base) {
-        fprintf(stderr, "Could not create event base: exiting\n");
+        spdlog_error("Could not create event base: exiting");
         exit(1);
     }
     struct event *sigint = evsignal_new(base, SIGINT, signal_handler, base);
     if (!sigint) {
-        fprintf(stderr, "Could not create SIGINT event: exiting\n");
+        spdlog_error("Could not create SIGINT event: exiting");
         event_base_free(base);
         exit(1);
     }
@@ -69,7 +68,7 @@ int main(int argc, char ** args)
 
     struct event *sigterm = evsignal_new(base, SIGTERM, signal_handler, base);
     if (!sigterm) {
-        fprintf(stderr, "Could not create SIGTERM event: exiting\n");
+        spdlog_error("Could not create SIGTERM event: exiting");
         event_free(sigint);
         event_base_free(base);
         exit(1);
@@ -78,7 +77,6 @@ int main(int argc, char ** args)
 
     event_base_dispatch(base);
 
-    printf("wait....\n");
     event_free(sigint);
     event_free(sigterm);
     event_base_free(base);

@@ -17,6 +17,7 @@
 #include <event2/thread.h>
 #include "queue.h"
 #include "tcp_client.h"
+#include "spdlog_c.h"
 
 void *tcp_client_send_entry(void *arg);
 static void tcp_client_disconnect(TcpClient* client);
@@ -27,12 +28,12 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 
     if (client->recnt_att < client->max_recnt_att) {
         client->recnt_att++;
-        printf("Reconnecting... Attempt %d/%d\n", client->recnt_att, client->max_recnt_att);
+        spdlog_debug("Reconnecting... Attempt %d/%d.", client->recnt_att, client->max_recnt_att);
         struct timeval timeout = {1, 0}; // 1秒后重试
         event_base_once(client->base, -1, EV_TIMEOUT, tcp_client_reconnect, client, &timeout);
     } else {
         // client->is_connected = false;
-        printf("Max reconnect attempts reached. Exiting.\n");
+        spdlog_debug("Max reconnect attempts reached. Exiting.");
         tcp_client_disconnect(client);
         // tcp_client_destroy(client);
     }
@@ -57,19 +58,19 @@ static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg
 {
     TcpClient* client = (TcpClient*)arg;
 
-    printf("tcp_client_event_cb--------event 0x%x, BEV_EVENT_CONNECTED:0x%x\n", events, BEV_EVENT_CONNECTED);
+    spdlog_debug("tcp_client_event_cb--------event 0x%x, BEV_EVENT_CONNECTED:0x%x.", events, BEV_EVENT_CONNECTED);
     if (events & BEV_EVENT_CONNECTED) {
-        printf("Connected to server.\n");
+        spdlog_debug("Connected to server.");
         client->recnt_att = 0;
         client->is_connected = true;
         pthread_create(&client->send_thread, NULL, tcp_client_send_entry, (void*)client);
     } else if (events & BEV_EVENT_EOF) {
-        printf("Connection closed.\n");
+        spdlog_debug("Connection closed.");
         // client->is_connected = false;
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     } else if (events & BEV_EVENT_ERROR) {
         int err = EVUTIL_SOCKET_ERROR();
-        printf("An error occurred: %d, %s\n", err, strerror(err));
+        spdlog_error("An error occurred: %d, %s.", err, strerror(err));
         // client->is_connected = false;
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     }
@@ -82,13 +83,13 @@ void *tcp_client_connect_entry(void *arg)
     evthread_use_pthreads();
     client->base = event_base_new();
     if (!client->base) {
-        perror("event_base_new failed");
+        spdlog_error("event_base_new failed.");
         return NULL;
     }
 
     client->bev = bufferevent_socket_new(client->base, -1, BEV_OPT_CLOSE_ON_FREE);
     if (!client->bev) {
-        perror("bufferevent_socket_new failed");
+        spdlog_error("bufferevent_socket_new failed.");
         event_base_free(client->base);
         return NULL;
     }
@@ -102,7 +103,7 @@ void *tcp_client_connect_entry(void *arg)
     inet_aton(client->server_ip, &server_addr.sin_addr);
 
     if (bufferevent_socket_connect(client->bev, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        perror("bufferevent_socket_connect failed");
+        spdlog_error("bufferevent_socket_connect failed.");
         bufferevent_free(client->bev);
         event_base_free(client->base);
         return NULL;
@@ -150,7 +151,7 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
     // }
     if (client->is_connected) {
         enqueue(&client->tx_queue, data, len);
-        printf("tcp_client_send ok\n");
+        spdlog_info("tcp_client_send ok.");
     }
 }
 
@@ -194,7 +195,7 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 /* 销毁客户端 */
 void tcp_client_destroy(TcpClient* client) 
 {
-    printf("tcp_client_destroy\n");
+    spdlog_debug("tcp_client_destroy.");
     clean_queue(&client->tx_queue);
     // clean_queue(&client->rx_queue);
     free(client->server_ip);

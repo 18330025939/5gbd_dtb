@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <curl/curl.h>
+#include "spdlog_c.h"
 
 /* FTP上传回调函数 */
 static size_t upload_read_callback(void *ptr, size_t size, size_t nmemb, void *userp) 
@@ -36,29 +37,29 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
     struct stat fileInfo;
     curl_off_t fsize;
 
-    printf("ftp_upload url:%s, local_path:%s, remote_path:%s, user:%s, pass:%s\n", url, local_path, remote_path, user, pass);
+    spdlog_debug("ftp_upload url:%s, local_path:%s, remote_path:%s, user:%s, pass:%s.", url, local_path, remote_path, user, pass);
     curl = curl_easy_init();
     if (!curl) {
-        fprintf(stderr, "Init the curl object failed\n");
+        spdlog_error"Init the curl object failed.");
         return -1;
     }
 
     if(stat(local_path, &fileInfo)) {
-        fprintf(stderr, "Couldnt open '%s': %s\n",local_path, strerror(errno));
+        spdlog_error("Couldnt open '%s': %s.",local_path, strerror(errno));
         return -1;
     }
     fsize = (curl_off_t)fileInfo.st_size;
 
     fp = fopen(local_path, "rb");
     if (!fp) {
-        fprintf(stderr, "Failed to open local file\n");
+        spdlog_error("Failed to open local file.");
         curl_easy_cleanup(curl);
         return -1;
     }
 
     char *ftp_url = malloc(strlen(url) + strlen(remote_path) + 2);
     if (!ftp_url) {
-        fprintf(stderr, "Memory allocation failed\n");
+        spdlog_error("Memory allocation failed.");
         fclose(fp);
         curl_easy_cleanup(curl);
         return -1;
@@ -86,7 +87,7 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
-        fprintf(stderr, "Curl execution failed %s\n", curl_easy_strerror(res));
+        spdlog_error("Curl execution failed %s.", curl_easy_strerror(res));
         return -1;
     }
 
@@ -100,16 +101,16 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
     CURLcode res;
     FILE *fp;
 
-    printf("ftp_download url:%s, local_path:%s, remote_path:%s, user:%s, pass:%s\n", url, local_path, remote_path, user, pass);
+    spdlog_debug("ftp_download url:%s, local_path:%s, remote_path:%s, user:%s, pass:%s.", url, local_path, remote_path, user, pass);
     curl = curl_easy_init();
     if (!curl) {
-        fprintf(stderr, "Init the curl object failed\n");
+        spdlog_error("Init the curl object failed.");
         return -1;
     }
 
     fp = fopen(local_path, "wb");
     if (!fp) {
-        fprintf(stderr, "Failed to open local file\n");
+        spdlog_error("Failed to open local file.");
         curl_easy_cleanup(curl);
         return -1;
     }
@@ -117,7 +118,7 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
     if (remote_path != NULL) {
         char *ftp_url = malloc(strlen(url) + strlen(remote_path) + 2);
         if (!ftp_url) {
-            fprintf(stderr, "Memory allocation failed\n");
+            spdlog_error("Memory allocation failed.");
             fclose(fp);
             curl_easy_cleanup(curl);
             return -1;
@@ -147,7 +148,7 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK) {
-        fprintf(stderr, "Curl execution failed: %s\n", curl_easy_strerror(res));
+        spdlog_error("Curl execution failed: %s.", curl_easy_strerror(res));
         return -1;
     }
 
@@ -175,7 +176,7 @@ int http_post_request(const char *url, const char *json_data, char **response)
 
     curl = curl_easy_init();
     if (!curl) {
-        fprintf(stderr, "Failed to initialize CURL\n");
+        spdlog_error("Failed to initialize CURL.");
         return -1;
     }
     headers = curl_slist_append(headers, "accept: */*");
@@ -191,7 +192,7 @@ int http_post_request(const char *url, const char *json_data, char **response)
     res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
     if (res != CURLE_OK) {
-        fprintf(stderr, "CURL request failed: %s\n", curl_easy_strerror(res));
+        spdlog_error("CURL request failed: %s.", curl_easy_strerror(res));
         return -1;
     }
 

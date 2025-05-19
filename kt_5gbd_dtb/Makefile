@@ -15,7 +15,10 @@ endif
 
 SED_COMMAND = sed \
     -e "s/@CLIENT_VERSION@/${release.version}/g" \
-	-e "s/@BUILD_TIMESTAMP@/${build.level}/g"
+	-e "s/@BUILD_TIMESTAMP@/${build.level}/g" \
+	-e "s/@RT_A100_VERSION_MAJOR@/${MAJOR_VERSION}/g" \
+    -e "s/@RT_A100_VERSION_MINOR@/${MINOR_VERSION}/g" \
+    -e "s/@RT_A100_VERSION_PATCH@/${PATCH_VERSION}/g"
 
 VersionInfo.h: VersionInfo.h.in
 	$(SED_COMMAND) $< > $@

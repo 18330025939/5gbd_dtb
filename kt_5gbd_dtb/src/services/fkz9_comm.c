@@ -15,6 +15,7 @@
 #include "ssh_client.h"
 #include "fkz9_comm.h"
 #include "firmware_updater.h"
+#include "spdlog_c.h"
 
 static void heartbeat_resp(uint8_t *arg)
 {
@@ -25,7 +26,7 @@ static void heartbeat_resp(uint8_t *arg)
     }
 
     hb_data = (HeartBeatDataSeg*)((uint8_t*)arg + sizeof(MsgFramHdr));
-    printf("heartbeat_resp, DevAddr %04d, %02d-%02d-%2d %2d:%2d:%2d\n", hb_data->usDevAddr, 
+    spdlog_info("heartbeat_resp, DevAddr %04d, %02d-%02d-%2d %2d:%2d:%2d.", hb_data->usDevAddr, 
         hb_data->ucYear, hb_data->ucMonth, hb_data->ucDay, hb_data->ucHour, hb_data->ucMinute, hb_data->ucSecond);
 
     return;
@@ -147,7 +148,7 @@ int init_updater_environment(void)
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.connect failed.\n");
+        spdlog_error("ssh_client.connect failed.");
         return -1;
     }
 
@@ -156,10 +157,10 @@ int init_updater_environment(void)
             resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute find updater.sh failed.\n");
+        spdlog_error("ssh_client.execute find updater.sh failed.");
         return -1;
     } else {
-        printf("find updater.sh resp %s\n", resp);
+        spdlog_info("find updater.sh resp %s.", resp);
         if (strstr(resp, "updater.sh")) {
             SSHClient_Destroy(&ssh_client);
             return 0;
@@ -172,7 +173,7 @@ int init_updater_environment(void)
     ret = ssh_client.upload_file(&ssh_client, loacl_path, "/home/cktt/script/updater.sh");
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.upload_file updater.sh failed.\n");
+        spdlog_error("ssh_client.upload_file updater.sh failed.");
         return -1;
     }
 
@@ -180,7 +181,7 @@ int init_updater_environment(void)
             resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute chmod +x updater.sh failed.\n");
+        spdlog_error("ssh_client.execute chmod +x updater.sh failed.");
         return -1;
     }
 
@@ -216,7 +217,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     mqtt_client->ops->register_cb(mqtt_client, on_message_cb);
     int ret = mqtt_client->ops->connect(mqtt_client);
     if(ret) {
-        printf("mqtt connect failed\n");
+        spdlog_error("mqtt connect failed.");
         ctx->is_running = false;
         mqtt_client_destroy(mqtt_client);
         return;
@@ -233,7 +234,7 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
 {
     AsyncMQTTClient *mqtt_client = NULL;
 
-    printf("fkz9_comm_uninit\n");
+    spdlog_debug("fkz9_comm_uninit.");
     if (ctx == NULL || ctx->is_running == false) {
         return;
     }
