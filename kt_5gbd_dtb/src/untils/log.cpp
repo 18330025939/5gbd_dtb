@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <cstdarg>  
 #include <spdlog.h>
 #include <sinks/stdout_color_sinks.h>
 #include <sinks/rotating_file_sink.h>

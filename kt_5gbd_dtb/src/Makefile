@@ -51,7 +51,7 @@ $(EXEC): $(SRC)
 
 %.o: %.cpp
 	@if [ ! -d obj ]; then mkdir -p obj; fi
-	$(CXX) $(CFLAGS) -c $< -o obj/$(notdir $@)
+	$(CXX) $(CFLAGS) -std=c++11 -c $< -o obj/$(notdir $@)
 
 clean:
 	-@rm -f $(EXEC) *.o
