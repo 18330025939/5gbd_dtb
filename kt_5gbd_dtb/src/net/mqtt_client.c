@@ -18,7 +18,7 @@ static void on_connect_success(void* context, MQTTAsync_successData* response)
     // }
     pthread_mutex_unlock(&client->lock);
     
-    spdlog_debug(("MQTT service connection successful.");
+    spdlog_debug("MQTT service connection successful.");
 }
 
 /* 连接失败回调 */
