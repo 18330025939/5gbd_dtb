@@ -12,6 +12,10 @@
 #include "led.h"
 #include "ssh_client.h"
 
+#if !defined(SPDLOG_ACTIVE_LEVEL)
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+#endif
+
 void signal_handler(evutil_socket_t fd, short events, void *arg)
 {
     struct event_base *base = NULL;
@@ -26,11 +30,12 @@ int main(int argc, char ** args)
 {
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
-
-    spdlog_c_init("/home/rk/app.log", 1048576 * 5, 5);
-
+    
+    spdlog_debug("Appliction start...");
     spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
-    spdlog_debug("Appliction start...%s %s", __DATE__, __TIME__);
+    spdlog_c_init("/home/rk/app.log", 1048576 * 5, 5);
+    spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
+
 
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {
