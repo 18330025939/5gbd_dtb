@@ -112,7 +112,7 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     if (str != NULL) {
         str[0] = '\0';
         for (int i = 0; i < len; i++) {
-            sprintf(str + strlen(str), "%hhu ", arr[i]);
+            sprintf(str + strlen(str), "%hhu ", payload[i]);
         }
 
         if (strlen(str) > 0) {
