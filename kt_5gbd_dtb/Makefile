@@ -1,4 +1,4 @@
-all: versionInfo.h host_lib host_third host_src 
+all: VersionInfo.h host_lib host_third host_src 
 	@echo "root build done"
 
 MAJOR_VERSION := $(shell cat version.major)
@@ -20,7 +20,7 @@ SED_COMMAND = sed \
     -e "s/@RT_A100_VERSION_MINOR@/${MINOR_VERSION}/g" \
     -e "s/@RT_A100_VERSION_PATCH@/${PATCH_VERSION}/g"
 
-versionInfo.h: versionInfo.h.in
+VersionInfo.h: VersionInfo.h.in
 	$(SED_COMMAND) $< > $@
 
 host_lib:

@@ -10,7 +10,7 @@
 #include "cloud_comm.h"
 #include "fkz9_comm.h"
 #include "led.h"
-#include "versionInfo.h"
+#include "VersionInfo.h"
 #include "ssh_client.h"
 
 
