@@ -170,7 +170,7 @@ static void gngga_data_parse(void *data, const char *payload, size_t len)
     //     return ; // 非PBSOL消息
     // }
 
-    sscanf((const char *)token, "%[^,],%lf,%lf,%c,%lf,%c,%hhu,%hhu,"
+    sscanf((const char *)payload, "%[^,],%lf,%lf,%c,%lf,%c,%hhu,%hhu,"
             "%f,%f,%c,%f,%c",
             gngga->talker_id,
             &gngga->time,
