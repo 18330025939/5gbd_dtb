@@ -108,6 +108,21 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
         printf("0x%x  ", ((uint8_t*)payload)[i]);
     }
     spdlog_debug("mqtt_publish topic=%s, len=%ld, rc=%d.", topic, len, rc);
+    char *str = (char *)malloc(len * 4 + 1);
+    if (str != NULL) {
+        str[0] = '\0';
+        for (int i = 0; i < len; i++) {
+            sprintf(str + strlen(str), "%hhu ", arr[i]);
+        }
+
+        if (strlen(str) > 0) {
+            str[strlen(str) - 1] = '\0';
+        }
+
+        spdlog_debug("payload: %s", str);
+        free(str);
+    }
+
     return rc;
 }
 
@@ -153,25 +168,20 @@ static AsyncClientOps client_ops = {
     .register_cb = mqtt_register_cb
 } ;
 
-static AsyncClientConfig client_config = {
-    .keep_alive = KEEP_ALIVE_TIME,
-    .qos = QOS,
-    .clean_session = 1,
-} ;
+// static AsyncClientConfig client_config = {
+//     .keep_alive = KEEP_ALIVE_TIME,
+//     .qos = QOS,
+//     .clean_session = 1,
+// } ;
 
 /* 初始化 */
-AsyncMQTTClient* mqtt_client_create(AsyncClientConfig *config)//const char *addr, const char *id, const char *username, const char *password) 
+AsyncMQTTClient* mqtt_client_create(AsyncClientConfig *config)
 {
     int rc;
     AsyncMQTTClient* client = calloc(1, sizeof(AsyncMQTTClient));
     pthread_mutex_init(&client->lock, NULL);
 
-    client->config = config;// &client_config;
-
-    // client->config->address = config->address; //strdup(addr);
-    // client->config->client_id =  config->client_id; //strdup(id);
-    // client->config->user_name = config->user_name; //strdup(username);
-    // client->config->password = config->password; //strdup(password);
+    client->config = config;
 
     client->ops = &client_ops;
     client->is_conn = false;
@@ -209,10 +219,6 @@ void mqtt_client_destroy(AsyncMQTTClient* client)
     MQTTAsync_destroy(&client->handle);
     pthread_mutex_unlock(&client->lock);
     pthread_mutex_destroy(&client->lock);
-    // free(client->config->address);
-    // free(client->config->client_id);
-    // free(client->config->user_name);
-    // free(client->config->password);
     free(client);
     client = NULL;
 }

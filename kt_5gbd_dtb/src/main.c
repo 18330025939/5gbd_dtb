@@ -10,6 +10,7 @@
 #include "cloud_comm.h"
 #include "fkz9_comm.h"
 #include "led.h"
+#include "versionInfo.h"
 #include "ssh_client.h"
 
 #if !defined(SPDLOG_ACTIVE_LEVEL)
@@ -31,10 +32,10 @@ int main(int argc, char ** args)
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
     
-    spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
     spdlog_c_init("/home/rk/app.log", 1048576 * 5, 5);
-    // spdlog_info("RT-A100 build time: %s %s", __DATE__, __TIME__);
-
+    spdlog_info("BUILD_TIMESTAMP: %s",BUILD_TIMESTAMP);
+    spdlog_info("CLIENT_VERSION: %s", CLIENT_VERSION);
+    spdlog_info("RT_A100_VERSION_MAJOR: %d.%d.%d", RT_A100_VERSION_MAJOR, RT_A100_VERSION_MINOR, RT_A100_VERSION_PATCH);
 
     cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
     if (cloud_ctx == NULL) {

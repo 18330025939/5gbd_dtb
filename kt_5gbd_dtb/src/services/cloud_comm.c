@@ -539,9 +539,9 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     MsgFramHdr *hdr = NULL;
     NAVDataSeg *nav_data = NULL;
     MsgDataFramCrc *crc = NULL;
-    CustomTime t;
+    // CustomTime t;
     uint8_t buf[512];
-    char str[50];
+    // char str[50];
 
     if (arg == NULL) {
         return ;

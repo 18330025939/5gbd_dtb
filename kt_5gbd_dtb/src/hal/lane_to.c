@@ -504,13 +504,12 @@ int init_shm_data_sock(LaneToCtx *ctx)
     // 发送命令
     const char *command = "?WATCH={\"enable\":true,\"raw\":3}\n";
     if (send(sockfd, command, strlen(command), 0) < 0) {
-        fprintf(stderr, "Shared data sock config failed.\n");
         close(sockfd);
         return -1;
     }
 
     ctx->sockfd = sockfd;
-    printf("shm  data sock init success.\n");
+    printf("shm data sock init success.\n");
     return 0;
 }
 

@@ -28,7 +28,7 @@ void tcp_accept_cb(evutil_socket_t fd, short event, void *arg)
             return ;
         }
         else {
-            printf("tcp没有断开的情况下,收到相同ip的连接,关闭旧连接,启动新连接.");
+            printf("When receiving a connection with the same IP address without disconnecting TCP, close the old connection and start a new one.\n");
         }
     }
     else {

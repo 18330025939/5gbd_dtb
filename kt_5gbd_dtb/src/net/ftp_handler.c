@@ -40,7 +40,7 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
     spdlog_debug("ftp_upload url:%s, local_path:%s, remote_path:%s, user:%s, pass:%s.", url, local_path, remote_path, user, pass);
     curl = curl_easy_init();
     if (!curl) {
-        spdlog_error"Init the curl object failed.");
+        spdlog_error("Init the curl object failed.");
         return -1;
     }
 

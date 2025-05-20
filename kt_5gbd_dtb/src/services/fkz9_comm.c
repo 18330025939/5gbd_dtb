@@ -199,7 +199,6 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     }
 
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
-
     AsyncClientConfig client_config = {
         .address = url,
         .client_id = MQTT_CLIENT_ID,
@@ -210,7 +209,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         .clean_session = 1
     };
 
-    mqtt_client = mqtt_client_create(&client_config);//(url, MQTT_CLIENT_ID, MQTT_TEST_SERVER_USERNAME, MQTT_TEST_SERVER_PASSWORD);
+    mqtt_client = mqtt_client_create(&client_config);
     if (mqtt_client == NULL) {
         return;
     }
@@ -239,6 +238,7 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
         return;
     }
 
+    ctx->is_running == false;
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     mqtt_client = ctx->mqtt_client;

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "queue.h"
 
-#define MAX_RECONNECT_ATTEMPTS 3
+#define MAX_RECONNECT_ATTEMPTS 3000
 
 typedef struct st_TcpClient TcpClient;
 
