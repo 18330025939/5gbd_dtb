@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include "led.h"
 
+
 /* 初始化GPIO控制器 */
 static int GpioController_Init(GpioController *controller, char *gpio_num) 
 {
@@ -20,13 +21,13 @@ static int GpioController_Init(GpioController *controller, char *gpio_num)
     // 导出GPIO
     fd_export = open("/sys/class/gpio/export", O_WRONLY);
     if (fd_export < 0) {
-        perror("Failed to open export");
+        perror("Failed to open export.");
         return -1;
     }
 
     ret = write(fd_export, gpio_num, sizeof(gpio_num));
     if (ret < 0) {
-        perror("Failed to export GPIO");
+        perror("Failed to export GPIO.");
         close(fd_export);
         return -1;
     }
@@ -36,7 +37,7 @@ static int GpioController_Init(GpioController *controller, char *gpio_num)
     snprintf(path, sizeof(path), "%s%s%s%s", GPIO_SYSFS_PATH, "gpio", gpio_num, "/direction");
     controller->fd_dir = open(path, O_RDWR);
     if (controller->fd_dir < 0) {
-        perror("Failed to open direction");
+        perror("Failed to open direction.");
         return -1;
     }
 
@@ -44,7 +45,7 @@ static int GpioController_Init(GpioController *controller, char *gpio_num)
     snprintf(path, sizeof(path), "%s%s%s%s", GPIO_SYSFS_PATH, "gpio", gpio_num, "/value");
     controller->fd_value = open(path, O_RDWR);
     if (controller->fd_value < 0) {
-        perror("Failed to open value");
+        perror("Failed to open value.");
         close(controller->fd_dir);
         return -1;
     }
@@ -56,12 +57,12 @@ static int GpioController_Init(GpioController *controller, char *gpio_num)
 static int GpioController_SetDirection(GpioController *controller, const char *direction) 
 {
     if (controller->fd_dir < 0) {
-        perror("Direction file not opened");
+        perror("Direction file not opened.");
         return -1;
     }
 
     if (write(controller->fd_dir, direction, strlen(direction) + 1) < 0) {
-        perror("Failed to set direction");
+        perror("Failed to set direction.");
         return -1;
     }
 
@@ -73,7 +74,7 @@ static int GpioController_SetValue(GpioController *controller, int value)
 {
     char buf[2];
     if (controller->fd_value < 0) {
-        perror("Value file not opened");
+        perror("Value file not opened.");
         return -1;
     }
 
@@ -81,7 +82,7 @@ static int GpioController_SetValue(GpioController *controller, int value)
     buf[1] = '\0';
 
     if (write(controller->fd_value, buf, sizeof(buf)) < 0) {
-        perror("Failed to set value");
+        perror("Failed to set value.");
         return -1;
     }
 
@@ -95,13 +96,13 @@ static int GpioController_GetValue(GpioController *controller, int *value)
     int ret;
 
     if (controller->fd_value < 0) {
-        perror("Value file not opened");
+        perror("Value file not opened.");
         return -1;
     }
 
     ret = read(controller->fd_value, &buf, sizeof(buf));
     if (ret < 0) {
-        perror("Failed to read value");
+        perror("Failed to read value.");
         return -1;
     }
 
@@ -134,7 +135,7 @@ static void GpioController_Cleanup(GpioController *controller)
         snprintf(path, sizeof(path), "%s", controller->gpio_num);
         int ret = write(fd_unexport, path, strlen(path) + 1);
         if(ret < 0) {
-            perror("Failed to unexport GPIO");
+            perror("Failed to unexport GPIO.");
         }
         close(fd_unexport);
     }

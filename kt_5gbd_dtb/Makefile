@@ -1,4 +1,4 @@
-all: VersionInfo.h host_lib host_third host_src 
+all: versionInfo.h host_lib host_third host_src 
 	@echo "root build done"
 
 MAJOR_VERSION := $(shell cat version.major)
@@ -39,4 +39,3 @@ clean:
 	make -C $(KT_5GBD_DTB)/src clean
 	make -C $(KT_5GBD_DTB)/lib clean
 	make -C $(KT_5GBD_DTB)/third_party clean
-	rm -f $(KT_5GBD_DTB)/versionInfo.h

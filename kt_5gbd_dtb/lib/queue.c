@@ -21,7 +21,7 @@ int init_queue(ThreadSafeQueue* q, size_t size)
     return 0;
 }
 
-// 入队操作
+/* 入队操作 */
 int enqueue(ThreadSafeQueue* q, uint8_t* data, size_t len) 
 {
     pthread_mutex_lock(&q->mutex);
@@ -40,7 +40,7 @@ int enqueue(ThreadSafeQueue* q, uint8_t* data, size_t len)
     return 0;
 }
 
-// 出队操作
+/* 出队操作 */
 int dequeue(ThreadSafeQueue* q, uint8_t* data, size_t* len) 
 {
     pthread_mutex_lock(&q->mutex);

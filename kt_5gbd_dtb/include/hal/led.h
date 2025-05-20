@@ -4,9 +4,9 @@
 #define GPIO_SYSFS_PATH "/sys/class/gpio/"
 
 typedef struct {
-    char *gpio_num;         // GPIO编号
-    int fd_value;         // 值文件描述符
-    int fd_dir;           // 方向文件描述符
+    char *gpio_num;    // GPIO编号
+    int fd_value;      // 值文件描述符
+    int fd_dir;        // 方向文件描述符
 } GpioController;
 
 typedef struct {
@@ -22,7 +22,7 @@ void led_destroy(LedController *controller);
 
 
 // 定义每个灯的 GPIO 引脚编号
-#define SYS_RUN_LED_PIN_NUM "104"  //GPIO3_B0 高亮
+#define SYS_RUN_LED_PIN_NUM "104"    //GPIO3_B0 高亮
 #define SYS_FAULT_LED_PIN_NUM "103"  //GPIO3_A7 高灭 3*32+(1-1)*8+7
 
 // 定义每个灯的控制器实例
@@ -85,4 +85,4 @@ LedController fault_led;
         led_get_state(&fault_led, state); \
     } while (0)
 
-#endif
+#endif /* __LED_H */

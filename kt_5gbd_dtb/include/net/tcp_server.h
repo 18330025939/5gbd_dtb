@@ -19,5 +19,4 @@ typedef struct {
     TcpClientCanllback callback;
 } TcpServerSocket;
 
-
-#endif
+#endif /* __TCP_SERVER_H */

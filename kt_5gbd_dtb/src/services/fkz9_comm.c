@@ -17,6 +17,7 @@
 #include "firmware_updater.h"
 #include "spdlog_c.h"
 
+
 static void heartbeat_resp(uint8_t *arg)
 {
     HeartBeatDataSeg *hb_data = NULL;

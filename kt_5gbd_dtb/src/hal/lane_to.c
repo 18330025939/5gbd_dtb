@@ -7,6 +7,7 @@
 #include "serial.h"
 #include "lane_to.h"
 
+
 extern struct MessageParser __start_message_parsers;
 extern struct MessageParser __stop_message_parsers;
 
@@ -20,7 +21,7 @@ void calculate_checksum(const uint8_t *payload, uint16_t len, uint8_t *ckA, uint
     *ckB = (uint8_t)((sum >> 8) & 0xFF);
 }
 
-// 构造输入命令的通用函数
+/* 构造输入命令的通用函数 */
 uint8_t* build_command(uint8_t cmd_id, const uint8_t *payload, uint16_t payload_len) 
 {
     BinaryCommandHeader *cmd = malloc(sizeof(BinaryCommandHeader) + payload_len + 2);
@@ -47,7 +48,7 @@ uint8_t* build_set_baud_command(BaudRate rate, bool save_to_flash)
     return build_command(CMD_BAUD_RATE_SETTING, &payload, 1);
 }
 
-// NMEA校验和验证
+/* NMEA校验和验证 */
 int validate_nmea_checksum(const char *nmea_str) {
     uint8_t calc_checksum = 0;
     const char *p = nmea_str + 1; // 跳过'$'
@@ -164,10 +165,10 @@ static void gngga_data_parse(void *data, const char *payload, size_t len)
     // strncpy(buffer, payload, len);
     // buffer[len] = '\0';
 
-    char *token = strtok((char *)payload, ",*"); // 分割到校验和前
-    if (!token || strncmp(token, GNGGA_MSG_ID, 5) != 0) {
-        return ; // 非PBSOL消息
-    }
+    // char *token = strtok((char *)payload, ",*"); // 分割到校验和前
+    // if (!token || strncmp(token, GNGGA_MSG_ID, 5) != 0) {
+    //     return ; // 非PBSOL消息
+    // }
 
     sscanf((const char *)token, "%[^,],%lf,%lf,%c,%lf,%c,%hhu,%hhu,"
             "%f,%f,%c,%f,%c",
@@ -185,6 +186,20 @@ static void gngga_data_parse(void *data, const char *payload, size_t len)
             &gngga->geoid_separation,
             &gngga->geoid_unit);
 
+    // printf("gngga_data_parse: %s,%lf,%lf,%c,%lf,%c,%hhu,%hhu,%f,%f,%c,%f,%c\n",
+    //         gngga->talker_id,
+    //         gngga->time,
+    //         gngga->latitude,
+    //         gngga->ns,
+    //         gngga->longitude,
+    //         gngga->ew,
+    //         gngga->fix_quality,
+    //         gngga->num_satellites,
+    //         gngga->hdop,
+    //         gngga->altitude_msl,
+    //         gngga->altitude_unit,
+    //         gngga->geoid_separation,
+    //         gngga->geoid_unit);
     // char *checksum_str = strrchr(payload, '*');
     // if (checksum_str) {
     //     uint8_t calc_checksum = 0;
@@ -484,7 +499,7 @@ int init_shm_data_sock(LaneToCtx *ctx)
     ctx->sockfd = -1;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        perror("socket");
+        perror("socket failed.");
         return -1;
     }
 

@@ -358,4 +358,5 @@ typedef enum {
 FX650_Error fx650_connect_network(Fx650Ctx* ctx);
 FX650_Error fx650_init(Fx650Ctx* ctx); 
 void fx650_uninit(Fx650Ctx* ctx);
-#endif
+
+#endif /* __FX650_H */

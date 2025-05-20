@@ -11,6 +11,7 @@
 #include "serial.h"
 #include "fx650.h"
 
+
 #define SYS_NET_PATH "/sys/class/net"
 #define MAX_LINE_LEN 256
 #define PRODUCT_PREFIX "PRODUCT="

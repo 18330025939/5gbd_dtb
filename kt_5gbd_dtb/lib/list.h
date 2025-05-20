@@ -24,4 +24,4 @@ int List_Insert(struct List *pRootList, void *arg);
 int List_DelHead(struct List *pRootList);
 struct ListNode *List_GetHead(struct List *pRootList);
 
-#endif
+#endif /* __LIST_H */

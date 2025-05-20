@@ -46,4 +46,5 @@ struct st_AsyncMQTTClient {
 
 AsyncMQTTClient* mqtt_client_create(AsyncClientConfig *config);//(const char *addr, const char *id, const char *username, const char *password) ;
 void mqtt_client_destroy(AsyncMQTTClient* client);
-#endif
+
+#endif /* __MQTT_CLIENT_H */

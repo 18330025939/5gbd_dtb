@@ -220,17 +220,7 @@ struct FwDownInfo
 } ;
 
 
-// typedef struct st_DownTaskList
-// {
-//     uint16_t task_num;
-//     struct st_DownTask *task;
-// } DownTaskList;
-
-// void (*task_cb)(evutil_socket_t, short, void*);
-
 uint16_t checkSum_8(uint8_t *buf, uint16_t len);
-// void get_system_time(CustomTime *t);
-// int _system_(const char *cmd, char *pRetMsg, int msg_len);
 void clound_comm_init(CloundCommContext *ctx);
 void clound_comm_uninit(CloundCommContext *ctx);
-#endif
+#endif /* __CLOUD_COMM_H */

@@ -366,7 +366,6 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
     return ret;
 }
 
-// void ota_report_task_cb(evutil_socket_t fd, short event, void *arg)
 void do_ota_report(struct FwDownInfo *info)
 {
     char buf[512];
@@ -381,7 +380,6 @@ void do_ota_report(struct FwDownInfo *info)
 
     free(resp);
 }
-
 
 int do_downlaod_firmware(struct List *task_list)
 {

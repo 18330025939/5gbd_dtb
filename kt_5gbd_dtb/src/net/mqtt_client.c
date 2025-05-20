@@ -82,6 +82,7 @@ void on_publish_success(void* context, MQTTAsync_successData* response)
 {
     spdlog_debug("publish success.");
 }
+
 /* 消息发布 */
 int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload, size_t len) 
 {
@@ -218,3 +219,4 @@ void mqtt_client_destroy(AsyncMQTTClient* client)
     free(client);
     client = NULL;
 }
+

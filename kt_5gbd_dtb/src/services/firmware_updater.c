@@ -10,6 +10,7 @@
 #include "firmware_updater.h"
 #include "spdlog_c.h"
 
+
 int fkz9_fw_trans_func(void *arg)
 {
     SSHClient ssh_client;

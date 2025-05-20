@@ -13,6 +13,7 @@
 #include "versionInfo.h"
 #include "ssh_client.h"
 
+
 #if !defined(SPDLOG_ACTIVE_LEVEL)
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
 #endif

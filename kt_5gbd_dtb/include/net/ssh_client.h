@@ -27,4 +27,4 @@ struct st_SSHClient {
 void SSHClient_Init(SSHClient *client, const char *host, const char *username, const char *password);
 void SSHClient_Destroy(SSHClient *client);
 
-#endif
+#endif /* __SSH_CLIENT_H */

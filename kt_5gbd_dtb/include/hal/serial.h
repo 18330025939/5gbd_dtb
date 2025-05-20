@@ -7,11 +7,11 @@ typedef struct st_SerialPort SerialPort;
 
 typedef struct st_SerialPortInfo{
 	int speed;		     //baudrate
-	int data_bits;		//data bits, 5, 6, 7, 8
-	int	fctl;			//flow control, 0: none, 1: hardware, 2: software
-	char parity;		//parity 0: none, 1: odd, 2: even
-	int stop_bits;		//stop bits, 1, 2
-	// char cName[32];	    //tty: 0, 1, 2, 3, 4, 5, 6, 7
+	int data_bits;		 //data bits, 5, 6, 7, 8
+	int	fctl;			 //flow control, 0: none, 1: hardware, 2: software
+	char parity;		 //parity 0: none, 1: odd, 2: even
+	int stop_bits;		 //stop bits, 1, 2
+	// char cName[32];	 //tty: 0, 1, 2, 3, 4, 5, 6, 7
 } SerialPortInfo;
 
 struct SerialOps {
@@ -42,4 +42,5 @@ typedef struct st_RS485Port {
 UartPort *uart_port_create(void);
 RS485Port *rs485_port_create(int rts_pin);
 
-#endif
+#endif /* __SERIAL_H */
+ 

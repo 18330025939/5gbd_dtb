@@ -32,5 +32,4 @@ struct st_USBDevice {
     USBDeviceOps *ops;
 } ;
 
-
-#endif
+#endif /* __USB_H */

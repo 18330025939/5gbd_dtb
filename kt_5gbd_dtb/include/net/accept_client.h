@@ -23,5 +23,5 @@ struct st_AcceptClient {
 
 AcceptClient* accept_client_create(struct event_base *base, evutil_socket_t fd, struct sockaddr_in *addr);
 
-#endif
+#endif /* __ACCEPT_CLIENT_H */
 

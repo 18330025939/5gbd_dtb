@@ -23,6 +23,6 @@ struct st_I2CDevice{
     struct I2CDeviceOps *ops;
 } ;
 
-
 I2CDevice* i2c_device_create(const char *path, uint8_t addr);
-#endif
+
+#endif /* __IIC_H */

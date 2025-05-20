@@ -5,7 +5,6 @@
 #include <sys/time.h>
 
 
-
 #define BSWAP16(x) (uint16_t)((((x) >> 8) & 0x00FF) | (((x) << 8) & 0xFF00))
 
 #define BSWAP32(x) (uint32_t)( \
@@ -35,5 +34,6 @@ int BeTimeOutMN(struct timeval *stv, int ms);
 uint32_t calcTimeOff(struct timeval end, struct timeval begin);
 char *GetSysTimeStr(int isWithDate);
 int _system_(const char *cmd, char *pRetMsg, int msg_len);
-#endif
+
+#endif /* __PUB_LIB_H */
 

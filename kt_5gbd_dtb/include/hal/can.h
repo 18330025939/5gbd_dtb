@@ -66,5 +66,5 @@ struct st_CANDevice {
 };
 
 CANDevice* can_device_create(void) ;
-#endif 
+#endif  /* _CAN_H */
 

@@ -11,13 +11,14 @@
 #include <linux/serial.h>
 #include "serial.h"
 
+
 int serial_open(SerialPort *self, const char *path)
 {
     mode_t mode = 0666;
 
     printf("serial_open %s\n", path);
     if (chmod(path, mode) == -1) {
-        fprintf(stderr, "chmod error\n");
+        fprintf(stderr, "chmod error.\n");
         return -1;
     }
     self->fd = open(path, O_RDWR | O_NOCTTY | O_NONBLOCK);
@@ -183,7 +184,7 @@ static int uart_configure(SerialPort *self, const SerialPortInfo *info)//int nSp
 
     tcflush(self->fd, TCOFLUSH);
     if (tcsetattr(self->fd , TCSANOW, &tio) != 0) {
-        fprintf(stderr, "com set error\n");
+        fprintf(stderr, "com set error.\n");
         return -1;
     }
 

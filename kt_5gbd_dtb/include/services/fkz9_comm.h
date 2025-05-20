@@ -274,4 +274,4 @@ struct UnitCorrInfo
 void fkz9_comm_init(Fkz9CommContext *ctx);
 void fkz9_comm_uninit(Fkz9CommContext *ctx);
 
-#endif
+#endif /* __FKZ9_COMM_H */
