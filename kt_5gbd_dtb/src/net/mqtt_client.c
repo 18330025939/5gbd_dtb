@@ -103,16 +103,12 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     }
     pthread_mutex_unlock(&client->lock);
 
-    for (int i = 0; i < len; i++)
-    {
-        printf("0x%x  ", ((uint8_t*)payload)[i]);
-    }
     spdlog_debug("mqtt_publish topic=%s, len=%ld, rc=%d.", topic, len, rc);
     char *str = (char *)malloc(len * 4 + 1);
     if (str != NULL) {
         str[0] = '\0';
         for (int i = 0; i < len; i++) {
-            sprintf(str + strlen(str), "%hhu ", payload[i]);
+            sprintf(str + strlen(str), "%hhu ", ((uint8_t*)payload)[i]);
         }
 
         if (strlen(str) > 0) {
