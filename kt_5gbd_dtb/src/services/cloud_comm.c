@@ -229,9 +229,9 @@ int create_ota_heartbeat_data(char *data)
     char *buf = NULL;
     // char str[20];
 
-    if (data == NULL) {
-        return -1;
-    }
+    // if (data == NULL) {
+    //     return -1;
+    // }
  
     spdlog_debug("create_ota_heartbeat_data");
     memset(&(heart_beat), 0x00, sizeof(OtaHeartBeat));
@@ -255,12 +255,12 @@ int create_ota_heartbeat_data(char *data)
     cJSON_AddItemToObject(root, "hardwareList", unit_info);
     unit_info = create_unit_info_array(heart_beat.unit_num, heart_beat.units, 1);
     cJSON_AddItemToObject(root, "softwareList", unit_info);
-
-    buf = cJSON_Print(root);
-    spdlog_debug("ota heart beat data: %s", buf);
-    strncpy(data, buf, strlen(buf));
+ 
+    data = cJSON_Print(root);
+    // spdlog_debug("ota heart beat data: %s", buf);
+    // strncpy(data, buf, strlen(buf));
     cJSON_Delete(root);
-    free(buf);
+    // free(buf);
     free(heart_beat.units);
 
     return 0;
@@ -307,11 +307,11 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
-    char *buf = NULL;
+    // char *buf = NULL;
 
-    if (data == NULL) {
-        return -1;
-    }
+    // if (data == NULL) {
+    //     return -1;
+    // }
 
     spdlog_debug("create_ota_report_data");
     memset(&report, 0, sizeof(OtaReport));
@@ -325,11 +325,11 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
     cJSON_AddStringToObject(root, "taskId", report.task_id);
     cJSON_AddStringToObject(root, "executionTime", report.time);
     cJSON_AddStringToObject(root, "executionReport", report.report);
-    buf = cJSON_Print(root);
-    strncpy(data, buf, strlen(buf));
-    spdlog_debug("ota report data: %s", buf);
+    data = cJSON_Print(root);
+    // strncpy(data, buf, strlen(buf));
+    // spdlog_debug("ota report data: %s", buf);
     cJSON_Delete(root);
-    free(buf);
+    // free(buf);
 
     return 0;
 }
@@ -368,7 +368,7 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 
 void do_ota_report(struct FwDownInfo *info)
 {
-    char buf[512];
+    char *buf = NULL;
     char *resp = NULL;
     
     int ret = create_ota_report_data(info, buf);
@@ -377,8 +377,11 @@ void do_ota_report(struct FwDownInfo *info)
     }
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
     spdlog_debug("do_ota_report %s", resp);
-
-    free(resp);
+    
+    if (buf != NULL)
+        free(buf);
+    if (resp != NULL) 
+        free(resp);
 }
 
 int do_downlaod_firmware(struct List *task_list)
@@ -507,7 +510,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
 void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     CloundCommContext *ctx = NULL;
-    char buf[1024];
+    char *buf = NULL;
     char *resp = NULL;
 
     int ret = create_ota_heartbeat_data(buf);
@@ -517,7 +520,6 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 
     ret = http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
     spdlog_debug("resp to ota_heartbeat_req: %s, %d.", resp, ret);
-
     if (ret == 0) {
         ctx = (CloundCommContext *)arg;
         pthread_mutex_lock(&ctx->down_task.mutex);
@@ -529,7 +531,10 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
         pthread_mutex_unlock(&ctx->down_task.mutex);
     }
 
-    free(resp);
+    if (buf != NULL)
+        free(buf);
+    if (resp != NULL) 
+        free(resp);
 }
 
 void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
