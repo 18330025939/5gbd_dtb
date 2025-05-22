@@ -239,7 +239,7 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
         return;
     }
 
-    ctx->is_running == false;
+    ctx->is_running = false;
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     mqtt_client = ctx->mqtt_client;

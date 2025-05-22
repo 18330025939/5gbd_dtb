@@ -33,7 +33,7 @@ int main(int argc, char ** args)
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
     
-    spdlog_c_init("/home/rk/app.log", 1048576 * 5, 5);
+    spdlog_c_init("/opt/log/rt_a100.log", 1048576 * 5, 5);
     spdlog_info("BUILD_TIMESTAMP: %s",BUILD_TIMESTAMP);
     spdlog_info("CLIENT_VERSION: %s", CLIENT_VERSION);
     spdlog_info("RT_A100_VERSION_MAJOR: %d.%d.%d", RT_A100_VERSION_MAJOR, RT_A100_VERSION_MINOR, RT_A100_VERSION_PATCH);
