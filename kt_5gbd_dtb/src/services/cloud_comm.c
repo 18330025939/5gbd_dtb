@@ -226,7 +226,7 @@ int create_ota_heartbeat_data(char *data)
     cJSON *root = NULL;
     cJSON *unit_info = NULL;
     OtaHeartBeat heart_beat;
-    char *buf = NULL;
+    //char *buf = NULL;
     // char str[20];
 
     // if (data == NULL) {

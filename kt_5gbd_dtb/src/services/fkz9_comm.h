@@ -8,7 +8,7 @@
 
 typedef struct st_AsyncMQTTClient AsyncMQTTClient;
 
-#define MAX_MSG_SIZE    200
+#define MAX_MSG_SIZE    1500
 
 #define MQTT_SERVER_IP  "192.168.42.50"
 #define MQTT_SERVER_PORT 1883

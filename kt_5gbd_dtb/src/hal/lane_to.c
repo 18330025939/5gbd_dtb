@@ -462,11 +462,14 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
         return;
     }
     if (ctx->uart) {
+        // printf("laneTo uart\n");
         serial = &ctx->uart->base;
         bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
     } else {
+        // printf("laneTo sock\n");
         bytes_read = read(ctx->sockfd, buffer, sizeof(buffer));
     }
+    // printf("byte_read %ld\n", bytes_read);
     if (bytes_read > 0) {
         buffer[bytes_read] = '\0';
         // printf("buf, %s, sock %d\n", buffer, ctx->sockfd);
@@ -551,12 +554,16 @@ int laneTo_init(LaneToCtx *ctx)
             return -1;
         }
 
-        ctx->uart = laneTo_port;
         int ret = laneTo_port->base.ops->open(&laneTo_port->base, LANETO_DEV_NAME);
         if (ret) {
             return -1;
         }
-        laneTo_port->base.ops->configure(&laneTo_port->base, &laneto_port_info);
+        ret = laneTo_port->base.ops->configure(&laneTo_port->base, &laneto_port_info);
+        if (ret) {
+            return -1;
+        }
+        ctx->uart = laneTo_port;
+        // printf("fd = %d\n", ctx->uart->base.fd);
     }
     ctx->running = true;
     printf("laneTo_init ok!\n");

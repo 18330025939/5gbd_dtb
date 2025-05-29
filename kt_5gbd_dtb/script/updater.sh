@@ -318,7 +318,7 @@ boot_time=$(cut -d. -f1 /proc/uptime)
 # ota_heartbeat
 # echo "process heartbeat end"
 # #脚本执行完成后备份执行过程
-# if [ -f "$log_file" ]; then
+# if [ -f "$log_file"]; then
 #     mv "$log_file" "$log_file_bak"
 # fi
 
@@ -333,6 +333,6 @@ case $1 in
         get_ota_report_info
         ;;
     *)
-        echo "unknow command"
+        echo "$devaddr,"
         ;;
 esac
