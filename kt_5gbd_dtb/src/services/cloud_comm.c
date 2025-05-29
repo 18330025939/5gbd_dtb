@@ -63,7 +63,7 @@ int get_ota_heartbeat_info(void *arg)
     }
  
     spdlog_debug("get_ota_heart_beat_info");
-#if 1
+#if 0
     pHb_info = (struct st_OtaHeartBeat*)arg;
     strcpy(pHb_info->dev_addr, "0356");
     strcpy(pHb_info->cpu_info, "10");
@@ -126,13 +126,13 @@ int get_ota_heartbeat_info(void *arg)
         return -1;
     }
 #endif
-#if 0
+#if 1
     pHb_info = (struct st_OtaHeartBeat*)arg;
     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.connect failed.\n");
+        spdlog_error("ssh_client.connect failed.");
         return -1;
     }
 
@@ -143,7 +143,7 @@ int get_ota_heartbeat_info(void *arg)
     // printf("base_info '%s'\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute updater.sh base_info failed.\n");
+        spdlog_error("ssh_client.execute updater.sh base_info failed.");
         return -1;
     }
 
@@ -159,7 +159,7 @@ int get_ota_heartbeat_info(void *arg)
     // printf("unit_info resp '%s'\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        fprintf(stderr, "ssh_client.execute updater.sh unit_info failed.\n");
+        spdlog_error("ssh_client.execute updater.sh unit_info failed.");
         return -1;
     }
     

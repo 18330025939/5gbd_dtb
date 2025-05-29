@@ -148,12 +148,24 @@ static void tcp_client_connect(TcpClient* client)
 /* 发送数据 */
 static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len) 
 {
-    // for (int i = 0; i < len; i++) {
-    //     printf("%02x ", data[i]);
-    // }
     if (client->is_connected) {
         enqueue(&client->tx_queue, data, len);
-        spdlog_info("tcp_client_send ok.");
+
+        spdlog_debug("tcp_client_send data len=%d.", len);
+        char *str = (char *)malloc(len * 4 + 1);
+        if (str != NULL) {
+            str[0] = '\0';
+            for (int i = 0; i < len; i++) {
+                sprintf(str + strlen(str), "%x ", data[i]);
+            }
+
+            if (strlen(str) > 0) {
+                str[strlen(str) - 1] = '\0';
+            }
+
+            spdlog_debug("data: %s", str);
+            free(str);
+        }
     }
 }
 

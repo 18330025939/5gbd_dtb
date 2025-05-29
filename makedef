@@ -8,6 +8,6 @@ export KT_5GBD_DTB_INCLUDE = -I$(KT_5GBD_DTB)/lib \
                              -I$(KT_5GBD_DTB)/src \
                              -I$(KT_5GBD_DTB)/src/hal \
                              -I$(KT_5GBD_DTB)/src/net \
-                             -I$(KT_5GBD_DTB)/src/untils \
+                             -I$(KT_5GBD_DTB)/src/utils \
                              -I$(KT_5GBD_DTB)/src/services 
 export KT_5GBD_DTB_BUILD = -O0 -Wall

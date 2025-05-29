@@ -202,25 +202,35 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
 static int activate_dia(Fx650Ctx* ctx, uint8_t status) 
 {
     char cmd[128];
-    snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=%s,1\r", status ? "1" : "0");
     char resp[AT_MAX_RESPONSE_LEN];
-    if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS * 2) < 0) {
+
+    // 查询IP分配状态
+    if (send_at_command(ctx, "AT+GTRNDIS?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
-    // 检查是否返回OK
-    if (strstr(resp, "OK") == NULL) {
-        fprintf(stderr, "Activation dialing failed.\n");
-        return -1;
-    }
-    if (status) {
-        // 查询IP分配状态
-        if (send_at_command(ctx, "AT+GTRNDIS?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (strstr(resp, "+GTRNDIS: 0") == NULL && status == 1) {
+        snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=1,1\r");
+        char resp[AT_MAX_RESPONSE_LEN];
+        if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
         }
 
+        // 检查是否返回OK
         if (strstr(resp, "OK") == NULL) {
-            fprintf(stderr, "IP address not obtained.\n");
+            fprintf(stderr, "Activation dialing failed.\n");
+            return -1;
+        }
+    } else if (strstr(resp, "+GTRNDIS: 1,1") == NULL && status == 0) {
+        snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=0,1\r");
+        char resp[AT_MAX_RESPONSE_LEN];
+        if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+            return -1;
+        }
+
+        // 检查是否返回OK
+        if (strstr(resp, "OK") == NULL) {
+            fprintf(stderr, "Deactivation dialing failed.\n");
             return -1;
         }
     }
@@ -310,14 +320,7 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
     ret = activate_dia(ctx, 1);
     if (ret) {
         fprintf(stderr, "Activation of RNDIS failed,attempt to deactivate and reactivate.\n");
-        if (activate_dia(ctx, 0)) {
-            fprintf(stderr, "Failed to deactivate RNDIS.\n");
-            return FX650_ERR_PDP_ACTIVATE;
-        }
-        if (activate_dia(ctx, 1)) {
-            fprintf(stderr, "Activation failed again, exit.\n");
-            return FX650_ERR_PDP_ACTIVATE;
-        }
+        return FX650_ERR_PDP_ACTIVATE;
     }
 
     run_dhcp_client(ctx->net_name);
