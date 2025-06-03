@@ -11,6 +11,7 @@
 extern struct MessageParser __start_message_parsers;
 extern struct MessageParser __stop_message_parsers;
 
+#if 0
 void calculate_checksum(const uint8_t *payload, uint16_t len, uint8_t *ckA, uint8_t *ckB) 
 {
     uint16_t sum = 0;
@@ -29,6 +30,7 @@ uint8_t* build_command(uint8_t cmd_id, const uint8_t *payload, uint16_t payload_
     cmd->sync2 = 0x42;
     cmd->msg_id = cmd_id;
     cmd->payload_len = payload_len;
+    malloc(cmd->payload, payload_len);
     memcpy(cmd->payload, payload, payload_len);
     
     // 计算校验和
@@ -59,7 +61,7 @@ int validate_nmea_checksum(const char *nmea_str) {
     uint8_t recv_checksum = strtoul(p+1, NULL, 16);
     return (calc_checksum == recv_checksum) ? 0 : -2;
 }
-
+#endif
 static void sg_data_parse(void *data, const char *payload, size_t len)
 {
     SGData *sg = (SGData*)data;

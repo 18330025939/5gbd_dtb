@@ -298,6 +298,14 @@ function ota_report_check()
     done
 }
 
+function get_cloud_ip_port()
+{
+    db_res=`psql -U cktt  -d fkz9 -t -A -c "set search_path=obc; select ip_addr, port from device_info"`
+    IFS='|' read -r cloud_ip_addr cloud_port <<<"$db_res"
+
+    echo "$cloud_ip_addr,$cloud_port,"
+}
+
 #ota 客户端main程序，执行心跳及升级检查
 
 db_res=`psql -U cktt  -d fkz9 -t -c "set search_path=obc; select dev_addr from device_info" | awk -F ' ' '{print $1}'`
@@ -331,6 +339,9 @@ case $1 in
         ;;
     report_info)
         get_ota_report_info
+        ;;
+    cloud_info)
+        get_cloud_ip_port
         ;;
     *)
         echo "$devaddr,"

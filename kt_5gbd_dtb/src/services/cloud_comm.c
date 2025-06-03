@@ -334,7 +334,6 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
     return 0;
 }
 
-
 int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 {
     struct FwUpdater *start = &__start_firmware_update;
@@ -555,7 +554,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     laneTo_read_nav_data(ctx->laneTo);
     memset(buf, 0, sizeof(buf));
     hdr = (MsgFramHdr *)buf;
-    hdr->usHdr = MSG_DATA_FRAM_HDR;
+    hdr->usHdr = MSG_DATA_FRAM_HDR1;
     hdr->ucSign = MSG_SIGN_TRANS_NAV_DATA;
     uint16_t len = sizeof(MsgFramHdr) + sizeof(NAVDataSeg) + sizeof(MsgDataFramCrc);
     hdr->usLen = bswap_16(len);
@@ -735,13 +734,12 @@ void *event_task_entry(void *arg)
         pHdr = (MsgFramHdr *)buf;
         uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-        spdlog_debug("pHdr->usHdr 0x%x, pCrc->usCRC 0x%x, crc 0x%x.",bswap_16(pHdr->usHdr), bswap_16(pCrc->usCRC), crc);
-        if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
+        spdlog_debug("cloud_recv: pHdr->usHdr=0x%x, pHdr->ucSign=0x%x, pCrc->usCRC=0x%x, crc=0x%x.", bswap_16(pHdr->usHdr), pHdr->ucSign, bswap_16(pCrc->usCRC), crc);
+        if (pHdr->usHdr != MSG_DATA_FRAM_HDR1 || pHdr->usHdr != MSG_DATA_FRAM_HDR2 || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
-        spdlog_debug("pHdr->ucSign 0x%x.", pHdr->ucSign);
+
         for (; start != end; start++) {
-            spdlog_debug("start->sign 0x%x.", start->sign);
             if (start->sign == pHdr->ucSign) {
                 int ret = start->pFuncEntry(buf);
                 if (ret == 0 && start->pFuncCb != NULL) {
@@ -798,6 +796,31 @@ void *timer_task_entry(void *arg)
     return NULL;
 }
 
+int get_cloud_info(struct CluoudInfo*  pInfo)
+{
+    SSHClient ssh_client;
+
+    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+    int ret = ssh_client.connect(&ssh_client);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        spdlog_error("ssh_client.connect failed.");
+        return -1;
+    }
+
+    char resp[128] = {0};;
+    ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh cloud_info", resp, sizeof(resp));
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        spdlog_error("ssh_client.execute updater.sh failed.");
+        return -1;
+    }
+    sscanf(resp, "%[^,]%d,", pInfo->ip, pInfo->port);
+
+    SSHClient_Destroy(&ssh_client);
+    return 0;
+}
+
 void clound_comm_init(CloundCommContext *ctx)
 {
     TcpClient *client = NULL;
@@ -815,7 +838,12 @@ void clound_comm_init(CloundCommContext *ctx)
     List_Init_Thread(&ctx->ev_list);
     List_Init_Thread(&ctx->down_task.list);
 
-    client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
+    int ret = get_cloud_info(&ctx->cloud_info);
+    if (ret) {
+        client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
+    } else {
+        client = tcp_client_create(ctx->cloud_info.ip, ctx->cloud_info.port, MAX_RECONNECT_ATTEMPTS);
+    }
     client->ops->register_cb(client, proc_message_cb);
     client->ops->connect(client);
     ctx->client = client;
@@ -846,7 +874,7 @@ void clound_comm_uninit(CloundCommContext *ctx)
     if (ctx->client->is_connected) {
         ctx->client->ops->disconnect(ctx->client);
     }
-    tcp_client_destroy(ctx->client);
+    tcp_client_destroy(void);
     laneTo_uninit(ctx->laneTo);
     fx650_uninit(ctx->fx650);
     clean_queue(&ctx->event_queue);

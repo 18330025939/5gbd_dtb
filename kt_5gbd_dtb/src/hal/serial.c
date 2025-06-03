@@ -61,14 +61,12 @@ ssize_t serial_read(SerialPort *self, void *buf, size_t count)
     size_t t_bytes = 0;
     size_t r_bytes = 0;
 
-
-    // printf("serial_read is_open %s, count %ld, self->fd %d\n", self->is_open == true ? "true" : "false", count, self->fd);
     if(self->is_open == false) {
         return 0;
     }
 
     while (t_bytes < (count - 1)) {
-        r_bytes = read(self->fd, buf + t_bytes, count > 256 ? 256 : count);
+        r_bytes = read(self->fd, buf + t_bytes, count > 512 ? 512 : count);
         if (r_bytes <= 0) {
             break;
         }
@@ -111,8 +109,8 @@ static int uart_configure(SerialPort *self, const SerialPortInfo *info)//int nSp
     if (info == NULL || self == NULL)
         return -1;
 
-    if (tcgetattr(self->fd, &tio) != 0)
-        return -1;
+    // if (tcgetattr(self->fd, &tio) != 0)
+    //     return -1;
 
     bzero(&tio, sizeof(tio));
     cfmakeraw(&tio);

@@ -27,24 +27,7 @@ typedef struct st_AsyncMQTTClient AsyncMQTTClient;
 
 #define CLIENT_DEV_ADDR   0x2002
 
-#if 0 //在其他头文件有定义
-#define MSG_DATA_FRAM_HDR         0xAAAA
-#pragma pack(push, 1)
-typedef struct st_MsgFramHdr
-{
-    uint16_t usHdr;       /* 帧头 */
-    uint16_t usLen;       /* 长度 */
-    uint8_t ucSign;       /* 标识 */
-} MsgFramHdr; 
-
-typedef struct st_MsgDataFramCrc
-{
-    uint16_t usCRC;      /* 校验 */
-} MsgDataFramCrc; 
-#pragma pack(pop)
-#endif
-
-/* */
+/* 5G <-> FKZ9 */
 #define MQTT_HEARTBEAT_REQ_TOPIC   "/5G/4G/21"
 #define MQTT_HEARTBEAT_RESP_TOPIC  "/4G/5G/22"
 
@@ -64,6 +47,35 @@ typedef struct st_HeartBeatDataSeg
     uint8_t  ucRsvd[9];
 } HeartBeatDataSeg;
 #pragma pack(pop)
+/* Cloud <-> FKZ9 */
+// /* 服务器发送换参数据格式 */
+// typedef struct st_ChgRefsDataSeg
+// {
+//     uint16_t usDevAddr;
+//     uint8_t  ucEnFlag1;
+//     uint8_t  ucEnFlag2;
+//     uint8_t  ucEnFlag3;
+//     uint8_t  ucEnFlag4;
+//     uint8_t  ucClsPH1;
+//     uint8_t  ucClsPH2;
+//     uint8_t  ucClsPH3;
+//     uint8_t  ucClsPH4;
+// } ChgRefsDataSeg;
+
+struct CloudMsgFwInf {
+    uint8_t sign;
+    int (*pFuncEntry)(void *);
+    int (*pFuncCb)(void *);
+} ;
+
+#define REGISTER_CLOUD_MESSAGE_FW_INTERFACE(name, msg_sign, func_entry, func_cb)\
+    __attribute__((used, __section__("message_forwarding"))) static struct CloudMsgFwInf msg_fw_##name = { \
+        .sign = msg_sign, \
+        .pFuncEntry = func_entry, \
+        .pFuncCb = func_cb \
+    }
+
+
 
 #if 0 //旧协议,暂不使用
 #define MSG_SIGN_VOD_FILE_REQUEST       0x15
@@ -252,9 +264,9 @@ typedef struct st_UpdateReportRespDataSeg
 typedef struct st_Fkz9CommContext
 {
     AsyncMQTTClient *mqtt_client;
-    ThreadSafeQueue tx_queue;
-    ThreadSafeQueue rx_queue;
-    pthread_t send_thread;
+    ThreadSafeQueue event_queue;
+    // ThreadSafeQueue rx_queue;
+    pthread_t event_thread;
     uint16_t fkz9_dev_addr;
     pthread_t timer_thread;
     struct event_base *base;

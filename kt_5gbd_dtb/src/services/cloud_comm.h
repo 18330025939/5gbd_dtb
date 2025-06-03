@@ -32,7 +32,8 @@ typedef struct st_Fx650Ctx Fx650Ctx;
 // #define UPGRADE_FILE_REMOTE_PATH "/upgrade/"
 #define UPGRADE_FILE_LOCAL_PATH "/upgrade/cktt/"
 
-#define MSG_DATA_FRAM_HDR         0xAAAA
+#define MSG_DATA_FRAM_HDR1         0xAAAA
+#define MSG_DATA_FRAM_HDR2         0xBBBB
 #pragma pack(push, 1)
 typedef struct st_MsgFramHdr
 {
@@ -156,6 +157,11 @@ struct DownUpgradeTask
     pthread_t thread;
 };
 
+struct CluoudInfo {
+    char ip[16];
+    int port;
+}
+
 typedef struct st_MsgCommContext
 {
     TcpClient *client;
@@ -170,6 +176,7 @@ typedef struct st_MsgCommContext
     Fx650Ctx *fx650;
     // struct List upgrade_task;
     struct DownUpgradeTask down_task;
+    struct CluoudInfo cloud_info;
 } CloundCommContext;
 
 #define STRING_LEN_MAX 32

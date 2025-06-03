@@ -18,20 +18,138 @@
 #include "spdlog_c.h"
 
 
-static void heartbeat_resp(uint8_t *arg)
+extern struct CloudMsgFwInf __start_message_forwarding;
+extern struct CloudMsgFwInf __stop_message_forwarding;
+static Fkz9CommContext *gp_fkz9_comm_ctx = NULL;
+
+int fkz9_heartbeat_resp_entry(void *arg)
 {
     HeartBeatDataSeg *hb_data = NULL;
 
     if (arg == NULL) {
-        return;
+        return -1;
     }
 
     hb_data = (HeartBeatDataSeg*)((uint8_t*)arg + sizeof(MsgFramHdr));
     spdlog_info("heartbeat_resp, DevAddr %04d, %02d-%02d-%2d %2d:%2d:%2d.", hb_data->usDevAddr, 
         hb_data->ucYear, hb_data->ucMonth, hb_data->ucDay, hb_data->ucHour, hb_data->ucMinute, hb_data->ucSecond);
 
-    return;
+    return 0;
 }
+REGISTER_CLOUD_MESSAGE_FW_INTERFACE(hb_resp, 22, fkz9_heartbeat_resp_entry, NULL);
+
+int fkz9_msg_fw_to_cloud_entry(void *arg)
+{
+    MsgFramHdr *hdr = NULL;
+
+    if (arg == NULL) {
+        return -1;
+    }
+
+    hdr = (MsgFramHdr*)arg;
+    TcpClient *client = gp_cloud_comm_ctx->client;
+    client->ops->send(client, (uint8_t*)arg, bswap_16(hdr->usLen));
+
+    return 0;
+}
+
+int cloud_to_can_entry(void* arg)
+{
+    MsgFramHdr *pHdr = NULL;
+    AsyncMQTTClient *mqtt_client = NULL;
+
+    if (arg == NULL) {
+        return -1;
+    }
+
+    pHdr = (MsgFramHdr*)arg;
+    mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
+    char topic[50] = {0};
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/can/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->sign);
+    mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
+    
+    return 0;
+}
+
+int cloud_to_conf_entry(void* arg)
+{
+    MsgFramHdr *pHdr = NULL;
+    AsyncMQTTClient *mqtt_client = NULL;
+
+    if (arg == NULL) {
+        return -1;
+    }
+
+    pHdr = (MsgFramHdr*)arg;
+    mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
+    char topic[50] = {0};
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/conf/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->sign);
+    mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
+    
+    return 0;
+}
+
+int cloud_to_algorithms_entry(void* arg)
+{
+    MsgFramHdr *pHdr = NULL;
+    AsyncMQTTClient *mqtt_client = NULL;
+
+    if (arg == NULL) {
+        return -1;
+    }
+
+    pHdr = (MsgFramHdr*)arg;
+    mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
+    char topic[50] = {0};
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/algorithms/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->sign);
+    mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
+    
+    return 0;
+}
+
+int cloud_to_cmd_entry(void* arg)
+{
+    MsgFramHdr *pHdr = NULL;
+    AsyncMQTTClient *mqtt_client = NULL;
+
+    if (arg == NULL) {
+        return -1;
+    }
+
+    pHdr = (MsgFramHdr*)arg;
+    mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
+    char topic[50] = {0};
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/cmd/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->sign);
+    mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
+    
+    return 0;
+}
+/* 0x91 服务器发送换参数据 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(change_refs, 145, cloud_to_can_entry, NULL);
+/* 0x72 服务器发送录波开关数据 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_switch, 114, cloud_to_conf_entry, NULL);
+/* 0x59 服务器下行剩磁系数数据 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(remanence_coefficient 89, cloud_to_conf_entry, NULL);
+/* 0x82 服务器下行突发录波参数配置 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_record, 130, cloud_to_conf_entry, NULL);
+/* 0x84 服务器下行首次合闸参数配置1 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(first_close1, 132, cloud_to_can_entry, NULL);
+/* 0x87 服务器下行首次合闸参数配置2 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(first_close2, 135, cloud_to_can_entry, NULL);
+// /* 0xC3 服务器下行时间预估算法参数 */
+// REGISTER_MESSAGE_PROCESSING_INTERFACE(time_estimation, 195, cloud_to_can_entry, NULL);
+// /* 0x08 服务器下行时间预估算法参数 */
+// REGISTER_MESSAGE_PROCESSING_INTERFACE(feedback_time, 8, cloud_to_can_entry, NULL);
+/* 0x93 服务器下行网压变比系数配置 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(voltage_ratio, 147, cloud_to_conf_entry, NULL);
+/* 0x9C 服务器下行断路器预估算法配置 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(cb_pred_alg, 156, cloud_to_can_entry, NULL);
+/* 0x9E 服务器下行相控功能配置 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(phase_control, 158, cloud_to_can_entry, NULL);
+/* 0x6C 服务器新下行合闸相位预估算法开关控制 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(close_phase, 108, cloud_to_algorithms_entry, NULL);
+/* 0x6E 服务器下行断路器二次侧关合时间开关控制 */
+REGISTER_MESSAGE_PROCESSING_INTERFACE(cb_close_time, 110, cloud_to_algorithms_entry, NULL);
 
 static void on_message_cb(const char* topic, const void* payload, size_t payload_len)
 {
@@ -42,21 +160,22 @@ static void on_message_cb(const char* topic, const void* payload, size_t payload
         return;
     }
 
-    spdlog_info("topic: %s.", topic);
-    pHdr = (MsgFramHdr *)payload;
-    uint16_t crc = checkSum_8((uint8_t *)payload, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-    pCrc = (MsgDataFramCrc *)((uint8_t *)payload + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
+    spdlog_info("topic: %s, payload_len: %ld.", topic, payload_len);
+    // pHdr = (MsgFramHdr *)payload;
+    // uint16_t crc = checkSum_8((uint8_t *)payload, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
+    // pCrc = (MsgDataFramCrc *)((uint8_t *)payload + (bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc)));
 
-    if (pHdr->usHdr != MSG_DATA_FRAM_HDR || crc != bswap_16(pCrc->usCRC)) {
-        return ;
-    }
-    switch (pHdr->ucSign) {
-        case MQTT_MSG_SIGN_HEARTBEAT_RESP:
-            heartbeat_resp((uint8_t *)payload);
-            break;
-        default:
-        break;
-    }
+    // if (pHdr->usHdr != MSG_DATA_FRAM_HDR1 || crc != bswap_16(pCrc->usCRC)) {
+    //     return ;
+    // }
+    // switch (pHdr->ucSign) {
+    //     case MQTT_MSG_SIGN_HEARTBEAT_RESP:
+    //         heartbeat_resp((uint8_t *)payload);
+    //         break;
+    //     default:
+    //     break;
+    // }
+    enqueue(&gp_fkz9_comm_ctx->event_queue, (uint8_t *)payload, len);
 }
 
 static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
@@ -73,7 +192,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
 
     Fkz9CommContext *ctx = (Fkz9CommContext *)arg;
     hdr = (MsgFramHdr*)buf;
-    hdr->usHdr = MSG_DATA_FRAM_HDR;
+    hdr->usHdr = MSG_DATA_FRAM_HDR1;
     hdr->ucSign = MQTT_MSG_SIGN_HEARTBEAT_REQ;
     uint16_t len = sizeof(MsgFramHdr) + sizeof(HeartBeatDataSeg) + sizeof(MsgDataFramCrc);
     hdr->usLen = bswap_16(len);
@@ -148,7 +267,49 @@ static void *timer_task_entry(void *arg)
     return NULL;
 }
 
-int init_updater_environment(uint16_t* dev_addr)
+void *event_task_entry(void *arg)
+{
+    Fkz9CommContext *ctx = NULL;
+    uint8_t buf[1024];
+    size_t len = 0;
+    MsgFramHdr *pHdr = NULL;
+    MsgDataFramCrc *pCrc = NULL;
+    struct MsgProcInf *start = &__start_message_forwarding;
+    struct MsgProcInf *end = &__stop_message_forwarding;
+
+    if (arg == NULL) {
+        return NULL;
+    }
+    
+    ctx = (Fkz9CommContext *)arg;
+    while (ctx->running) {
+        if (dequeue(&ctx->event_queue, buf, &len)) {
+            continue;
+        }
+        pHdr = (MsgFramHdr *)buf;
+        uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
+        pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
+        spdlog_debug("fkz9_recv: pHdr->usHdr=0x%x, pHdr->ucSign=0x%x, pCrc->usCRC=0x%x, crc=0x%x.", bswap_16(pHdr->usHdr), pHdr->ucSign, bswap_16(pCrc->usCRC), crc);
+        if (pHdr->usHdr != MSG_DATA_FRAM_HDR1 || pHdr->usHdr != MSG_DATA_FRAM_HDR2 || crc != bswap_16(pCrc->usCRC)) {
+            continue ;
+        }
+
+        for (; start != end; start++) {
+            if (start->sign == pHdr->ucSign) {
+                int ret = start->pFuncEntry(buf);
+                if (ret == 0 && start->pFuncCb != NULL) {
+                    start->pFuncCb(arg);
+                }
+            } else {
+                fkz9_msg_fw_to_cloud_entry(arg);
+            }
+        }
+    }
+
+    return NULL;
+}
+
+int get_fkz9_dev_addr(uint16_t* dev_addr)
 {
     SSHClient ssh_client;
 
@@ -160,48 +321,15 @@ int init_updater_environment(uint16_t* dev_addr)
         return -1;
     }
 
-    char resp[128];
-    ret = ssh_client.execute(&ssh_client, "find /home/cktt/script/ -name \"updater.sh\"", 
-            resp, sizeof(resp));
+    char resp[128] = {0};
+    ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh", resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.execute find updater.sh failed.");
-        return -1;
-    } else {
-        spdlog_info("find updater.sh resp %s.", resp);
-        if (strstr(resp, "updater.sh")) {
-            memset(resp, 0, sizeof(resp));
-            ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh", resp, sizeof(resp));
-            if (ret) {
-                SSHClient_Destroy(&ssh_client);
-                spdlog_error("ssh_client.execute updater.sh failed.");
-                return -1;
-            }
-            spdlog_info("fkz9_dev_addr: %s.", resp);
-            sscanf(resp, "%hd,", dev_addr);
-
-            SSHClient_Destroy(&ssh_client);
-            return 0;
-        }
-    }
-    
-    char loacl_path[256];
-    _system_("pwd", resp, sizeof(resp));
-    snprintf(loacl_path, sizeof(loacl_path), "%s/kt_5gbd_dtb/script/updater.sh", resp);
-    ret = ssh_client.upload_file(&ssh_client, loacl_path, "/home/cktt/script/updater.sh");
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.upload_file updater.sh failed.");
+        spdlog_error("ssh_client.execute updater.sh failed.");
         return -1;
     }
-
-    ret = ssh_client.execute(&ssh_client, "chmod +x /home/cktt/script/updater.sh", 
-            resp, sizeof(resp));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.execute chmod +x updater.sh failed.");
-        return -1;
-    }
+    spdlog_info("fkz9_dev_addr: %s.", resp);
+    sscanf(resp, "%hd,", dev_addr);
 
     SSHClient_Destroy(&ssh_client);
     return 0;
@@ -239,12 +367,14 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         mqtt_client_destroy(mqtt_client);
         return;
     }
-    init_updater_environment(&ctx->fkz9_dev_addr);
+    get_fkz9_dev_addr(&ctx->fkz9_dev_addr);
     ctx->mqtt_client = mqtt_client;
-    init_queue(&ctx->tx_queue, MAX_MSG_SIZE);
+    init_queue(&ctx->event_queue, MAX_MSG_SIZE);
     List_Init_Thread(&ctx->ev_list);
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
+    pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
     ctx->is_running = true;
+    gp_fkz9_comm_ctx = ctx;
 }
 
 void fkz9_comm_uninit(Fkz9CommContext *ctx)
@@ -261,6 +391,7 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
     pthread_join(ctx->timer_thread, NULL);
     mqtt_client = ctx->mqtt_client;
     mqtt_client_destroy(mqtt_client);
-    clean_queue(&ctx->tx_queue);
+    clean_queue(&ctx->event_queue);
+    gp_fkz9_comm_ctx = NULL;
 }
 

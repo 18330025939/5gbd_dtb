@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <event2/event.h>
 #include "spdlog_c.h"
+#include "firmware_updater.h"
 #include "cloud_comm.h"
 #include "fkz9_comm.h"
 #include "led.h"
@@ -17,6 +18,55 @@
 #if !defined(SPDLOG_ACTIVE_LEVEL)
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
 #endif
+
+int init_updater_environment(void)
+{
+    SSHClient ssh_client;
+
+    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+    int ret = ssh_client.connect(&ssh_client);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        spdlog_error("ssh_client.connect failed.");
+        return -1;
+    }
+
+    char resp[128] = {0};
+    ret = ssh_client.execute(&ssh_client, "find /home/cktt/script/ -name \"updater.sh\"", 
+            resp, sizeof(resp));
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        spdlog_error("ssh_client.execute find updater.sh failed.");
+        return -1;
+    } else {
+        spdlog_info("find updater.sh resp %s.", resp);
+        if (strstr(resp, "updater.sh")) {
+            SSHClient_Destroy(&ssh_client);
+            return 0;
+        }
+    }
+    
+    char loacl_path[256];
+    _system_("pwd", resp, sizeof(resp));
+    snprintf(loacl_path, sizeof(loacl_path), "%s/kt_5gbd_dtb/script/updater.sh", resp);
+    ret = ssh_client.upload_file(&ssh_client, loacl_path, "/home/cktt/script/updater.sh");
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        spdlog_error("ssh_client.upload_file updater.sh failed.");
+        return -1;
+    }
+
+    ret = ssh_client.execute(&ssh_client, "chmod +x /home/cktt/script/updater.sh", 
+            resp, sizeof(resp));
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        spdlog_error("ssh_client.execute chmod +x updater.sh failed.");
+        return -1;
+    }
+
+    SSHClient_Destroy(&ssh_client);
+    return 0;
+}
 
 void signal_handler(evutil_socket_t fd, short events, void *arg)
 {
@@ -52,6 +102,7 @@ int main(int argc, char ** args)
     RUN_LED_INIT();
     FAULT_LED_INIT();
 
+    init_updater_environment();
     clound_comm_init(cloud_ctx);
     fkz9_comm_init(fkz9_ctx);
 

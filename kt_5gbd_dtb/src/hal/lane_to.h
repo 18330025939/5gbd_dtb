@@ -4,23 +4,23 @@
 #include <stdint.h>
 #include <time.h>
 #include <stdbool.h>
-#include "serial.h"
 
 #define LANETO_DEV_NAME "/dev/ttyS4"
 
 #define SHM_DATA_SERVER_IP "127.0.0.1"
 #define SHM_DATA_SERVER_PORT 2947
 
+#if 0
 #pragma pack(push, 1)
 typedef struct {
     uint8_t sync1;        // 固定为0x50
     uint8_t sync2;        // 固定为0x42
     uint8_t msg_id;       // 命令ID (0xE0 ~ 0xFF)
     uint16_t payload_len; // Little-Endian
-    uint8_t payload[];    // 可变长度负载
+    uint8_t *payload;    // 可变长度负载
 } BinaryCommandHeader;
 #pragma pack(pop)
-
+#endif
 // 常用命令ID宏定义
 #define CMD_REVERT_MFG_SETTING       0xE0
 #define CMD_POLL_FW_VERSION          0xE3
