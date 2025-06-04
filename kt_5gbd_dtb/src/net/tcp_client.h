@@ -40,6 +40,6 @@ struct st_TcpClient
 // int tcp_client_init(TcpClient* client);
 // void tcp_client_send(TcpClient* client, uint8_t* data, size_t len);
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt);
-void tcp_client_destroy(void);
+void tcp_client_destroy(TcpClient* client);
 
 #endif /* __TCP_CLIENT_H */

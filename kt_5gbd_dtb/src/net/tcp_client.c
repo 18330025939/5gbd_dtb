@@ -22,8 +22,8 @@
 
 void *tcp_client_send_entry(void *arg);
 static void tcp_client_disconnect(TcpClient* client);
-static TcpClient *tcpClient_instance(void);
-static TcpClient *gp_tcp_client = NULL;
+
+TcpClient *gp_tcp_client = NULL;
 /* 重连机制 */
 void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 {
@@ -38,7 +38,7 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
         // client->is_connected = false;
         spdlog_debug("Max reconnect attempts reached. Exiting.");
         tcp_client_disconnect(client);
-        // tcp_client_destroy();
+        // tcp_client_destroy(client);
     }
 }
 
@@ -173,15 +173,14 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
 /* 断开连接 */
 static void tcp_client_disconnect(TcpClient* client) 
 {
-    TcpClient *client = NULL;
-
-    client = tcpClient_instance();
-    if (client != NULL) {
-        client->is_connected = false;
-        event_base_loopbreak(client->base);
-        pthread_join(client->conn_thread, NULL);
-        pthread_join(client->send_thread, NULL);
+    if (client == NULL) {
+        return ;
     }
+
+    client->is_connected = false;
+    event_base_loopbreak(client->base);
+    pthread_join(client->conn_thread, NULL);
+    pthread_join(client->send_thread, NULL);
 }
 
 static void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size_t len)) 
@@ -196,52 +195,43 @@ TcpClientOps tcp_client_ops = {
     .send = tcp_client_send
 };
 
-static TcpClient *tcpClient_instance(void)
-{
-	if (gp_tcp_client == NULL) {
-		gp_tcp_client = (struct st_smbus_switch*)malloc(sizeof(struct st_smbus_switch));
-		if (gp_tcp_client != NULL)
-			memset((void *)gp_tcp_client, 0, sizeof(struct st_smbus_switch));
-	}
+// static TcpClient *tcpClient_instance(void)
+// {
+// 	if (gp_tcp_client == NULL) {
+// 		gp_tcp_client = (struct st_smbus_switch*)malloc(sizeof(struct st_smbus_switch));
+// 		if (gp_tcp_client != NULL)
+// 			memset((void *)gp_tcp_client, 0, sizeof(struct st_smbus_switch));
+// 	}
 
-	return gp_tcp_client;
-}
+// 	return gp_tcp_client;
+// }
 
 
 /* 创建客户端 */
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 {
-    TcpClient *client = NULL;
-
-    client = tcpClient_instance();
-    if (client != NULL && client->is_init != true) {
-        client->server_ip = strdup(server_ip);
-        client->port = port;
-        client->max_recnt_att = max_recnt;
-        client->recnt_att = 0;
-        client->is_connected = false;
-        client->ops = &tcp_client_ops;
-        init_queue(&client->tx_queue, 256);
-        // init_queue(&client->rx_queue, 1024);
-        client->conn_num = 0; 
-        client->is_init = true;
-    }
-
+    TcpClient* client = (TcpClient*)malloc(sizeof(TcpClient));
+    memset(client, 0, sizeof(TcpClient));
+    client->server_ip = strdup(server_ip);
+    client->port = port;
+    client->max_recnt_att = max_recnt;
+    client->recnt_att = 0;
+    client->is_connected = false;
+    client->ops = &tcp_client_ops;
+    init_queue(&client->tx_queue, 256);
+    // init_queue(&client->rx_queue, 1024);
     return client;
 }
 
 /* 销毁客户端 */
-void tcp_client_destroy(void) 
-{   
-    TcpClient *client = NULL;
-    
-    client = tcpClient_instance();
-    if (client != NULL) {
-        
-        spdlog_debug("tcp_client_destroy.");
-        clean_queue(&client->tx_queue);
-        // clean_queue(&client->rx_queue);
-        free(client->server_ip);
-        free(client);
+void tcp_client_destroy(TcpClient* client) 
+{
+    if (client == NULL) {
+        return ;
     }
+    spdlog_debug("tcp_client_destroy.");
+    clean_queue(&client->tx_queue);
+    // clean_queue(&client->rx_queue);
+    free(client->server_ip);
+    free(client);
 }

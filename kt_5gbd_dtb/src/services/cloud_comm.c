@@ -874,7 +874,7 @@ void clound_comm_uninit(CloundCommContext *ctx)
     if (ctx->client->is_connected) {
         ctx->client->ops->disconnect(ctx->client);
     }
-    tcp_client_destroy(void);
+    tcp_client_destroy(ctx->client);
     laneTo_uninit(ctx->laneTo);
     fx650_uninit(ctx->fx650);
     clean_queue(&ctx->event_queue);
