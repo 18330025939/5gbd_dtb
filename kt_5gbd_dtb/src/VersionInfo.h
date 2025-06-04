@@ -2,7 +2,7 @@
 #define VERSIONINFO_H
 
 #define CLIENT_VERSION  "0.0.1"
-#define BUILD_TIMESTAMP "Thu May 22 15:23:56 CST 2025"
+#define BUILD_TIMESTAMP "2025年 06月 04日 星期三 15:15:06 CST"
 
 #define RT_A100_VERSION  "0.0.1"
 

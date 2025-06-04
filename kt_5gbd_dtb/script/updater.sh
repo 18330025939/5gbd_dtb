@@ -1,11 +1,6 @@
 #!/bin/bash
 
-pid=$$
-ota_count=`ps -ef | grep ota_client.sh | grep -v grep | grep -v $pid | wc -l`
-if [ $ota_count -gt 1 ]; then
-    echo "already has a ota task,so just exit"
-    exit 0
-fi
+
 
 mission_file=/home/cktt/script/ota_mission
 log_file=/upgrade/ota_opreation.log

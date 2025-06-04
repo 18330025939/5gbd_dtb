@@ -237,6 +237,7 @@ int create_ota_heartbeat_data(char *data)
     memset(&(heart_beat), 0x00, sizeof(OtaHeartBeat));
     int ret = get_ota_heartbeat_info(&heart_beat);
     if (ret) {
+        spdlog_error("get_ota_hearbeat_info error");
         return -1;
     }
     root = cJSON_CreateObject(); 
@@ -516,7 +517,7 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
     if (ret) {
         return;
     }
-
+    spdlog_info("ota_heartbeat : %s", buf);
     ret = http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
     spdlog_debug("resp to ota_heartbeat_req: %s, %d.", resp, ret);
     if (ret == 0) {
@@ -712,7 +713,7 @@ void proc_message_cb(char *buf, size_t len)
 }
 
 
-void *event_task_entry(void *arg)
+static void *event_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     uint8_t buf[256];
@@ -767,7 +768,7 @@ void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), ui
     event_add(task, &tv);
 }
 
-void *timer_task_entry(void *arg)
+static void *timer_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     struct event_base *base = NULL;
@@ -781,7 +782,7 @@ void *timer_task_entry(void *arg)
     base = event_base_new();
     ctx->base = base;
     add_timer_task(arg, nav_data_msg_task_cb, 1000);
-    add_timer_task(arg, ota_heartbeat_task_cb, 60000);
+    add_timer_task(arg, ota_heartbeat_task_cb, 30000);
 
     event_base_dispatch(base);  // 启动事件循环
     
@@ -816,7 +817,7 @@ int get_cloud_info(struct CluoudInfo*  pInfo)
         return -1;
     }
     sscanf(resp, "%[^,],%d,", pInfo->ip, &pInfo->port);
-
+    spdlog_info("cloud_ip=%s, cloud_port=%d", pInfo->ip, pInfo->port);
     SSHClient_Destroy(&ssh_client);
     return 0;
 }
@@ -859,7 +860,8 @@ void clound_comm_init(CloundCommContext *ctx)
 
 void clound_comm_uninit(CloundCommContext *ctx)
 {
-    if (ctx == NULL || ctx->running == true) {
+
+    if (ctx == NULL || ctx->running == false) {
         return ;
     } 
 

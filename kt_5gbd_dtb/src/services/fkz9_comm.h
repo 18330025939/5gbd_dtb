@@ -8,7 +8,7 @@
 
 typedef struct st_AsyncMQTTClient AsyncMQTTClient;
 
-#define MAX_MSG_SIZE    1500
+#define MAX_MSG_SIZE    512
 
 #define MQTT_SERVER_IP  "192.168.42.50"
 #define MQTT_SERVER_PORT 1883
@@ -267,11 +267,11 @@ typedef struct st_Fkz9CommContext
     ThreadSafeQueue event_queue;
     // ThreadSafeQueue rx_queue;
     pthread_t event_thread;
-    uint16_t fkz9_dev_addr;
     pthread_t timer_thread;
     struct event_base *base;
     struct List ev_list;
     bool is_running;
+    uint16_t fkz9_dev_addr;
 } Fkz9CommContext;
 
 struct UnitCorrInfo

@@ -578,6 +578,8 @@ void laneTo_uninit(LaneToCtx *ctx)
     if (ctx == NULL) {
         return ;
     }
+
+    printf("laneTo_uninit.\n");
     ctx->running = false;
     if (ctx->uart) {
         laneTo_port = ctx->uart;

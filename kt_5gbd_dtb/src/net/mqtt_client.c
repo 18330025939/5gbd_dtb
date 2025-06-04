@@ -212,7 +212,7 @@ void mqtt_client_destroy(AsyncMQTTClient* client)
 
     spdlog_debug("mqtt_client_destroy.");
     pthread_mutex_lock(&client->lock);
-    MQTTAsync_disconnect(client->handle, NULL);
+    // MQTTAsync_disconnect(client->handle, NULL);
     MQTTAsync_destroy(&client->handle);
     pthread_mutex_unlock(&client->lock);
     pthread_mutex_destroy(&client->lock);

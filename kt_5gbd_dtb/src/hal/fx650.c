@@ -145,12 +145,12 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
 /* 检查SIM卡状态 */
 static int check_sim_status(Fx650Ctx* ctx) 
 {
-    char resp[AT_MAX_RESPONSE_LEN];
+    char resp[AT_MAX_RESPONSE_LEN] = {0};
     if (send_at_command(ctx, "AT+CPIN?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
-    if (strstr(resp, "+CPIN: READY") == NULL) {
+    if (strstr(resp, "READY") == NULL) {
         fprintf(stderr, "SIM card not ready.\n");
         return -1;
     }
@@ -160,7 +160,7 @@ static int check_sim_status(Fx650Ctx* ctx)
 /* 检查网段 */
 static int check_network_segment(Fx650Ctx* ctx) 
 {
-    char resp[AT_MAX_RESPONSE_LEN];
+    char resp[AT_MAX_RESPONSE_LEN] = {0};
     if (send_at_command(ctx, "AT+GTDHCPCFG?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
@@ -183,9 +183,9 @@ static int check_network_segment(Fx650Ctx* ctx)
 */
 static int set_apn(Fx650Ctx* ctx, const char *apn) 
 {
-    char cmd[128];
+    char cmd[128] = {0};
     snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"\r", apn);
-    char resp[AT_MAX_RESPONSE_LEN];
+    char resp[AT_MAX_RESPONSE_LEN] = {0};
     if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
@@ -201,17 +201,18 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
 /* 激活拨号 */
 static int activate_dia(Fx650Ctx* ctx, uint8_t status) 
 {
-    char cmd[128];
-    char resp[AT_MAX_RESPONSE_LEN];
+    char cmd[128] = {0};
+    char resp[AT_MAX_RESPONSE_LEN] = {0};
 
     // 查询IP分配状态
     if (send_at_command(ctx, "AT+GTRNDIS?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
-    if (strstr(resp, "+GTRNDIS: 0") == NULL && status == 1) {
+    if (strstr(resp, "+GTRNDIS: 0") && status == 1) {
+        memset(cmd, 0, sizeof(cmd));
         snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=1,1\r");
-        char resp[AT_MAX_RESPONSE_LEN];
+        memset(resp, 0, sizeof(resp));
         if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
         }
@@ -221,9 +222,10 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
             fprintf(stderr, "Activation dialing failed.\n");
             return -1;
         }
-    } else if (strstr(resp, "+GTRNDIS: 1,1") == NULL && status == 0) {
+    } else if (strstr(resp, "+GTRNDIS: 1,1") && status == 0) {
+        memset(cmd, 0, sizeof(cmd));
         snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=0,1\r");
-        char resp[AT_MAX_RESPONSE_LEN];
+        memset(resp, 0, sizeof(resp));
         if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
         }
@@ -267,7 +269,7 @@ static int check_network_connection(void)
 /* 执行DHCP获取IP */
 static int run_dhcp_client(const char* net) 
 {
-    char cmd[128];
+    char cmd[128] = {0};
     int ret = 0;
 
     snprintf(cmd, sizeof(cmd), "ip link set %s up", net);
@@ -275,21 +277,25 @@ static int run_dhcp_client(const char* net)
         return ret;
     }
 
+    memset(cmd, 0, sizeof(cmd));
     snprintf(cmd, sizeof(cmd), "udhcpc -i %s &", net);
     if((ret = system(cmd)) == -1) {
         return ret;
     }
 
+    memset(cmd, 0, sizeof(cmd));
     snprintf(cmd, sizeof(cmd), "ip route del default");
     if((ret = system(cmd)) == -1) {
         return ret;
     }
 
+    memset(cmd, 0, sizeof(cmd));
     snprintf(cmd, sizeof(cmd), "ip route add default via 192.168.10.1 dev %s metric 600", net);
     if((ret = system(cmd)) == -1) {
         return ret;
     }
 
+    memset(cmd, 0, sizeof(cmd));
     snprintf(cmd, sizeof(cmd), "ip route add default via 192.168.42.1 dev eth0 metric 20100");
     if((ret = system(cmd)) == -1) {
         return ret;
@@ -301,7 +307,7 @@ static int run_dhcp_client(const char* net)
 FX650_Error fx650_connect_network(Fx650Ctx* ctx) 
 {
     int ret = 0;
-#if 0
+#if 1
     ret = check_network_segment(ctx);
     if (ret) {
         return FX650_ERR_NET_SEGMENT;
@@ -343,6 +349,9 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
 {
     UartPort *fx650_port = NULL;
 
+
+    memset(ctx, 0, sizeof(Fx650Ctx));
+    ctx->uart = NULL;
     ctx->net_name = find_interface_by_vid_pid(FX650_VID, FX650_PID);
     if (ctx->net_name == NULL) {
         fprintf(stderr, "Network port name not found.\n");
@@ -371,11 +380,12 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
     ctx->uart = fx650_port;
 
     // 发送基础AT指令测试
-    char resp[64];
+    char resp[64] = {0};
     FX650_Error ret = send_at_command(ctx, "AT\r\n", resp, sizeof(resp), AT_TIMEOUT_MS);
     if (ret != FX650_OK) {
         fprintf(stderr, "Failed to send AT command.\n");
-        close(ctx->uart->base.fd);
+        fx650_port->base.ops->close(&fx650_port->base);
+        free(fx650_port);
         return ret;
     }
 
@@ -383,28 +393,28 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
     // ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), AT_TIMEOUT_MS);
 
     ret = fx650_connect_network(ctx);
+    fx650_port->base.ops->close(&fx650_port->base);
+    free(fx650_port);
 
     return ret;
 }
 
 void fx650_uninit(Fx650Ctx* ctx)
 {
-    UartPort *fx650_port = NULL;
-
     if (ctx == NULL) {
         return ;
     }
 
+    printf("fx650_uninit.\n");
+    if (ctx->uart) {
+        fx650_disconnect_network(ctx);
+        ctx->uart->base.ops->close(&ctx->uart->base);
+        free(ctx->uart);
+    }
     if (ctx->net_name) {
         free(ctx->net_name);
     }
-    fx650_port = ctx->uart;
-    if (fx650_port->base.is_open) {
-        fx650_port->base.ops->close(&fx650_port->base);
-    }
-    if (fx650_port) {
-        free(fx650_port);
-    }
+    
     free(ctx);
 } 
 

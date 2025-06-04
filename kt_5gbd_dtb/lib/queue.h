@@ -2,7 +2,7 @@
 #ifndef __QUEUE_H
 #define __QUEUE_H
 
-#define MAX_SEGMENTS 128
+#define MAX_SEGMENTS 64
 
 typedef struct st_ThreadSafeQueue {
     pthread_mutex_t mutex;

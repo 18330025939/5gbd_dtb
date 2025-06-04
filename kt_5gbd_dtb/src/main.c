@@ -136,7 +136,11 @@ int main(int argc, char ** args)
     
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
-    FAULT_LED_ON();
+ //   FAULT_LED_ON();
+    free(cloud_ctx);
+    free(fkz9_ctx);
+
+    spdlog_info("Application exiting...");
 
     exit(0);
 }

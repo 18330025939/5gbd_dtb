@@ -69,12 +69,14 @@ static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg
         pthread_create(&client->send_thread, NULL, tcp_client_send_entry, (void*)client);
     } else if (events & BEV_EVENT_EOF) {
         spdlog_debug("Connection closed.");
-        // client->is_connected = false;
+        client->is_connected = false;
+        pthread_join(client->send_thread, NULL);
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     } else if (events & BEV_EVENT_ERROR) {
         int err = EVUTIL_SOCKET_ERROR();
         spdlog_error("An error occurred: %d, %s.", err, strerror(err));
-        // client->is_connected = false;
+        client->is_connected = false;
+        pthread_join(client->send_thread, NULL);
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     }
 }
@@ -153,20 +155,20 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
         enqueue(&client->tx_queue, data, len);
 
         spdlog_debug("tcp_client_send data len=%d.", len);
-        char *str = (char *)malloc(len * 4 + 1);
-        if (str != NULL) {
-            str[0] = '\0';
-            for (int i = 0; i < len; i++) {
-                sprintf(str + strlen(str), "%x ", data[i]);
-            }
+        // char *str = (char *)malloc(len * 4 + 1);
+        // if (str != NULL) {
+        //     str[0] = '\0';
+        //     for (int i = 0; i < len; i++) {
+        //         sprintf(str + strlen(str), "%x ", data[i]);
+        //     }
 
-            if (strlen(str) > 0) {
-                str[strlen(str) - 1] = '\0';
-            }
+        //     if (strlen(str) > 0) {
+        //         str[strlen(str) - 1] = '\0';
+        //     }
 
-            spdlog_debug("data: %s", str);
-            free(str);
-        }
+        //     spdlog_debug("data: %s", str);
+        //     free(str);
+        // }
     }
 }
 
@@ -227,6 +229,7 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 void tcp_client_destroy(TcpClient* client) 
 {
     if (client == NULL) {
+        spdlog_error("tcp_client_destroy client is null");
         return ;
     }
     spdlog_debug("tcp_client_destroy.");

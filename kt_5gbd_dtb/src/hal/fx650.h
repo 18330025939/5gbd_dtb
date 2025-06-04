@@ -328,6 +328,7 @@ typedef struct {
 typedef struct st_Fx650Ctx {
     UartPort *uart;
     char *net_name;
+    // bool running;
     // NetworkStatus net_status;
     // APNConfig apn_config;
     // DataReceivedCallback data_cb;

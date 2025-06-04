@@ -19,8 +19,8 @@
 #include "spdlog_c.h"
 
 
-extern struct Fkz9MsgFwInf __start_message_forwarding;
-extern struct Fkz9MsgFwInf __stop_message_forwarding;
+//extern struct Fkz9MsgFwInf __start_message_forwarding;
+//extern struct Fkz9MsgFwInf __stop_message_forwarding;
 static Fkz9CommContext *gp_fkz9_comm_ctx = NULL;
 
 int fkz9_heartbeat_resp_entry(void *arg)
@@ -37,7 +37,7 @@ int fkz9_heartbeat_resp_entry(void *arg)
 
     return 0;
 }
-REGISTER_FKZ9_MESSAGE_FW_INTERFACE(hb_resp, 22, fkz9_heartbeat_resp_entry, NULL);
+//REGISTER_FKZ9_MESSAGE_FW_INTERFACE(hb_resp, 22, fkz9_heartbeat_resp_entry, NULL);
 
 extern CloundCommContext *gp_cloud_comm_ctx;
 int fkz9_msg_fw_to_cloud_entry(void *arg)
@@ -48,6 +48,7 @@ int fkz9_msg_fw_to_cloud_entry(void *arg)
         return -1;
     }
 
+    
     hdr = (MsgFramHdr*)arg;
     TcpClient *client = gp_cloud_comm_ctx->client;
     client->ops->send(client, (uint8_t*)arg, bswap_16(hdr->usLen));
@@ -251,9 +252,14 @@ static void *timer_task_entry(void *arg)
     ctx->base = base;
     add_timer_task(arg, heartbeat_req_task_cb, 3000);
 
-    mqtt_client = ctx->mqtt_client;
-    char topic[128];
+    spdlog_info("fkz9_dev_addr=%d, ctx=0x%x", ctx->fkz9_dev_addr, ctx);
+    char topic[128] = {0};
     snprintf(topic, sizeof(topic), "fkz9/%04d/+/4G/#", ctx->fkz9_dev_addr);
+    mqtt_client = ctx->mqtt_client;
+    do {
+        sleep(0.1);
+    }
+    while (mqtt_client->is_conn == false);
     mqtt_client->ops->subscribe(mqtt_client, topic);
 
     event_base_dispatch(base);  // 启动事件循环
@@ -269,15 +275,15 @@ static void *timer_task_entry(void *arg)
     return NULL;
 }
 
-void *event_task_entry(void *arg)
+static void *event_task_entry(void *arg)
 {
     Fkz9CommContext *ctx = NULL;
     uint8_t buf[1024];
     size_t len = 0;
     MsgFramHdr *pHdr = NULL;
     MsgDataFramCrc *pCrc = NULL;
-    struct Fkz9MsgFwInf *start = &__start_message_forwarding;
-    struct Fkz9MsgFwInf *end = &__stop_message_forwarding;
+    // struct Fkz9MsgFwInf *start = &__start_message_forwarding;
+    // struct Fkz9MsgFwInf *end = &__stop_message_forwarding;
 
     if (arg == NULL) {
         return NULL;
@@ -292,26 +298,33 @@ void *event_task_entry(void *arg)
         uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         spdlog_debug("fkz9_recv: pHdr->usHdr=0x%x, pHdr->ucSign=0x%x, pCrc->usCRC=0x%x, crc=0x%x.", bswap_16(pHdr->usHdr), pHdr->ucSign, bswap_16(pCrc->usCRC), crc);
-        if (pHdr->usHdr != MSG_DATA_FRAM_HDR1 || pHdr->usHdr != MSG_DATA_FRAM_HDR2 || crc != bswap_16(pCrc->usCRC)) {
+        if ((pHdr->usHdr != MSG_DATA_FRAM_HDR1 && pHdr->usHdr != MSG_DATA_FRAM_HDR2) || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
 
-        for (; start != end; start++) {
-            if (start->sign == pHdr->ucSign) {
-                int ret = start->pFuncEntry(buf);
-                if (ret == 0 && start->pFuncCb != NULL) {
-                    start->pFuncCb(arg);
-                }
-            } else {
-                fkz9_msg_fw_to_cloud_entry(buf);
-            }
+        if (MQTT_MSG_SIGN_HEARTBEAT_RESP == pHdr->ucSign) {
+            fkz9_heartbeat_resp_entry(buf);
+        } else {
+            fkz9_msg_fw_to_cloud_entry(buf);
         }
+        
+        // for (; start != end; start++) {
+        //     spdlog_info("start->sign=0x%x, pHdr->ucSign", start->sign, pHdr->ucSign);
+        //     if (start->sign == pHdr->ucSign) {
+        //         int ret = start->pFuncEntry(buf);
+        //         if (ret == 0 && start->pFuncCb != NULL) {
+        //             start->pFuncCb(arg);
+        //         }
+        //     } else {
+        //         fkz9_msg_fw_to_cloud_entry(buf);
+        //     }
+        // }
     }
 
     return NULL;
 }
 
-int get_fkz9_dev_addr(uint16_t* dev_addr)
+static int get_fkz9_dev_addr(uint16_t* dev_addr)
 {
     SSHClient ssh_client;
 
@@ -330,8 +343,7 @@ int get_fkz9_dev_addr(uint16_t* dev_addr)
         spdlog_error("ssh_client.execute updater.sh failed.");
         return -1;
     }
-    spdlog_info("fkz9_dev_addr: %s.", resp);
-    sscanf(resp, "%hd,", dev_addr);
+    sscanf(resp, "%hd", dev_addr);
 
     SSHClient_Destroy(&ssh_client);
     return 0;
@@ -345,7 +357,9 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     if (ctx == NULL) {
         return;
     }
-
+    
+    get_fkz9_dev_addr(&(ctx->fkz9_dev_addr));
+    spdlog_info("kfz9_dev_addr=%d, ctx=0x%x", ctx->fkz9_dev_addr, ctx);
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
     AsyncClientConfig client_config = {
         .address = url,
@@ -366,10 +380,9 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     if(ret) {
         spdlog_error("mqtt connect failed.");
         ctx->is_running = false;
-        mqtt_client_destroy(mqtt_client);
         return;
     }
-    get_fkz9_dev_addr(&ctx->fkz9_dev_addr);
+
     ctx->mqtt_client = mqtt_client;
     init_queue(&ctx->event_queue, MAX_MSG_SIZE);
     List_Init_Thread(&ctx->ev_list);
@@ -383,14 +396,15 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
 {
     AsyncMQTTClient *mqtt_client = NULL;
 
-    spdlog_debug("fkz9_comm_uninit.");
     if (ctx == NULL || ctx->is_running == false) {
         return;
     }
 
+    spdlog_debug("fkz9_comm_uninit.");
     ctx->is_running = false;
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
+    pthread_join(ctx->event_thread, NULL);
     mqtt_client = ctx->mqtt_client;
     mqtt_client_destroy(mqtt_client);
     clean_queue(&ctx->event_queue);
