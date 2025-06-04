@@ -11,6 +11,7 @@
 #include "list.h"
 #include "mqtt_client.h"
 #include "ftp_handler.h"
+#include "tcp_client.h"
 #include "cloud_comm.h"
 #include "ssh_client.h"
 #include "fkz9_comm.h"
