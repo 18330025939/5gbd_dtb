@@ -815,7 +815,7 @@ int get_cloud_info(struct CluoudInfo*  pInfo)
         spdlog_error("ssh_client.execute updater.sh failed.");
         return -1;
     }
-    sscanf(resp, "%[^,]%d,", pInfo->ip, pInfo->port);
+    sscanf(resp, "%[^,],%d,", pInfo->ip, &pInfo->port);
 
     SSHClient_Destroy(&ssh_client);
     return 0;

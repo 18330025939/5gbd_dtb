@@ -1,6 +1,8 @@
 #ifndef __FX650_H
 #define __FX650_H
 
+typedef struct st_UartPort UartPort;
+
 #define AT_TIMEOUT_MS   1000
 #define URC_BUFFER_SIZE 256
 #define AT_MAX_RESPONSE_LEN 1024

@@ -5,6 +5,8 @@
 #include <time.h>
 #include <stdbool.h>
 
+typedef struct st_UartPort UartPort;
+
 #define LANETO_DEV_NAME "/dev/ttyS4"
 
 #define SHM_DATA_SERVER_IP "127.0.0.1"

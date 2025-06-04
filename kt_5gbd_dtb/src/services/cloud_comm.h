@@ -160,7 +160,7 @@ struct DownUpgradeTask
 struct CluoudInfo {
     char ip[16];
     int port;
-}
+} ;
 
 typedef struct st_MsgCommContext
 {

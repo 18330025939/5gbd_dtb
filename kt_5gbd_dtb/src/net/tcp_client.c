@@ -198,9 +198,9 @@ TcpClientOps tcp_client_ops = {
 // static TcpClient *tcpClient_instance(void)
 // {
 // 	if (gp_tcp_client == NULL) {
-// 		gp_tcp_client = (struct st_smbus_switch*)malloc(sizeof(struct st_smbus_switch));
+// 		gp_tcp_client = (TcpClient*)malloc(sizeof(TcpClient));
 // 		if (gp_tcp_client != NULL)
-// 			memset((void *)gp_tcp_client, 0, sizeof(struct st_smbus_switch));
+// 			memset((void *)gp_tcp_client, 0, sizeof(TcpClient));
 // 	}
 
 // 	return gp_tcp_client;
