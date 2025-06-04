@@ -838,8 +838,8 @@ void clound_comm_init(CloundCommContext *ctx)
     List_Init_Thread(&ctx->ev_list);
     List_Init_Thread(&ctx->down_task.list);
 
-    int ret = get_cloud_info(&ctx->cloud_info);
-    if (ret) {
+    int sta = get_cloud_info(&ctx->cloud_info);
+    if (sta) {
         client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
     } else {
         client = tcp_client_create(ctx->cloud_info.ip, ctx->cloud_info.port, MAX_RECONNECT_ATTEMPTS);
