@@ -18,8 +18,8 @@
 #include "spdlog_c.h"
 
 
-extern struct CloudMsgFwInf __start_message_forwarding;
-extern struct CloudMsgFwInf __stop_message_forwarding;
+extern struct Fkz9MsgFwInf __start_message_forwarding;
+extern struct Fkz9MsgFwInf __stop_message_forwarding;
 static Fkz9CommContext *gp_fkz9_comm_ctx = NULL;
 
 int fkz9_heartbeat_resp_entry(void *arg)
@@ -36,8 +36,9 @@ int fkz9_heartbeat_resp_entry(void *arg)
 
     return 0;
 }
-REGISTER_CLOUD_MESSAGE_FW_INTERFACE(hb_resp, 22, fkz9_heartbeat_resp_entry, NULL);
+REGISTER_FKZ9_MESSAGE_FW_INTERFACE(hb_resp, 22, fkz9_heartbeat_resp_entry, NULL);
 
+extern CloundCommContext *gp_cloud_comm_ctx;
 int fkz9_msg_fw_to_cloud_entry(void *arg)
 {
     MsgFramHdr *hdr = NULL;
@@ -65,7 +66,7 @@ int cloud_to_can_entry(void* arg)
     pHdr = (MsgFramHdr*)arg;
     mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/can/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->sign);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/can/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->ucSign);
     mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
     
     return 0;
@@ -83,7 +84,7 @@ int cloud_to_conf_entry(void* arg)
     pHdr = (MsgFramHdr*)arg;
     mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/conf/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->sign);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/conf/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->ucSign);
     mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
     
     return 0;
@@ -101,7 +102,7 @@ int cloud_to_algorithms_entry(void* arg)
     pHdr = (MsgFramHdr*)arg;
     mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/algorithms/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->sign);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/algorithms/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->ucSign);
     mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
     
     return 0;
@@ -119,7 +120,7 @@ int cloud_to_cmd_entry(void* arg)
     pHdr = (MsgFramHdr*)arg;
     mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/cmd/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->sign);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/cmd/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->ucSign);
     mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
     
     return 0;
@@ -129,7 +130,7 @@ REGISTER_MESSAGE_PROCESSING_INTERFACE(change_refs, 145, cloud_to_can_entry, NULL
 /* 0x72 服务器发送录波开关数据 */
 REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_switch, 114, cloud_to_conf_entry, NULL);
 /* 0x59 服务器下行剩磁系数数据 */
-REGISTER_MESSAGE_PROCESSING_INTERFACE(remanence_coefficient 89, cloud_to_conf_entry, NULL);
+REGISTER_MESSAGE_PROCESSING_INTERFACE(remanence_coeff, 89, cloud_to_conf_entry, NULL);
 /* 0x82 服务器下行突发录波参数配置 */
 REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_record, 130, cloud_to_conf_entry, NULL);
 /* 0x84 服务器下行首次合闸参数配置1 */
@@ -153,8 +154,8 @@ REGISTER_MESSAGE_PROCESSING_INTERFACE(cb_close_time, 110, cloud_to_algorithms_en
 
 static void on_message_cb(const char* topic, const void* payload, size_t payload_len)
 {
-    MsgFramHdr *pHdr = NULL;
-    MsgDataFramCrc *pCrc = NULL;
+    // MsgFramHdr *pHdr = NULL;
+    // MsgDataFramCrc *pCrc = NULL;
     
     if (topic == NULL && payload == NULL && payload_len == 0) {
         return;
@@ -175,7 +176,7 @@ static void on_message_cb(const char* topic, const void* payload, size_t payload
     //     default:
     //     break;
     // }
-    enqueue(&gp_fkz9_comm_ctx->event_queue, (uint8_t *)payload, len);
+    enqueue(&gp_fkz9_comm_ctx->event_queue, (uint8_t *)payload, payload_len);
 }
 
 static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
@@ -274,15 +275,15 @@ void *event_task_entry(void *arg)
     size_t len = 0;
     MsgFramHdr *pHdr = NULL;
     MsgDataFramCrc *pCrc = NULL;
-    struct MsgProcInf *start = &__start_message_forwarding;
-    struct MsgProcInf *end = &__stop_message_forwarding;
+    struct Fkz9MsgFwInf *start = &__start_message_forwarding;
+    struct Fkz9MsgFwInf *end = &__stop_message_forwarding;
 
     if (arg == NULL) {
         return NULL;
     }
     
     ctx = (Fkz9CommContext *)arg;
-    while (ctx->running) {
+    while (ctx->is_running) {
         if (dequeue(&ctx->event_queue, buf, &len)) {
             continue;
         }
@@ -301,7 +302,7 @@ void *event_task_entry(void *arg)
                     start->pFuncCb(arg);
                 }
             } else {
-                fkz9_msg_fw_to_cloud_entry(arg);
+                fkz9_msg_fw_to_cloud_entry(buf);
             }
         }
     }

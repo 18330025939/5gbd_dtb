@@ -30,7 +30,7 @@ extern struct MsgProcInf __stop_message_processing;
 extern struct FwUpdater __start_firmware_update;
 extern struct FwUpdater __stop_firmware_update;
 
-static CloundCommContext *gp_cloud_comm_ctx = NULL;
+CloundCommContext *gp_cloud_comm_ctx = NULL;
 
 uint16_t checkSum_8(uint8_t *buf, uint16_t len)
 {

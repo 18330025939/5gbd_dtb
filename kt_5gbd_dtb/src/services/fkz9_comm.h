@@ -62,14 +62,14 @@ typedef struct st_HeartBeatDataSeg
 //     uint8_t  ucClsPH4;
 // } ChgRefsDataSeg;
 
-struct CloudMsgFwInf {
+struct Fkz9MsgFwInf {
     uint8_t sign;
     int (*pFuncEntry)(void *);
     int (*pFuncCb)(void *);
 } ;
 
-#define REGISTER_CLOUD_MESSAGE_FW_INTERFACE(name, msg_sign, func_entry, func_cb)\
-    __attribute__((used, __section__("message_forwarding"))) static struct CloudMsgFwInf msg_fw_##name = { \
+#define REGISTER_FKZ9_MESSAGE_FW_INTERFACE(name, msg_sign, func_entry, func_cb)\
+    __attribute__((used, __section__("message_forwarding"))) static struct Fkz9MsgFwInf msg_fw_##name = { \
         .sign = msg_sign, \
         .pFuncEntry = func_entry, \
         .pFuncCb = func_cb \
