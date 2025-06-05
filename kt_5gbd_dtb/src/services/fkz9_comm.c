@@ -195,15 +195,26 @@ REGISTER_MESSAGE_PROCESSING_INTERFACE(cb_close_time, 110, cloud_to_algorithms_en
 
 static void on_message_cb(const char* topic, const void* payload, size_t payload_len)
 {
-    // MsgFramHdr *pHdr = NULL;
+    MsgFramHdr *pHdr = NULL;
+    size_t len = 0;
+    size_t index = 0;
     // MsgDataFramCrc *pCrc = NULL;
     
     if (topic == NULL && payload == NULL && payload_len == 0) {
         return;
     }
 
-    spdlog_info("topic: %s, payload_len: %ld.", topic, payload_len);
-    // pHdr = (MsgFramHdr *)payload;
+    pHdr = (MsgFramHdr *)payload;
+    if (pHdr->ucSign != MQTT_MSG_SIGN_HEARTBEAT_REQ) {
+        spdlog_info("topic: %s, payload_len: %ld.", topic, payload_len);
+        do {
+            len = bswap_16(pHdr->usLen);
+            enqueue(&gp_fkz9_comm_ctx->event_queue, (uint8_t *)payload + index, len);
+            index += len;
+            pHdr = (MsgFramHdr *)(payload + index);
+        } while(index < payload_len);
+        // enqueue(&gp_fkz9_comm_ctx->event_queue, (uint8_t *)payload, payload_len);
+    }
     // uint16_t crc = checkSum_8((uint8_t *)payload, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
     // pCrc = (MsgDataFramCrc *)((uint8_t *)payload + (bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc)));
 
@@ -217,7 +228,6 @@ static void on_message_cb(const char* topic, const void* payload, size_t payload
     //     default:
     //     break;
     // }
-    enqueue(&gp_fkz9_comm_ctx->event_queue, (uint8_t *)payload, payload_len);
 }
 
 static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
@@ -275,7 +285,7 @@ static void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, voi
     event_add(task, &tv);
 }
 
-static void *timer_task_entry(void *arg)
+static void *fkz9_timer_task_entry(void *arg)
 {
     Fkz9CommContext *ctx = NULL;
     struct event_base *base = NULL;
@@ -300,6 +310,9 @@ static void *timer_task_entry(void *arg)
     }
     while (mqtt_client->is_conn == false);
     mqtt_client->ops->subscribe(mqtt_client, topic);
+    memset(topic, 0, sizeof(topic));
+    snprintf(topic, sizeof(topic), "fkz9/%04d/+/5G/#", ctx->fkz9_dev_addr);
+    mqtt_client->ops->subscribe(mqtt_client, topic);
 
     event_base_dispatch(base);  // 启动事件循环
     
@@ -314,7 +327,7 @@ static void *timer_task_entry(void *arg)
     return NULL;
 }
 
-static void *event_task_entry(void *arg)
+static void *fkz9_event_task_entry(void *arg)
 {
     Fkz9CommContext *ctx = NULL;
     uint8_t buf[1024];
@@ -333,13 +346,19 @@ static void *event_task_entry(void *arg)
         if (dequeue(&ctx->event_queue, buf, &len)) {
             continue;
         }
+
         pHdr = (MsgFramHdr *)buf;
-        uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-        pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
-        spdlog_debug("fkz9_recv: pHdr->usHdr=0x%x, pHdr->ucSign=0x%x, pCrc->usCRC=0x%x, crc=0x%x.", bswap_16(pHdr->usHdr), pHdr->ucSign, bswap_16(pCrc->usCRC), crc);
-        if ((pHdr->usHdr != MSG_DATA_FRAM_HDR1 && pHdr->usHdr != MSG_DATA_FRAM_HDR2) || crc != bswap_16(pCrc->usCRC)) {
+        if (pHdr->usHdr != MSG_DATA_FRAM_HDR1 && pHdr->usHdr != MSG_DATA_FRAM_HDR2) {
             continue ;
         }
+
+        int16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
+        pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
+        if (crc != bswap_16(pCrc->usCRC)) {
+            continue;
+        }
+
+        spdlog_debug("fkz9_recv: pHdr->usHdr=0x%x, pHdr->ucSign=0x%x, pCrc->usCRC=0x%x, crc=0x%x.", bswap_16(pHdr->usHdr), pHdr->ucSign, bswap_16(pCrc->usCRC), crc);
 
         if (MQTT_MSG_SIGN_HEARTBEAT_RESP == pHdr->ucSign) {
             fkz9_heartbeat_resp_entry(buf);
@@ -427,10 +446,11 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     }
 
     ctx->mqtt_client = mqtt_client;
-    init_queue(&ctx->event_queue, MAX_MSG_SIZE);
+    // init_queue(&ctx->event_queue, MAX_MSG_SIZE);
+    init_queue(&ctx->event_queue);
     List_Init_Thread(&ctx->ev_list);
-    pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
-    pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
+    pthread_create(&ctx->timer_thread, NULL, fkz9_timer_task_entry, ctx);
+    pthread_create(&ctx->event_thread, NULL, fkz9_event_task_entry, ctx);
     ctx->is_running = true;
     ctx->is_init = false;
     gp_fkz9_comm_ctx = ctx;

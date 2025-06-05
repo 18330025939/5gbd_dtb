@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <errno.h>
 #include <signal.h>
 #include <termios.h>
@@ -61,6 +62,7 @@ int init_updater_environment(void)
                     &fkz9_devBaseInfo.ctrl_hw,
                     &fkz9_devBaseInfo.net_sw,
                     &fkz9_devBaseInfo.net_hw);
+            spdlog_info("dev_addr:%d, cloud_ip:%s, cloud_port:%d,", fkz9_devBaseInfo.dev_addr, fkz9_devBaseInfo.cloud_ip, fkz9_devBaseInfo.cloud_port);
 
             SSHClient_Destroy(&ssh_client);
             return 0;
@@ -99,12 +101,49 @@ void signal_handler(evutil_socket_t fd, short events, void *arg)
     event_base_loopexit(base, NULL);
 }
 
+static void *event_task_entry(void *arg)
+{
+    struct event_base *base = event_base_new();
+    if (!base) {
+        spdlog_error("Could not create event base: exiting");
+        return NULL;
+        //exit(1);
+    }
+    struct event *sigint = evsignal_new(base, SIGINT, signal_handler, base);
+    if (!sigint) {
+        spdlog_error("Could not create SIGINT event: exiting");
+        event_base_free(base);
+        return NULL;
+        //exit(1);
+    }
+    event_add(sigint, NULL);
+
+    struct event *sigterm = evsignal_new(base, SIGTERM, signal_handler, base);
+    if (!sigterm) {
+        spdlog_error("Could not create SIGTERM event: exiting");
+        event_free(sigint);
+        event_base_free(base);
+        return NULL;
+        //exit(1);
+    }
+    event_add(sigterm, NULL);
+
+    event_base_dispatch(base);
+
+    event_free(sigint);
+    event_free(sigterm);
+    event_base_free(base);
+
+    return NULL;
+}
+
 int main(int argc, char ** args)
 {
+    pthread_t event_thread;
     CloundCommContext *cloud_ctx = NULL;
     Fkz9CommContext *fkz9_ctx = NULL;
     
-    spdlog_c_init("/opt/log/rt_a100.log", 1048576 * 5, 5);
+    spdlog_c_init("/opt/log/rt_a100.log", 1024 * 2, 2);
     spdlog_info("BUILD_TIMESTAMP: %s",BUILD_TIMESTAMP);
     spdlog_info("CLIENT_VERSION: %s", CLIENT_VERSION);
     spdlog_info("RT_A100_VERSION_MAJOR: %d.%d.%d", RT_A100_VERSION_MAJOR, RT_A100_VERSION_MINOR, RT_A100_VERSION_PATCH);
@@ -120,41 +159,16 @@ int main(int argc, char ** args)
         free(cloud_ctx);
         exit(1);
     }
-    RUN_LED_INIT();
-    FAULT_LED_INIT();
+    // RUN_LED_INIT();
+    // FAULT_LED_INIT();
 
     init_updater_environment();
     clound_comm_init(cloud_ctx);
     fkz9_comm_init(fkz9_ctx);
 
-    struct event_base *base = event_base_new();
-    if (!base) {
-        spdlog_error("Could not create event base: exiting");
-        exit(1);
-    }
-    struct event *sigint = evsignal_new(base, SIGINT, signal_handler, base);
-    if (!sigint) {
-        spdlog_error("Could not create SIGINT event: exiting");
-        event_base_free(base);
-        exit(1);
-    }
-    event_add(sigint, NULL);
-
-    struct event *sigterm = evsignal_new(base, SIGTERM, signal_handler, base);
-    if (!sigterm) {
-        spdlog_error("Could not create SIGTERM event: exiting");
-        event_free(sigint);
-        event_base_free(base);
-        exit(1);
-    }
-    event_add(sigterm, NULL);
-
-    event_base_dispatch(base);
-
-    event_free(sigint);
-    event_free(sigterm);
-    event_base_free(base);
+    pthread_create(&event_thread, NULL, event_task_entry, NULL);
     
+    pthread_join(event_thread, NULL);
     clound_comm_uninit(cloud_ctx); 
     fkz9_comm_uninit(fkz9_ctx);
  //   FAULT_LED_ON();

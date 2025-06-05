@@ -220,7 +220,8 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
     client->recnt_att = 0;
     client->is_connected = false;
     client->ops = &tcp_client_ops;
-    init_queue(&client->tx_queue, 256);
+    // init_queue(&client->tx_queue, 1350);
+    init_queue(&client->tx_queue);
     // init_queue(&client->rx_queue, 1024);
     return client;
 }

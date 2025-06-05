@@ -5,13 +5,13 @@ typedef struct st_UartPort UartPort;
 
 #define AT_TIMEOUT_MS   1000
 #define URC_BUFFER_SIZE 256
-#define AT_MAX_RESPONSE_LEN 512
+#define AT_MAX_RESPONSE_LEN 256
 
 #define FX650_PID  "A05"
 #define FX650_VID  "2CB7"
 
 #define FX650_DEV_NAME "/dev/ttyUSB1"
-
+#if 0
 // 模组信息相关定义
 #define AT_CGMI "+CGMI"          // 获取制造商 ID
 #define AT_GMI "+GMI"            // 获取制造商 ID
@@ -320,7 +320,7 @@ typedef struct {
     char username[32];
     char password[32];
 } APNConfig;
-
+#endif
 // 回调函数类型定义
 // typedef void (*DataReceivedCallback)(uint8_t* data, size_t len);
 // typedef void (*NetworkEventCallback)(int event);

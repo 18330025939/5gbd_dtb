@@ -26,7 +26,7 @@ struct st_TcpClient
     int recnt_att;
     int max_recnt_att;
     bool is_connected;
-    bool is_init;
+    // bool is_init;
     uint8_t conn_num;
     pthread_t conn_thread;
     pthread_t send_thread;

@@ -210,7 +210,7 @@ static int get_smi_id(Fx650Ctx* ctx)
         return -1;
     }
 
-    char *token = strtok((char *)resp, ":");
+    char *token = strtok((char *)resp, " ");
     strncpy(ctx->sim_id, token, 20);
 
     return 0;
@@ -331,14 +331,11 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
         return FX650_ERR_NET_SEGMENT;
     }
 #endif
+
+
     ret = check_sim_status(ctx);
     if (ret) {
         return FX650_ERR_SIM_NOT_READY;
-    }
-
-    ret = get_smi_id(ctx);
-    if (ret) {
-        return FX650_ERR_SIM_ID;
     }
 
     ret = set_apn(ctx, "5gnet");
@@ -353,6 +350,12 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
     }
 
     run_dhcp_client(ctx->net_name);
+
+    ret = get_smi_id(ctx);
+    if (ret) {
+        return FX650_ERR_SIM_ID;
+    }
+    
     return FX650_OK;
 }
 

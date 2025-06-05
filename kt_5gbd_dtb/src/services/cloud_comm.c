@@ -222,12 +222,12 @@ static int create_ota_heartbeat_data(char *data)
     cJSON *root = NULL;
     cJSON *unit_info = NULL;
     OtaHeartBeat heart_beat;
-    //char *buf = NULL;
+    char *buf = NULL;
     // char str[20];
 
-    // if (data == NULL) {
-    //     return -1;
-    // }
+    if (data == NULL) {
+        return -1;
+    }
  
     spdlog_debug("create_ota_heartbeat_data");
     memset(&(heart_beat), 0x00, sizeof(OtaHeartBeat));
@@ -252,11 +252,11 @@ static int create_ota_heartbeat_data(char *data)
     unit_info = create_unit_info_array(heart_beat.unit_num, heart_beat.units, 1);
     cJSON_AddItemToObject(root, "softwareList", unit_info);
  
-    data = cJSON_Print(root);
+    buf = cJSON_Print(root);
     // spdlog_debug("ota heart beat data: %s", buf);
-    // strncpy(data, buf, strlen(buf));
+    strncpy(data, buf, strlen(buf));
     cJSON_Delete(root);
-    // free(buf);
+    free(buf);
     free(heart_beat.units);
 
     return 0;
@@ -303,11 +303,11 @@ static int create_ota_report_data(struct FwDownInfo *info, char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
-    // char *buf = NULL;
+    char *buf = NULL;
 
-    // if (data == NULL) {
-    //     return -1;
-    // }
+    if (data == NULL) {
+         return -1;
+    }
 
     spdlog_debug("create_ota_report_data");
     memset(&report, 0, sizeof(OtaReport));
@@ -321,11 +321,11 @@ static int create_ota_report_data(struct FwDownInfo *info, char *data)
     cJSON_AddStringToObject(root, "taskId", report.task_id);
     cJSON_AddStringToObject(root, "executionTime", report.time);
     cJSON_AddStringToObject(root, "executionReport", report.report);
-    data = cJSON_Print(root);
-    // strncpy(data, buf, strlen(buf));
-    // spdlog_debug("ota report data: %s", buf);
+    buf = cJSON_Print(root);
+    strncpy(data, buf, strlen(buf));
+    spdlog_debug("ota report data: %s", buf);
     cJSON_Delete(root);
-    // free(buf);
+    free(buf);
 
     return 0;
 }
@@ -363,7 +363,7 @@ static int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 
 static void do_ota_report(struct FwDownInfo *info)
 {
-    char *buf = NULL;
+    char buf[1024] = {0};
     char *resp = NULL;
     
     int ret = create_ota_report_data(info, buf);
@@ -373,8 +373,8 @@ static void do_ota_report(struct FwDownInfo *info)
     http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
     spdlog_debug("do_ota_report %s", resp);
     
-    if (buf != NULL)
-        free(buf);
+    // if (buf != NULL)
+        // free(buf);
     if (resp != NULL) 
         free(resp);
 }
@@ -505,14 +505,14 @@ static int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
 static void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     CloundCommContext *ctx = NULL;
-    char *buf = NULL;
+    char buf[1024] = {0};
     char *resp = NULL;
 
     int ret = create_ota_heartbeat_data(buf);
     if (ret) {
         return;
     }
-    spdlog_info("ota_heartbeat : %s", buf);
+    // spdlog_info("ota_heartbeat : %s", buf);
     ret = http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
     spdlog_debug("resp to ota_heartbeat_req: %s, %d.", resp, ret);
     if (ret == 0) {
@@ -526,8 +526,8 @@ static void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
         pthread_mutex_unlock(&ctx->down_task.mutex);
     }
 
-    if (buf != NULL)
-        free(buf);
+    // if (buf != NULL)
+        // free(buf);
     if (resp != NULL) 
         free(resp);
 }
@@ -708,7 +708,7 @@ static void proc_message_cb(char *buf, size_t len)
 }
 
 
-static void *event_task_entry(void *arg)
+static void *cloud_event_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     uint8_t buf[256];
@@ -763,7 +763,7 @@ static void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, voi
     event_add(task, &tv);
 }
 
-static void *timer_task_entry(void *arg)
+static void *cloud_timer_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     struct event_base *base = NULL;
@@ -777,7 +777,7 @@ static void *timer_task_entry(void *arg)
     base = event_base_new();
     ctx->base = base;
     add_timer_task(arg, nav_data_msg_task_cb, 1000);
-    add_timer_task(arg, ota_heartbeat_task_cb, 30000);
+    add_timer_task(arg, ota_heartbeat_task_cb, 60000);
 
     event_base_dispatch(base);  // 启动事件循环
     
@@ -835,10 +835,10 @@ void clound_comm_init(CloundCommContext *ctx)
     // ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
     laneTo_init(&ctx->laneTo);
 
-    init_queue(&ctx->event_queue, 256);
+    // init_queue(&ctx->event_queue, 256);
+    init_queue(&ctx->event_queue);
     List_Init_Thread(&ctx->ev_list);
     List_Init_Thread(&ctx->down_task.list);
-
     int sta = get_cloud_info(&ctx->cloud_info);
     if (sta) {
         client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
@@ -849,13 +849,14 @@ void clound_comm_init(CloundCommContext *ctx)
     client->ops->connect(client);
     ctx->client = client;
     ctx->running = true;
-    pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
-    pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
+    pthread_create(&ctx->timer_thread, NULL, cloud_timer_task_entry, ctx);
+    pthread_create(&ctx->event_thread, NULL, cloud_event_task_entry, ctx);
     if ((pthread_mutex_init(&ctx->down_task.mutex, NULL) == 0) && 
         (pthread_cond_init(&ctx->down_task.cond, NULL) ==0)) {
         pthread_create(&ctx->down_task.thread, NULL, download_upgrade_entry, ctx);
     }
     gp_cloud_comm_ctx = ctx;
+    spdlog_info("cloud_comm init ok");
 }
 
 void clound_comm_uninit(CloundCommContext *ctx)
