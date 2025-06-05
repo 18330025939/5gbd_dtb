@@ -547,7 +547,7 @@ static void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     
     // RUN_LED_TOGGLE();
     CloundCommContext *ctx = (CloundCommContext *)arg;
-    laneTo_read_nav_data(&ctx.laneTo);
+    laneTo_read_nav_data(&ctx->laneTo);
     memset(buf, 0, sizeof(buf));
     hdr = (MsgFramHdr *)buf;
     hdr->usHdr = MSG_DATA_FRAM_HDR1;
@@ -827,13 +827,13 @@ void clound_comm_init(CloundCommContext *ctx)
     TcpClient *client = NULL;
 
     // ctx->fx650 = (Fx650Ctx *)malloc(sizeof(Fx650Ctx));
-    FX650_Error ret = fx650_init(&ctx.fx650);
+    FX650_Error ret = fx650_init(&ctx->fx650);
     if (FX650_OK != ret) {
         spdlog_error("fx650_init failed. %d.", ret);
         return;
     }
     // ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
-    laneTo_init(&ctx.laneTo);
+    laneTo_init(&ctx->laneTo);
 
     init_queue(&ctx->event_queue, 256);
     List_Init_Thread(&ctx->ev_list);
@@ -877,8 +877,8 @@ void clound_comm_uninit(CloundCommContext *ctx)
         ctx->client->ops->disconnect(ctx->client);
     }
     tcp_client_destroy(ctx->client);
-    laneTo_uninit(&ctx.laneTo);
-    fx650_uninit(&ctx.fx650);
+    laneTo_uninit(&ctx->laneTo);
+    fx650_uninit(&ctx->fx650);
     clean_queue(&ctx->event_queue);
 }
 
