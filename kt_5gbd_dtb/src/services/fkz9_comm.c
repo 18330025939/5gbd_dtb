@@ -23,6 +23,7 @@
 //extern struct Fkz9MsgFwInf __stop_message_forwarding;
 static Fkz9CommContext *gp_fkz9_comm_ctx = NULL;
 
+extern CloundCommContext *gp_cloud_comm_ctx;
 static void func_dev_info_resp(void)
 {
     MsgFramHdr *pHdr = NULL;
@@ -43,10 +44,10 @@ static void func_dev_info_resp(void)
     strcpy(pInfo->cSimID, gp_cloud_comm_ctx->fx650->sim_id);
     pInfo->ucSwVerCTU = fkz9_devBaseInfo.ctrl_sw;
     pInfo->ucHwVerCTU = fkz9_devBaseInfo.ctrl_hw;
-    pInfo->ucSwVerAU = fkz9_devBaseInfo.au_sw;
-    pInfo->ucHwVerAU = fkz9_devBaseInfo.au_hw;
-    pInfo->ucSwVerNTU = fkz9_devBaseInfo.ntu_sw;
-    pInfo->ucHwVerNTU = fkz9_devBaseInfo.ntu_hw;
+    pInfo->ucSwVerAU = fkz9_devBaseInfo.ad_sw;
+    pInfo->ucHwVerAU = fkz9_devBaseInfo.ad_hw;
+    pInfo->ucSwVerNTU = fkz9_devBaseInfo.net_sw;
+    pInfo->ucHwVerNTU = fkz9_devBaseInfo.net_hw;
 
     pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(DevInfoDataSeg));
     pCrc->usCRC = checkSum_8(buf, len - sizeof(MsgDataFramCrc));
@@ -55,7 +56,6 @@ static void func_dev_info_resp(void)
     TcpClient *client = gp_cloud_comm_ctx->client;
     client->ops->send(client, buf, len);
 }
-
 
 static int fkz9_heartbeat_resp_entry(void *arg)
 {
@@ -73,12 +73,11 @@ static int fkz9_heartbeat_resp_entry(void *arg)
         func_dev_info_resp();
         gp_fkz9_comm_ctx->is_init = true;
     }
-    
+
     return 0;
 }
 //REGISTER_FKZ9_MESSAGE_FW_INTERFACE(hb_resp, 22, fkz9_heartbeat_resp_entry, NULL);
 
-extern CloundCommContext *gp_cloud_comm_ctx;
 static int fkz9_msg_fw_to_cloud_entry(void *arg)
 {
     MsgFramHdr *pHdr = NULL;
