@@ -198,6 +198,24 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
     return 0;
 }
 
+static int get_smi_id(Fx650Ctx* ctx)
+{
+    char resp[AT_MAX_RESPONSE_LEN] = {0};
+    if (send_at_command(ctx, "AT+CCID?", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+        return -1;
+    }
+
+    if (strstr(resp, "OK") == NULL) {
+        fprintf(stderr, "CCID acquisition failed.\n");
+        return -1;
+    }
+
+    char *token = strtok((char *)resp, ":");
+    strncpy(ctx->sim_id, token, 20);
+
+    return 0;
+}
+
 /* 激活拨号 */
 static int activate_dia(Fx650Ctx* ctx, uint8_t status) 
 {
@@ -316,6 +334,11 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
     ret = check_sim_status(ctx);
     if (ret) {
         return FX650_ERR_SIM_NOT_READY;
+    }
+
+    ret = get_smi_id(ctx);
+    if (ret) {
+        return FX650_ERR_SIM_ID;
     }
 
     ret = set_apn(ctx, "5gnet");

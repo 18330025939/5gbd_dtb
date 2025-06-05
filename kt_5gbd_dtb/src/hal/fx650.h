@@ -5,7 +5,7 @@ typedef struct st_UartPort UartPort;
 
 #define AT_TIMEOUT_MS   1000
 #define URC_BUFFER_SIZE 256
-#define AT_MAX_RESPONSE_LEN 1024
+#define AT_MAX_RESPONSE_LEN 512
 
 #define FX650_PID  "A05"
 #define FX650_VID  "2CB7"
@@ -328,6 +328,7 @@ typedef struct {
 typedef struct st_Fx650Ctx {
     UartPort *uart;
     char *net_name;
+    char sim_id[21];
     // bool running;
     // NetworkStatus net_status;
     // APNConfig apn_config;
@@ -351,6 +352,7 @@ typedef enum {
     FX650_ERR_AT_ERROR,
     FX650_ERR_NET_SEGMENT,
     FX650_ERR_SIM_NOT_READY,
+    FX650_ERR_SIM_ID,
     FX650_ERR_APN_NOT_READY,
     FX650_ERR_NET_REG,
     FX650_ERR_PDP_ACTIVATE,

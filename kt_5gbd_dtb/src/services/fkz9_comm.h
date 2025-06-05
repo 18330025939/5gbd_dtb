@@ -15,24 +15,24 @@ typedef struct st_AsyncMQTTClient AsyncMQTTClient;
 #define MQTT_SERVER_USERNAME "cktt"
 #define MQTT_SERVER_PASSWORD "cktt"
 
-#define MQTT_TEST_SERVER_USERNAME "lrj"
-#define MQTT_TEST_SERVER_PASSWORD "123456"
-
-#define TEST_SERVER_IP   "192.168.42.50"
-#define TEST_SERVER_PORT 1883
-#define TEST_SERVER_USERNAME "lrj"
-#define TEST_SERVER_PASSWORD "123456"
-
 #define MQTT_CLIENT_ID     "RT-A100"
-
 #define CLIENT_DEV_ADDR   0x2002
+/* 自测使用 */
+// #define MQTT_TEST_SERVER_USERNAME "lrj"
+// #define MQTT_TEST_SERVER_PASSWORD "123456"
+// #define TEST_SERVER_IP   "192.168.42.50"
+// #define TEST_SERVER_PORT 1883
+// #define TEST_SERVER_USERNAME "lrj"
+// #define TEST_SERVER_PASSWORD "123456"
 
 /* 5G <-> FKZ9 */
-#define MQTT_HEARTBEAT_REQ_TOPIC   "/5G/4G/21"
-#define MQTT_HEARTBEAT_RESP_TOPIC  "/4G/5G/22"
+#define MQTT_HEARTBEAT_REQ_TOPIC   "/5G/4G/15"
+#define MQTT_HEARTBEAT_RESP_TOPIC  "/4G/5G/16"
 
 #define MQTT_MSG_SIGN_HEARTBEAT_REQ    0x15
 #define MQTT_MSG_SIGN_HEARTBEAT_RESP   0x16
+
+#define TCP_MSG_SIGN_DEV_INFO_RESP    0x86
 
 #pragma pack(push, 1)
 typedef struct st_HeartBeatDataSeg
@@ -46,21 +46,53 @@ typedef struct st_HeartBeatDataSeg
     uint8_t  ucSecond;
     uint8_t  ucRsvd[9];
 } HeartBeatDataSeg;
+
+typedef struct st_DevInfoDataSeg
+{
+    uint16_t usDevAddr;
+    uint8_t  ucSwVerCPU;
+    uint8_t  ucHwVerCPU;
+    uint8_t  ucSwVerAU1;
+    uint8_t  ucHwVerAU1;
+    uint8_t  ucSwVerAU2;
+    uint8_t  ucHwVerAU2;
+    char     cSimID[20];
+    uint8_t  ucSwVerCTU;
+    uint8_t  ucHwVerCTU;
+    uint8_t  ucSwVerCCU;
+    uint8_t  ucHwVerCCU;
+    uint8_t  ucSwVerFBU1;
+    uint8_t  ucHwVerFBU1;
+    uint8_t  ucSwVerFBU2;
+    uint8_t  ucHwVerFBU2;
+    uint8_t  ucSwVerAU;
+    uint8_t  ucHwVerAU;
+    uint8_t  ucSwVerMTU;
+    uint8_t  ucHwVerMTU;
+    uint8_t  ucSwVerNTU;
+    uint8_t  ucHwVerNTU;
+    uint8_t  ucSwVerAUS;
+    uint8_t  ucHwVerAUS;
+    uint8_t  ucRsvd[6];
+} DevInfoDataSeg;
 #pragma pack(pop)
-/* Cloud <-> FKZ9 */
-// /* 服务器发送换参数据格式 */
-// typedef struct st_ChgRefsDataSeg
-// {
-//     uint16_t usDevAddr;
-//     uint8_t  ucEnFlag1;
-//     uint8_t  ucEnFlag2;
-//     uint8_t  ucEnFlag3;
-//     uint8_t  ucEnFlag4;
-//     uint8_t  ucClsPH1;
-//     uint8_t  ucClsPH2;
-//     uint8_t  ucClsPH3;
-//     uint8_t  ucClsPH4;
-// } ChgRefsDataSeg;
+
+
+typedef struct st_DevBaseInfo 
+{
+    uint16_t dev_addr;
+    char cloud_ip[16];
+    int cloud_port;
+    uint8_t cpu_sw;
+    uint8_t cpu_hw;
+    uint8_t ad_sw;
+    uint8_t ad_hw;
+    uint8_t ctrl_sw;
+    uint8_t ctrl_hw;
+    uint8_t net_sw;
+    uint8_t net_hw;
+} DevbaseInfo;
+DevbaseInfo fkz9_devBaseInfo;
 
 struct Fkz9MsgFwInf {
     uint8_t sign;
@@ -272,6 +304,7 @@ typedef struct st_Fkz9CommContext
     struct List ev_list;
     bool is_running;
     uint16_t fkz9_dev_addr;
+    bool is_init;
 } Fkz9CommContext;
 
 struct UnitCorrInfo

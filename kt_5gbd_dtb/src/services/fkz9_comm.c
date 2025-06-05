@@ -23,7 +23,41 @@
 //extern struct Fkz9MsgFwInf __stop_message_forwarding;
 static Fkz9CommContext *gp_fkz9_comm_ctx = NULL;
 
-int fkz9_heartbeat_resp_entry(void *arg)
+static void func_dev_info_resp(void)
+{
+    MsgFramHdr *pHdr = NULL;
+    DevInfoDataSeg *pInfo = NULL;
+    MsgDataFramCrc *pCrc = NULL;
+    uint8_t buf[128] = {0};
+
+    pHdr = (MsgFramHdr *)buf;
+    pHdr->usHdr = MSG_DATA_FRAM_HDR1;
+    pHdr->ucSign = TCP_MSG_SIGN_DEV_INFO_RESP;
+    uint16_t len = sizeof(MsgFramHdr) + sizeof(DevInfoDataSeg) + sizeof(MsgDataFramCrc);
+    pHdr->usLen = bswap_16(len);
+
+    pInfo = (DevInfoDataSeg *)(buf + sizeof(MsgFramHdr));
+    pInfo->usDevAddr = bswap_16(fkz9_devBaseInfo.dev_addr);
+    pInfo->ucSwVerCPU = fkz9_devBaseInfo.cpu_sw;
+    pInfo->ucHwVerCPU = fkz9_devBaseInfo.cpu_hw;
+    strcpy(pInfo->cSimID, gp_cloud_comm_ctx->fx650->sim_id);
+    pInfo->ucSwVerCTU = fkz9_devBaseInfo.ctrl_sw;
+    pInfo->ucHwVerCTU = fkz9_devBaseInfo.ctrl_hw;
+    pInfo->ucSwVerAU = fkz9_devBaseInfo.au_sw;
+    pInfo->ucHwVerAU = fkz9_devBaseInfo.au_hw;
+    pInfo->ucSwVerNTU = fkz9_devBaseInfo.ntu_sw;
+    pInfo->ucHwVerNTU = fkz9_devBaseInfo.ntu_hw;
+
+    pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(DevInfoDataSeg));
+    pCrc->usCRC = checkSum_8(buf, len - sizeof(MsgDataFramCrc));
+    pCrc->usCRC = bswap_16(pCrc->usCRC);
+
+    TcpClient *client = gp_cloud_comm_ctx->client;
+    client->ops->send(client, buf, len);
+}
+
+
+static int fkz9_heartbeat_resp_entry(void *arg)
 {
     HeartBeatDataSeg *hb_data = NULL;
 
@@ -35,28 +69,32 @@ int fkz9_heartbeat_resp_entry(void *arg)
     spdlog_info("heartbeat_resp, DevAddr %04d, %02d-%02d-%2d %2d:%2d:%2d.", hb_data->usDevAddr, 
         hb_data->ucYear, hb_data->ucMonth, hb_data->ucDay, hb_data->ucHour, hb_data->ucMinute, hb_data->ucSecond);
 
+    if (gp_fkz9_comm_ctx->is_init == false) {
+        func_dev_info_resp();
+        gp_fkz9_comm_ctx->is_init = true;
+    }
+    
     return 0;
 }
 //REGISTER_FKZ9_MESSAGE_FW_INTERFACE(hb_resp, 22, fkz9_heartbeat_resp_entry, NULL);
 
 extern CloundCommContext *gp_cloud_comm_ctx;
-int fkz9_msg_fw_to_cloud_entry(void *arg)
+static int fkz9_msg_fw_to_cloud_entry(void *arg)
 {
-    MsgFramHdr *hdr = NULL;
+    MsgFramHdr *pHdr = NULL;
 
     if (arg == NULL) {
         return -1;
     }
 
-    
-    hdr = (MsgFramHdr*)arg;
+    pHdr = (MsgFramHdr*)arg;
     TcpClient *client = gp_cloud_comm_ctx->client;
-    client->ops->send(client, (uint8_t*)arg, bswap_16(hdr->usLen));
+    client->ops->send(client, (uint8_t*)arg, bswap_16(pHdr->usLen));
 
     return 0;
 }
 
-int cloud_to_can_entry(void* arg)
+static int cloud_to_can_entry(void* arg)
 {
     MsgFramHdr *pHdr = NULL;
     AsyncMQTTClient *mqtt_client = NULL;
@@ -74,7 +112,7 @@ int cloud_to_can_entry(void* arg)
     return 0;
 }
 
-int cloud_to_conf_entry(void* arg)
+static int cloud_to_conf_entry(void* arg)
 {
     MsgFramHdr *pHdr = NULL;
     AsyncMQTTClient *mqtt_client = NULL;
@@ -92,7 +130,7 @@ int cloud_to_conf_entry(void* arg)
     return 0;
 }
 
-int cloud_to_algorithms_entry(void* arg)
+static int cloud_to_algorithms_entry(void* arg)
 {
     MsgFramHdr *pHdr = NULL;
     AsyncMQTTClient *mqtt_client = NULL;
@@ -110,7 +148,7 @@ int cloud_to_algorithms_entry(void* arg)
     return 0;
 }
 
-int cloud_to_cmd_entry(void* arg)
+static int cloud_to_cmd_entry(void* arg)
 {
     MsgFramHdr *pHdr = NULL;
     AsyncMQTTClient *mqtt_client = NULL;
@@ -326,6 +364,7 @@ static void *event_task_entry(void *arg)
 
 static int get_fkz9_dev_addr(uint16_t* dev_addr)
 {
+#if 0
     SSHClient ssh_client;
 
     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
@@ -337,15 +376,18 @@ static int get_fkz9_dev_addr(uint16_t* dev_addr)
     }
 
     char resp[128] = {0};
-    ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh", resp, sizeof(resp));
+    ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         spdlog_error("ssh_client.execute updater.sh failed.");
         return -1;
     }
-    sscanf(resp, "%hd", dev_addr);
+    sscanf(resp, "%hd,", dev_addr);
 
     SSHClient_Destroy(&ssh_client);
+#else
+    *dev_addr = fkz9_devBaseInfo.dev_addr;
+#endif
     return 0;
 }
 
@@ -389,6 +431,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     pthread_create(&ctx->timer_thread, NULL, timer_task_entry, ctx);
     pthread_create(&ctx->event_thread, NULL, event_task_entry, ctx);
     ctx->is_running = true;
+    ctx->is_init = false;
     gp_fkz9_comm_ctx = ctx;
 }
 
@@ -402,6 +445,7 @@ void fkz9_comm_uninit(Fkz9CommContext *ctx)
 
     spdlog_debug("fkz9_comm_uninit.");
     ctx->is_running = false;
+    ctx->is_init = false;
     event_base_loopbreak(ctx->base);
     pthread_join(ctx->timer_thread, NULL);
     pthread_join(ctx->event_thread, NULL);

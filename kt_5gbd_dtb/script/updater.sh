@@ -293,37 +293,26 @@ function ota_report_check()
     done
 }
 
-function get_cloud_ip_port()
+function get_dev_base_info()
 {
+    db_res=`psql -U cktt  -d fkz9 -t -c "set search_path=obc; select dev_addr from device_info" | awk -F ' ' '{print $1}'`
+    devaddr=`printf "%04d" $db_res`
+
     db_res=`psql -U cktt  -d fkz9 -t -A -c "set search_path=obc; select ip_addr, port from device_info"`
     IFS='|' read -r cloud_ip_addr cloud_port <<<"$db_res"
 
-    echo "$cloud_ip_addr,$cloud_port,"
+    db_res=`psql -U cktt  -d fkz9 -t -A -c "set search_path=obc; select cpu_soft_ver,cpu_hard_ver,ad_soft_ver,ad_hard_ver,control_soft_ver,control_hard_ver,net_soft_ver,net_hard_ver from device_info"`
+    IFS='|' read -r cpu_soft cpu_hard ad_soft ad_hard con_soft con_hard net_soft net_hard <<<"$db_res"
+
+    echo "$devaddr,$cloud_ip_addr,$cloud_port,$cpu_soft,$cpu_hard,$ad_soft,$ad_hard,$con_soft,$con_hard,$net_soft,$net_hard,"
 }
 
 #ota 客户端main程序，执行心跳及升级检查
 
-db_res=`psql -U cktt  -d fkz9 -t -c "set search_path=obc; select dev_addr from device_info" | awk -F ' ' '{print $1}'`
-devaddr=`printf "%04d" $db_res`
-boot_time=$(cut -d. -f1 /proc/uptime)
+# db_res=`psql -U cktt  -d fkz9 -t -c "set search_path=obc; select dev_addr from device_info" | awk -F ' ' '{print $1}'`
+# devaddr=`printf "%04d" $db_res`
+# boot_time=$(cut -d. -f1 /proc/uptime)
 
-# echo "start to check ota failed report"
-# ota_report_check
-# echo "end to check ota failed report"
-
-# if [ $boot_time -gt 120 -a $boot_time -lt 240 ]; then
-#     echo "ota upgrade check start"
-#     ota_upgrade_check
-#     echo "ota upgrade check end"
-# fi
-
-# echo "process heartbeat start"
-# ota_heartbeat
-# echo "process heartbeat end"
-# #脚本执行完成后备份执行过程
-# if [ -f "$log_file"]; then
-#     mv "$log_file" "$log_file_bak"
-# fi
 
 case $1 in
     base_info)
@@ -335,10 +324,10 @@ case $1 in
     report_info)
         get_ota_report_info
         ;;
-    cloud_info)
-        get_cloud_ip_port
+    dev_info)
+        get_dev_base_info
         ;;
     *)
-        echo "$devaddr,"
+        echo "unkown command"
         ;;
 esac

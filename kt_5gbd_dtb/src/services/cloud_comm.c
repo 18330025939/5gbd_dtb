@@ -53,7 +53,7 @@ static void GetFileName(const char *url, char *filename)
     }
 }
 
-int get_ota_heartbeat_info(void *arg)
+static int get_ota_heartbeat_info(void *arg)
 {
     SSHClient ssh_client;
     struct st_OtaHeartBeat *pHb_info = NULL;
@@ -63,7 +63,7 @@ int get_ota_heartbeat_info(void *arg)
     }
  
     spdlog_debug("get_ota_heart_beat_info");
-#if 0
+#if 0 //自测使用
     pHb_info = (struct st_OtaHeartBeat*)arg;
     strcpy(pHb_info->dev_addr, "0356");
     strcpy(pHb_info->cpu_info, "10");
@@ -140,7 +140,6 @@ int get_ota_heartbeat_info(void *arg)
     char resp[512] = {0};
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", 
             resp, sizeof(resp));
-    // printf("base_info '%s'\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         spdlog_error("ssh_client.execute updater.sh base_info failed.");
@@ -156,7 +155,6 @@ int get_ota_heartbeat_info(void *arg)
     memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
-    // printf("unit_info resp '%s'\n", resp);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         spdlog_error("ssh_client.execute updater.sh unit_info failed.");
@@ -168,13 +166,11 @@ int get_ota_heartbeat_info(void *arg)
     char *token = strtok(resp, ";");
     while (token != NULL) {
         pHb_info->unit_num++;
-        // printf("pHb_info->unit_num %d, token %s\n", pHb_info->unit_num, token);
         token = strtok(NULL, ";");
     }
     pHb_info->units = (UnitInfo *)malloc(sizeof(struct st_UnitInfo) * pHb_info->unit_num);
     
     int i = 0;
-    // printf("unit_info tmp_resp %s\n", tmp_resp);
     token = strtok(tmp_resp, ";");
     while (token != NULL) {
         sscanf(token, "%[^:]:%[^,],%s", pHb_info->units[i].unit_name,
@@ -221,7 +217,7 @@ cJSON *create_unit_info_array(uint8_t num, UnitInfo* info, uint8_t type)
     return array;
 }
 
-int create_ota_heartbeat_data(char *data)
+static int create_ota_heartbeat_data(char *data)
 {
     cJSON *root = NULL;
     cJSON *unit_info = NULL;
@@ -242,7 +238,6 @@ int create_ota_heartbeat_data(char *data)
     }
     root = cJSON_CreateObject(); 
     cJSON_AddStringToObject(root, "lang", "zh_CN");
-    // sprintf(str, "%hu", heart_beat.dev_addr);
     cJSON_AddStringToObject(root, "deviceAddress", heart_beat.dev_addr);
     cJSON_AddStringToObject(root, "usageCpu", heart_beat.cpu_info);
     cJSON_AddStringToObject(root, "usageMemory", heart_beat.used_mem);
@@ -267,7 +262,7 @@ int create_ota_heartbeat_data(char *data)
     return 0;
 }
 
-int get_ota_report_info(struct FwDownInfo *info, void *arg)
+static int get_ota_report_info(struct FwDownInfo *info, void *arg)
 {
     SSHClient ssh_client;
     struct st_OtaReport *pReport = NULL;
@@ -304,7 +299,7 @@ int get_ota_report_info(struct FwDownInfo *info, void *arg)
     return 0;
 }
 
-int create_ota_report_data(struct FwDownInfo *info, char *data)
+static int create_ota_report_data(struct FwDownInfo *info, char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
@@ -335,7 +330,7 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
     return 0;
 }
 
-int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
+static int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 {
     struct FwUpdater *start = &__start_firmware_update;
     struct FwUpdater *fw_up = NULL;
@@ -366,7 +361,7 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
     return ret;
 }
 
-void do_ota_report(struct FwDownInfo *info)
+static void do_ota_report(struct FwDownInfo *info)
 {
     char *buf = NULL;
     char *resp = NULL;
@@ -384,7 +379,7 @@ void do_ota_report(struct FwDownInfo *info)
         free(resp);
 }
 
-int do_downlaod_firmware(struct List *task_list)
+static int do_downlaod_firmware(struct List *task_list)
 {
     struct FwDownInfo *pInfo = NULL;
     struct ListNode *pNode = NULL;
@@ -429,7 +424,7 @@ int do_downlaod_firmware(struct List *task_list)
     return 0;
 }
 
-void *download_upgrade_entry(void *arg)
+static void *download_upgrade_entry(void *arg)
 {
     struct DownUpgradeTask *pTask = NULL;
     CloundCommContext *ctx = NULL;
@@ -452,7 +447,7 @@ void *download_upgrade_entry(void *arg)
     return NULL;
 }
 
-int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
+static int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
 {
     // 解析 JSON 数据
     cJSON *root = cJSON_Parse(respond);
@@ -507,7 +502,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
     return 0;
 }
 
-void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
+static void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     CloundCommContext *ctx = NULL;
     char *buf = NULL;
@@ -537,7 +532,7 @@ void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
         free(resp);
 }
 
-void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
+static void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
 {
     MsgFramHdr *hdr = NULL;
     NAVDataSeg *nav_data = NULL;
@@ -605,7 +600,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     return;
 }
 
-int func_wave_file_resp(void *arg)
+static int func_wave_file_resp(void *arg)
 {
     MsgFramHdr *pHdr = NULL;
     WaveFileResp *pResp = NULL;
@@ -619,7 +614,7 @@ int func_wave_file_resp(void *arg)
     }
     ctx = (CloundCommContext *)arg;
     pHdr = (MsgFramHdr *)buf;
-    pHdr->usHdr = MSG_SIGN_WAVE_FILE_REQ;
+    pHdr->usHdr = MSG_DATA_FRAM_HDR1;
     pHdr->ucSign = MSG_SIGN_WAVE_FILE_RESP;
     uint16_t len = sizeof(MsgFramHdr) + sizeof(WaveFileResp) + sizeof(MsgDataFramCrc);
     pHdr->usLen = bswap_16(len);    
@@ -702,7 +697,7 @@ int func_wave_file_req(void *arg)
 
 REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_file, 174, func_wave_file_req, func_wave_file_resp);
 
-void proc_message_cb(char *buf, size_t len)
+static void proc_message_cb(char *buf, size_t len)
 {
     if (buf == NULL || len == 0) {
         return ;
@@ -753,7 +748,7 @@ static void *event_task_entry(void *arg)
     return NULL;
 }
 
-void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
+static void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
 {
     CloundCommContext *ctx = NULL;
     
@@ -797,8 +792,9 @@ static void *timer_task_entry(void *arg)
     return NULL;
 }
 
-int get_cloud_info(struct CluoudInfo*  pInfo)
+static int get_cloud_info(struct CluoudInfo*  pInfo)
 {
+#if 0
     SSHClient ssh_client;
 
     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
@@ -819,6 +815,10 @@ int get_cloud_info(struct CluoudInfo*  pInfo)
     sscanf(resp, "%[^,],%d,", pInfo->ip, &pInfo->port);
     spdlog_info("cloud_ip=%s, cloud_port=%d", pInfo->ip, pInfo->port);
     SSHClient_Destroy(&ssh_client);
+#else
+    strcpy(pInfo->ip, fkz9_devBaseInfo.cloud_ip);
+    pInfo->port = fkz9_devBaseInfo.cloud_port;
+#endif
     return 0;
 }
 

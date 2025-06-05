@@ -41,6 +41,27 @@ int init_updater_environment(void)
     } else {
         spdlog_info("find updater.sh resp %s.", resp);
         if (strstr(resp, "updater.sh")) {
+            memset(resp, 0, sizeof(resp));
+            ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh dev_info", resp, sizeof(resp));
+            if (ret) {
+                SSHClient_Destroy(&ssh_client);
+                spdlog_error("ssh_client.execute updater.sh dev_info failed.");
+                return -1;
+            }
+            memset((voud*)&fkz9_devBaseInfo, 0, sizeof(DevbaseInfo));
+            sscanf(resp, "%hd,%[^,],%d,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,", 
+                    &fkz9_devBaseInfo.dev_addr,
+                    fkz9_devBaseInfo.cloud_ip,
+                    &fkz9_devBaseInfo.cloud_port,
+                    &fkz9_devBaseInfo.cpu_sw,
+                    &fkz9_devBaseInfo.cpu_hw,
+                    &fkz9_devBaseInfo.ad_sw,
+                    &fkz9_devBaseInfo.ad_hw,
+                    &fkz9_devBaseInfo.ctrl_sw,
+                    &fkz9_devBaseInfo.ctrl_hw,
+                    &fkz9_devBaseInfo.net_sw,
+                    &fkz9_devBaseInfo.net_hw);
+
             SSHClient_Destroy(&ssh_client);
             return 0;
         }
