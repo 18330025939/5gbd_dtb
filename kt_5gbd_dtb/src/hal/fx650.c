@@ -372,7 +372,6 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
 {
     UartPort *fx650_port = NULL;
 
-
     memset(ctx, 0, sizeof(Fx650Ctx));
     ctx->uart = NULL;
     ctx->net_name = find_interface_by_vid_pid(FX650_VID, FX650_PID);
@@ -438,7 +437,7 @@ void fx650_uninit(Fx650Ctx* ctx)
         free(ctx->net_name);
     }
     
-    free(ctx);
+    // free(ctx);
 } 
 
 

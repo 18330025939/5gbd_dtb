@@ -541,6 +541,7 @@ int laneTo_init(LaneToCtx *ctx)
         return -1;
     }
 
+    memset(ctx, 0, sizeof(LaneToCtx));
     ctx->uart = NULL;
     int ret = init_shm_data_sock(ctx);
     if (ret) {
@@ -589,6 +590,6 @@ void laneTo_uninit(LaneToCtx *ctx)
          close(ctx->sockfd);
     }
     free(laneTo_port);
-    free(ctx);
+    // free(ctx);
 }
 

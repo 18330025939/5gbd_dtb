@@ -172,8 +172,8 @@ typedef struct st_MsgCommContext
     struct event_base *base;
     struct List ev_list;
     // struct EventList *ev_list;
-    LaneToCtx *laneTo;
-    Fx650Ctx *fx650;
+    LaneToCtx laneTo;
+    Fx650Ctx fx650;
     // struct List upgrade_task;
     struct DownUpgradeTask down_task;
     struct CluoudInfo cloud_info;

@@ -41,7 +41,7 @@ static void func_dev_info_resp(void)
     pInfo->usDevAddr = bswap_16(fkz9_devBaseInfo.dev_addr);
     pInfo->ucSwVerCPU = fkz9_devBaseInfo.cpu_sw;
     pInfo->ucHwVerCPU = fkz9_devBaseInfo.cpu_hw;
-    strcpy(pInfo->cSimID, gp_cloud_comm_ctx->fx650->sim_id);
+    strncpy(pInfo->cSimID, gp_cloud_comm_ctx->fx650.sim_id, 20);
     pInfo->ucSwVerCTU = fkz9_devBaseInfo.ctrl_sw;
     pInfo->ucHwVerCTU = fkz9_devBaseInfo.ctrl_hw;
     pInfo->ucSwVerAU = fkz9_devBaseInfo.ad_sw;
@@ -147,6 +147,7 @@ static int cloud_to_algorithms_entry(void* arg)
     return 0;
 }
 
+#if 0
 static int cloud_to_cmd_entry(void* arg)
 {
     MsgFramHdr *pHdr = NULL;
@@ -164,6 +165,7 @@ static int cloud_to_cmd_entry(void* arg)
     
     return 0;
 }
+#endif
 /* 0x91 服务器发送换参数据 */
 REGISTER_MESSAGE_PROCESSING_INTERFACE(change_refs, 145, cloud_to_can_entry, NULL);
 /* 0x72 服务器发送录波开关数据 */
