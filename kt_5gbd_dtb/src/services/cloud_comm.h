@@ -2,13 +2,15 @@
 #define __CLOUD_COMM_H
 
 #include <stdbool.h>
+#include "lane_to.h"
+#include "fx650.h"
 #include "queue.h"
 #include "list.h"
 
 
 typedef struct st_TcpClient TcpClient;
-typedef struct st_LaneToCtx LaneToCtx;
-typedef struct st_Fx650Ctx Fx650Ctx;
+// typedef struct st_LaneToCtx LaneToCtx;
+// typedef struct st_Fx650Ctx Fx650Ctx;
 
 #define CLOUD_SERVER_IP   "152.136.10.158"
 #define CLOUD_SERVER_PORT 3901
