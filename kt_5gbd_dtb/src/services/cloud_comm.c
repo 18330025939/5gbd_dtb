@@ -792,35 +792,35 @@ static void *cloud_timer_task_entry(void *arg)
     return NULL;
 }
 
-static int get_cloud_info(struct CluoudInfo*  pInfo)
-{
-#if 0
-    SSHClient ssh_client;
+// static int get_cloud_info(struct CluoudInfo*  pInfo)
+// {
+// #if 0
+//     SSHClient ssh_client;
 
-    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-    int ret = ssh_client.connect(&ssh_client);
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.connect failed.");
-        return -1;
-    }
+//     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+//     int ret = ssh_client.connect(&ssh_client);
+//     if (ret) {
+//         SSHClient_Destroy(&ssh_client);
+//         spdlog_error("ssh_client.connect failed.");
+//         return -1;
+//     }
 
-    char resp[128] = {0};;
-    ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh cloud_info", resp, sizeof(resp));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.execute updater.sh failed.");
-        return -1;
-    }
-    sscanf(resp, "%[^,],%d,", pInfo->ip, &pInfo->port);
-    spdlog_info("cloud_ip=%s, cloud_port=%d", pInfo->ip, pInfo->port);
-    SSHClient_Destroy(&ssh_client);
-#else
-    strcpy(pInfo->ip, fkz9_devBaseInfo.cloud_ip);
-    pInfo->port = fkz9_devBaseInfo.cloud_port;
-#endif
-    return 0;
-}
+//     char resp[128] = {0};;
+//     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh cloud_info", resp, sizeof(resp));
+//     if (ret) {
+//         SSHClient_Destroy(&ssh_client);
+//         spdlog_error("ssh_client.execute updater.sh failed.");
+//         return -1;
+//     }
+//     sscanf(resp, "%[^,],%d,", pInfo->ip, &pInfo->port);
+//     spdlog_info("cloud_ip=%s, cloud_port=%d", pInfo->ip, pInfo->port);
+//     SSHClient_Destroy(&ssh_client);
+// #else
+//     // strcpy(pInfo->ip, fkz9_devBaseInfo.cloud_ip);
+//     // pInfo->port = fkz9_devBaseInfo.cloud_port;
+// #endif
+//     return 0;
+// }
 
 void clound_comm_init(CloundCommContext *ctx)
 {
@@ -835,15 +835,15 @@ void clound_comm_init(CloundCommContext *ctx)
     // ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
     laneTo_init(&ctx->laneTo);
 
-    // init_queue(&ctx->event_queue, 256);
-    init_queue(&ctx->event_queue);
+    init_queue(&ctx->event_queue, 256);
+    // init_queue(&ctx->event_queue);
     List_Init_Thread(&ctx->ev_list);
     List_Init_Thread(&ctx->down_task.list);
-    int sta = get_cloud_info(&ctx->cloud_info);
-    if (sta) {
+    // int sta = get_cloud_info(&ctx->cloud_info);
+    if (ctx->base_info == NULL) {
         client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
     } else {
-        client = tcp_client_create(ctx->cloud_info.ip, ctx->cloud_info.port, MAX_RECONNECT_ATTEMPTS);
+        client = tcp_client_create(ctx->base_info->cloud_ip, ctx->base_info->cloud_port, MAX_RECONNECT_ATTEMPTS);
     }
     client->ops->register_cb(client, proc_message_cb);
     client->ops->connect(client);

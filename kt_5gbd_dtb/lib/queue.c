@@ -7,34 +7,34 @@
 #include <stdint.h>
 #include "queue.h"
 
-// int init_queue(ThreadSafeQueue* q, size_t size)
-// {
-//     pthread_mutex_init(&q->mutex, NULL);
-//     for (int i = 0; i < MAX_SEGMENTS; i++) {
-//         q->buffers[i] = (uint8_t*)malloc(size * sizeof(uint8_t));
-//         bzero(q->buffers[i], size * sizeof(uint8_t));
-//     }
-
-//     bzero(q->sizes, size * sizeof(uint8_t));
-//     q->head = 0;
-//     q->tail = 0;
-//     return 0;
-// }
-
-int init_queue(ThreadSafeQueue* q)
+int init_queue(ThreadSafeQueue* q, size_t size)
 {
-
     pthread_mutex_init(&q->mutex, NULL);
     for (int i = 0; i < MAX_SEGMENTS; i++) {
-        bzero(q->buffers[i], MAX_DATA_LEN);
+        q->buffers[i] = (uint8_t*)malloc(size * sizeof(uint8_t));
+        bzero(q->buffers[i], size * sizeof(uint8_t));
     }
 
-    bzero(q->sizes, MAX_DATA_LEN);
+    bzero(q->sizes, size * sizeof(uint8_t));
     q->head = 0;
     q->tail = 0;
     return 0;
-
 }
+
+// int init_queue(ThreadSafeQueue* q)
+// {
+
+//     pthread_mutex_init(&q->mutex, NULL);
+//     for (int i = 0; i < MAX_SEGMENTS; i++) {
+//         bzero(q->buffers[i], MAX_DATA_LEN);
+//     }
+
+//     bzero(q->sizes, MAX_DATA_LEN);
+//     q->head = 0;
+//     q->tail = 0;
+//     return 0;
+
+// }
 
 /* 入队操作 */
 int enqueue(ThreadSafeQueue* q, uint8_t* data, size_t len) 

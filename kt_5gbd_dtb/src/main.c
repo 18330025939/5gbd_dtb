@@ -16,6 +16,8 @@
 #include "ssh_client.h"
 
 
+static struct DevBaseInfo fkz9_devBaseInfo;
+
 #if !defined(SPDLOG_ACTIVE_LEVEL)
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
 #endif
@@ -140,40 +142,32 @@ static void *event_task_entry(void *arg)
 int main(int argc, char ** args)
 {
     pthread_t event_thread;
-    CloundCommContext *cloud_ctx = NULL;
-    Fkz9CommContext *fkz9_ctx = NULL;
+    CloundCommContext cloud_ctx;
+    Fkz9CommContext fkz9_ctx;
     
     spdlog_c_init("/opt/log/rt_a100.log", 1024 * 2, 2);
     spdlog_info("BUILD_TIMESTAMP: %s",BUILD_TIMESTAMP);
     spdlog_info("CLIENT_VERSION: %s", CLIENT_VERSION);
     spdlog_info("RT_A100_VERSION_MAJOR: %d.%d.%d", RT_A100_VERSION_MAJOR, RT_A100_VERSION_MINOR, RT_A100_VERSION_PATCH);
 
-    cloud_ctx = (CloundCommContext*)malloc(sizeof(CloundCommContext));
-    if (cloud_ctx == NULL) {
-        exit(1);
-    }
-    memset(cloud_ctx, 0, sizeof(CloundCommContext));
-    
-    fkz9_ctx = (Fkz9CommContext*)malloc(sizeof(Fkz9CommContext));
-    if (fkz9_ctx == NULL) {
-        free(cloud_ctx);
-        exit(1);
-    }
+    memset((void*)&cloud_ctx, 0, sizeof(CloundCommContext));
+    cloud_ctx.base_info = &fkz9_devBaseInfo;
+
+    memset((void*)&fkz9_ctx, 0, sizeof(Fkz9CommContext));    
+    fkz9_ctx.base_info = &fkz9_devBaseInfo;
     // RUN_LED_INIT();
     // FAULT_LED_INIT();
 
     init_updater_environment();
-    clound_comm_init(cloud_ctx);
-    fkz9_comm_init(fkz9_ctx);
+    clound_comm_init(&cloud_ctx);
+    fkz9_comm_init(&fkz9_ctx);
 
     pthread_create(&event_thread, NULL, event_task_entry, NULL);
     
     pthread_join(event_thread, NULL);
-    clound_comm_uninit(cloud_ctx); 
-    fkz9_comm_uninit(fkz9_ctx);
+    clound_comm_uninit(&cloud_ctx); 
+    fkz9_comm_uninit(&fkz9_ctx);
  //   FAULT_LED_ON();
-    free(cloud_ctx);
-    free(fkz9_ctx);
 
     spdlog_info("Application exiting...");
 

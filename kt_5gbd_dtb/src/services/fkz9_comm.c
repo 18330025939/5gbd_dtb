@@ -31,6 +31,7 @@ static void func_dev_info_resp(void)
     MsgDataFramCrc *pCrc = NULL;
     uint8_t buf[128] = {0};
 
+    spdlog_debug("func_dev_info_resp......");
     pHdr = (MsgFramHdr *)buf;
     pHdr->usHdr = MSG_DATA_FRAM_HDR1;
     pHdr->ucSign = TCP_MSG_SIGN_DEV_INFO_RESP;
@@ -65,6 +66,7 @@ static int fkz9_heartbeat_resp_entry(void *arg)
         return -1;
     }
 
+    spdlog_debug("fkz9_heartbeat_resp_entry");
     hb_data = (HeartBeatDataSeg*)((uint8_t*)arg + sizeof(MsgFramHdr));
     spdlog_info("heartbeat_resp, DevAddr %04d, %02d-%02d-%2d %2d:%2d:%2d.", hb_data->usDevAddr, 
         hb_data->ucYear, hb_data->ucMonth, hb_data->ucDay, hb_data->ucHour, hb_data->ucMinute, hb_data->ucSecond);
@@ -105,7 +107,7 @@ static int cloud_to_can_entry(void* arg)
     pHdr = (MsgFramHdr*)arg;
     mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/can/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->ucSign);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/can/%02x", gp_fkz9_comm_ctx->base_info->dev_add, pHdr->ucSign);
     mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
     
     return 0;
@@ -123,7 +125,7 @@ static int cloud_to_conf_entry(void* arg)
     pHdr = (MsgFramHdr*)arg;
     mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/conf/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->ucSign);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/conf/%02x", gp_fkz9_comm_ctx->base_info->dev_addr, pHdr->ucSign);
     mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
     
     return 0;
@@ -141,7 +143,7 @@ static int cloud_to_algorithms_entry(void* arg)
     pHdr = (MsgFramHdr*)arg;
     mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/algorithms/%02x", gp_fkz9_comm_ctx->fkz9_dev_addr, pHdr->ucSign);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/algorithms/%02x", gp_fkz9_comm_ctx->base_info->dev_addr, pHdr->ucSign);
     mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
     
     return 0;
@@ -264,7 +266,7 @@ static void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     // printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
     mqtt_client = ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d%s", ctx->fkz9_dev_addr, MQTT_HEARTBEAT_REQ_TOPIC);
+    snprintf(topic, sizeof(topic), "fkz9/%04d%s", ctx->base_info->dev_addr, MQTT_HEARTBEAT_REQ_TOPIC);
     mqtt_client->ops->publish(mqtt_client, topic, buf, len);
 
     return;
@@ -301,9 +303,9 @@ static void *fkz9_timer_task_entry(void *arg)
     ctx->base = base;
     add_timer_task(arg, heartbeat_req_task_cb, 3000);
 
-    spdlog_info("fkz9_dev_addr=%d, ctx=0x%x", ctx->fkz9_dev_addr, ctx);
+    spdlog_info("fkz9_dev_addr=%d", ctx->base_info->dev_addr);
     char topic[128] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/+/4G/#", ctx->fkz9_dev_addr);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/+/4G/#", ctx->base_info->dev_addr);
     mqtt_client = ctx->mqtt_client;
     do {
         sleep(0.1);
@@ -311,7 +313,7 @@ static void *fkz9_timer_task_entry(void *arg)
     while (mqtt_client->is_conn == false);
     mqtt_client->ops->subscribe(mqtt_client, topic);
     memset(topic, 0, sizeof(topic));
-    snprintf(topic, sizeof(topic), "fkz9/%04d/+/5G/#", ctx->fkz9_dev_addr);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/+/5G/#", ctx->base_info->dev_addr);
     mqtt_client->ops->subscribe(mqtt_client, topic);
 
     event_base_dispatch(base);  // 启动事件循环
@@ -382,34 +384,34 @@ static void *fkz9_event_task_entry(void *arg)
     return NULL;
 }
 
-static int get_fkz9_dev_addr(uint16_t* dev_addr)
-{
-#if 0
-    SSHClient ssh_client;
+// static int get_fkz9_dev_addr(uint16_t* dev_addr)
+// {
+// #if 0
+//     SSHClient ssh_client;
 
-    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-    int ret = ssh_client.connect(&ssh_client);
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.connect failed.");
-        return -1;
-    }
+//     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+//     int ret = ssh_client.connect(&ssh_client);
+//     if (ret) {
+//         SSHClient_Destroy(&ssh_client);
+//         spdlog_error("ssh_client.connect failed.");
+//         return -1;
+//     }
 
-    char resp[128] = {0};
-    ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", resp, sizeof(resp));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.execute updater.sh failed.");
-        return -1;
-    }
-    sscanf(resp, "%hd,", dev_addr);
+//     char resp[128] = {0};
+//     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", resp, sizeof(resp));
+//     if (ret) {
+//         SSHClient_Destroy(&ssh_client);
+//         spdlog_error("ssh_client.execute updater.sh failed.");
+//         return -1;
+//     }
+//     sscanf(resp, "%hd,", dev_addr);
 
-    SSHClient_Destroy(&ssh_client);
-#else
-    *dev_addr = fkz9_devBaseInfo.dev_addr;
-#endif
-    return 0;
-}
+//     SSHClient_Destroy(&ssh_client);
+// #else
+//     *dev_addr = fkz9_devBaseInfo.dev_addr;
+// #endif
+//     return 0;
+// }
 
 void fkz9_comm_init(Fkz9CommContext *ctx)
 {
@@ -420,8 +422,8 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         return;
     }
     
-    get_fkz9_dev_addr(&(ctx->fkz9_dev_addr));
-    spdlog_info("kfz9_dev_addr=%d, ctx=0x%x", ctx->fkz9_dev_addr, ctx);
+    // get_fkz9_dev_addr(&(ctx->fkz9_dev_addr));
+    spdlog_info("kfz9_dev_addr=%d", ctx->base_info->dev_addr);
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
     AsyncClientConfig client_config = {
         .address = url,
@@ -446,8 +448,8 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
     }
 
     ctx->mqtt_client = mqtt_client;
-    // init_queue(&ctx->event_queue, MAX_MSG_SIZE);
-    init_queue(&ctx->event_queue);
+    init_queue(&ctx->event_queue, MAX_MSG_SIZE);
+    // init_queue(&ctx->event_queue);
     List_Init_Thread(&ctx->ev_list);
     pthread_create(&ctx->timer_thread, NULL, fkz9_timer_task_entry, ctx);
     pthread_create(&ctx->event_thread, NULL, fkz9_event_task_entry, ctx);

@@ -178,7 +178,8 @@ typedef struct st_MsgCommContext
     Fx650Ctx fx650;
     // struct List upgrade_task;
     struct DownUpgradeTask down_task;
-    struct CluoudInfo cloud_info;
+    // struct CluoudInfo cloud_info;
+    struct DevBaseInfo *base_info;
 } CloundCommContext;
 
 #define STRING_LEN_MAX 32

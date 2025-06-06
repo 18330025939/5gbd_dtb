@@ -78,7 +78,7 @@ typedef struct st_DevInfoDataSeg
 #pragma pack(pop)
 
 
-typedef struct st_DevBaseInfo 
+struct DevBaseInfo 
 {
     uint16_t dev_addr;
     char cloud_ip[16];
@@ -91,8 +91,7 @@ typedef struct st_DevBaseInfo
     uint8_t ctrl_hw;
     uint8_t net_sw;
     uint8_t net_hw;
-} DevbaseInfo;
-DevbaseInfo fkz9_devBaseInfo;
+} ;
 
 struct Fkz9MsgFwInf {
     uint8_t sign;
@@ -305,6 +304,7 @@ typedef struct st_Fkz9CommContext
     bool is_running;
     uint16_t fkz9_dev_addr;
     bool is_init;
+    struct DevBaseInfo *base_info;
 } Fkz9CommContext;
 
 struct UnitCorrInfo
