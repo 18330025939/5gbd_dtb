@@ -25,14 +25,15 @@ static struct DevBaseInfo fkz9_devBaseInfo;
 int init_updater_environment(void)
 {
     SSHClient ssh_client;
+    int ret = 0;
 
     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-    int ret = ssh_client.connect(&ssh_client);
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.connect failed.");
-        return -1;
-    }
+    do {
+        ret = ssh_client.connect(&ssh_client);
+        if (ret) {
+            sleep(1);
+        }
+    } while(ret);
 
     char resp[128] = {0};
     ret = ssh_client.execute(&ssh_client, "find /home/cktt/script/ -name \"updater.sh\"", 
@@ -103,7 +104,7 @@ void signal_handler(evutil_socket_t fd, short events, void *arg)
     event_base_loopexit(base, NULL);
 }
 
-static void *event_task_entry(void *arg)
+void *event_task_entry(void *arg)
 {
     struct event_base *base = event_base_new();
     if (!base) {
@@ -145,7 +146,7 @@ int main(int argc, char ** args)
     CloundCommContext cloud_ctx;
     Fkz9CommContext fkz9_ctx;
     
-    spdlog_c_init("/opt/log/rt_a100.log", 1024 * 2, 2);
+    spdlog_c_init("/opt/log/rt_a100.log", 1024 * 1024, 2);
     spdlog_info("BUILD_TIMESTAMP: %s",BUILD_TIMESTAMP);
     spdlog_info("CLIENT_VERSION: %s", CLIENT_VERSION);
     spdlog_info("RT_A100_VERSION_MAJOR: %d.%d.%d", RT_A100_VERSION_MAJOR, RT_A100_VERSION_MINOR, RT_A100_VERSION_PATCH);

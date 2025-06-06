@@ -34,7 +34,7 @@ CloundCommContext *gp_cloud_comm_ctx = NULL;
 
 uint16_t checkSum_8(uint8_t *buf, uint16_t len)
 {
-    uint8_t i;
+    uint16_t i;
     uint16_t ret = 0;
     for(i=0; i<len; i++)
     {
@@ -44,7 +44,7 @@ uint16_t checkSum_8(uint8_t *buf, uint16_t len)
     return ret;
 }
 
-static void GetFileName(const char *url, char *filename)
+void GetFileName(const char *url, char *filename)
 {
     char *token = strtok((char *)url, "/");
     while (token != NULL) {
@@ -53,7 +53,7 @@ static void GetFileName(const char *url, char *filename)
     }
 }
 
-static int get_ota_heartbeat_info(void *arg)
+int get_ota_heartbeat_info(void *arg)
 {
     SSHClient ssh_client;
     struct st_OtaHeartBeat *pHb_info = NULL;
@@ -217,7 +217,7 @@ cJSON *create_unit_info_array(uint8_t num, UnitInfo* info, uint8_t type)
     return array;
 }
 
-static int create_ota_heartbeat_data(char *data)
+int create_ota_heartbeat_data(char *data)
 {
     cJSON *root = NULL;
     cJSON *unit_info = NULL;
@@ -262,7 +262,7 @@ static int create_ota_heartbeat_data(char *data)
     return 0;
 }
 
-static int get_ota_report_info(struct FwDownInfo *info, void *arg)
+int get_ota_report_info(struct FwDownInfo *info, void *arg)
 {
     SSHClient ssh_client;
     struct st_OtaReport *pReport = NULL;
@@ -299,7 +299,7 @@ static int get_ota_report_info(struct FwDownInfo *info, void *arg)
     return 0;
 }
 
-static int create_ota_report_data(struct FwDownInfo *info, char *data)
+int create_ota_report_data(struct FwDownInfo *info, char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
@@ -330,7 +330,7 @@ static int create_ota_report_data(struct FwDownInfo *info, char *data)
     return 0;
 }
 
-static int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
+int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 {
     struct FwUpdater *start = &__start_firmware_update;
     struct FwUpdater *fw_up = NULL;
@@ -361,7 +361,7 @@ static int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
     return ret;
 }
 
-static void do_ota_report(struct FwDownInfo *info)
+void do_ota_report(struct FwDownInfo *info)
 {
     char buf[1024] = {0};
     char *resp = NULL;
@@ -379,7 +379,7 @@ static void do_ota_report(struct FwDownInfo *info)
         free(resp);
 }
 
-static int do_downlaod_firmware(struct List *task_list)
+int do_downlaod_firmware(struct List *task_list)
 {
     struct FwDownInfo *pInfo = NULL;
     struct ListNode *pNode = NULL;
@@ -424,7 +424,7 @@ static int do_downlaod_firmware(struct List *task_list)
     return 0;
 }
 
-static void *download_upgrade_entry(void *arg)
+void *download_upgrade_entry(void *arg)
 {
     struct DownUpgradeTask *pTask = NULL;
     CloundCommContext *ctx = NULL;
@@ -447,7 +447,7 @@ static void *download_upgrade_entry(void *arg)
     return NULL;
 }
 
-static int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
+int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
 {
     // 解析 JSON 数据
     cJSON *root = cJSON_Parse(respond);
@@ -502,7 +502,7 @@ static int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
     return 0;
 }
 
-static void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
+void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     CloundCommContext *ctx = NULL;
     char buf[1024] = {0};
@@ -532,7 +532,7 @@ static void ota_heartbeat_task_cb(evutil_socket_t fd, short event, void *arg)
         free(resp);
 }
 
-static void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
+void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg) 
 {
     MsgFramHdr *hdr = NULL;
     NAVDataSeg *nav_data = NULL;
@@ -600,7 +600,7 @@ static void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     return;
 }
 
-static int func_wave_file_resp(void *arg)
+int func_wave_file_resp(void *arg)
 {
     MsgFramHdr *pHdr = NULL;
     WaveFileResp *pResp = NULL;
@@ -619,7 +619,8 @@ static int func_wave_file_resp(void *arg)
     uint16_t len = sizeof(MsgFramHdr) + sizeof(WaveFileResp) + sizeof(MsgDataFramCrc);
     pHdr->usLen = bswap_16(len);    
     pResp = (WaveFileResp *)(buf + sizeof(MsgFramHdr));
-    pResp->usDevAddr = bswap_16(CLIENT_DEV_ADDR);
+    // pResp->usDevAddr = bswap_16(CLIENT_DEV_ADDR);
+    db_to_bcd(ctx->base_info->dev_addr, &pResp->usDevAddr);
     CustomTime t;
     get_system_time(&t);
     pResp->ucYear = t.usYear - 2000;
@@ -638,9 +639,9 @@ static int func_wave_file_resp(void *arg)
 
     char remote_path[128];
     char local_path[128];
-    uint16_t dev_addr = CLIENT_DEV_ADDR;
-    snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d/%4d-wavedat-%4d%2d%2d%2d%2d.dat.gz", dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, 
-                pResp->ucHour, dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, pResp->ucHour, pResp->ucMinute);
+    // uint16_t dev_addr = CLIENT_DEV_ADDR;
+    snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d/%4d-wavedat-%4d%2d%2d%2d%2d.dat.gz", ctx->base_info->dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, 
+                pResp->ucHour, ctx->base_info->dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, pResp->ucHour, pResp->ucMinute);
     int ret = ftp_upload(FTP_SERVER_URL, local_path, remote_path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
     if (ret != 0) {
         return -1;
@@ -697,7 +698,7 @@ int func_wave_file_req(void *arg)
 
 REGISTER_MESSAGE_PROCESSING_INTERFACE(wave_file, 174, func_wave_file_req, func_wave_file_resp);
 
-static void proc_message_cb(char *buf, size_t len)
+void proc_message_cb(char *buf, size_t len)
 {
     if (buf == NULL || len == 0) {
         return ;
@@ -708,7 +709,7 @@ static void proc_message_cb(char *buf, size_t len)
 }
 
 
-static void *cloud_event_task_entry(void *arg)
+void *cloud_event_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     uint8_t buf[256];
@@ -748,7 +749,7 @@ static void *cloud_event_task_entry(void *arg)
     return NULL;
 }
 
-static void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
+void cloud_add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, void*), uint32_t ms)
 {
     CloundCommContext *ctx = NULL;
     
@@ -763,7 +764,7 @@ static void add_timer_task(void *arg, void (task_cb)(evutil_socket_t, short, voi
     event_add(task, &tv);
 }
 
-static void *cloud_timer_task_entry(void *arg)
+void *cloud_timer_task_entry(void *arg)
 {
     CloundCommContext *ctx = NULL;
     struct event_base *base = NULL;
@@ -776,8 +777,8 @@ static void *cloud_timer_task_entry(void *arg)
     ctx = (CloundCommContext *)arg;
     base = event_base_new();
     ctx->base = base;
-    add_timer_task(arg, nav_data_msg_task_cb, 1000);
-    add_timer_task(arg, ota_heartbeat_task_cb, 60000);
+    cloud_add_timer_task(arg, nav_data_msg_task_cb, 1000);
+    cloud_add_timer_task(arg, ota_heartbeat_task_cb, 60000);
 
     event_base_dispatch(base);  // 启动事件循环
     
@@ -792,7 +793,7 @@ static void *cloud_timer_task_entry(void *arg)
     return NULL;
 }
 
-// static int get_cloud_info(struct CluoudInfo*  pInfo)
+// int get_cloud_info(struct CluoudInfo*  pInfo)
 // {
 // #if 0
 //     SSHClient ssh_client;
@@ -834,7 +835,6 @@ void clound_comm_init(CloundCommContext *ctx)
     }
     // ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
     laneTo_init(&ctx->laneTo);
-
     init_queue(&ctx->event_queue, 256);
     // init_queue(&ctx->event_queue);
     List_Init_Thread(&ctx->ev_list);

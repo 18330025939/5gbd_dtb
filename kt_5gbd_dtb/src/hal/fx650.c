@@ -190,6 +190,7 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
         return -1;
     }
 
+    printf("ccis resp:%s", resp);
     if (strstr(resp, "OK") == NULL) {
         fprintf(stderr, "APN setting failed.\n");
         return -1;
@@ -201,7 +202,7 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
 static int get_smi_id(Fx650Ctx* ctx)
 {
     char resp[AT_MAX_RESPONSE_LEN] = {0};
-    if (send_at_command(ctx, "AT+CCID?", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (send_at_command(ctx, "AT+CCID?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -209,9 +210,10 @@ static int get_smi_id(Fx650Ctx* ctx)
         fprintf(stderr, "CCID acquisition failed.\n");
         return -1;
     }
+    printf("CCID = %s", resp);
 
-    char *token = strtok((char *)resp, " ");
-    strncpy(ctx->sim_id, token, 20);
+    // char *token = strtok((char *)resp, ":");
+    strncpy(ctx->sim_id, resp + 7, 20);
 
     return 0;
 }
@@ -351,11 +353,6 @@ FX650_Error fx650_connect_network(Fx650Ctx* ctx)
 
     run_dhcp_client(ctx->net_name);
 
-    ret = get_smi_id(ctx);
-    if (ret) {
-        return FX650_ERR_SIM_ID;
-    }
-    
     return FX650_OK;
 }
 
@@ -383,9 +380,6 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
         return FX650_ERR_INIT;
     }
   
-    if (check_network_connection()) {
-        return FX650_OK;
-    }
     printf("Network port name: %s\n", ctx->net_name);  
     SerialPortInfo fx650_port_info = {
         .speed = 115200, 
@@ -414,6 +408,10 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
         return ret;
     }
 
+    get_smi_id(ctx);
+    if (check_network_connection()) {
+        return FX650_OK;
+    }
     // 关闭回显
     // ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), AT_TIMEOUT_MS);
 

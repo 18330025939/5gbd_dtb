@@ -8,13 +8,13 @@
 
 typedef struct st_TcpClient TcpClient;
 
-typedef struct st_TcpClientOps
+struct TcpClientOps
 {
     void (*connect)(TcpClient* client);
-    void (*send)(TcpClient* client, uint8_t* data, size_t len);
+    int (*send)(TcpClient* client, uint8_t* data, size_t len);
     void (*disconnect)(TcpClient* client);
     void (*register_cb)(TcpClient* client, void (*cb)(char *buf, size_t len));
-} TcpClientOps;
+} ;
 
 struct st_TcpClient
 {
@@ -32,7 +32,7 @@ struct st_TcpClient
     pthread_t send_thread;
     ThreadSafeQueue tx_queue;
     // ThreadSafeQueue rx_queue;
-    TcpClientOps *ops;
+    struct TcpClientOps *ops;
     void (*on_message)(char *buf, size_t len);
 } ;
 

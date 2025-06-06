@@ -159,6 +159,7 @@ static void sg_data_parse(void *data, const char *payload, size_t len)
 }
 REGISTER_MESSAGE_PARSER(PBSOL, 1, &sg_data, sg_data_parse);
 
+#if 0
 static void gngga_data_parse(void *data, const char *payload, size_t len)
 {   
     GNGGAData *gngga = (GNGGAData*)data;
@@ -213,7 +214,7 @@ static void gngga_data_parse(void *data, const char *payload, size_t len)
     // }
     return ;
 }
-REGISTER_MESSAGE_PARSER(GNGGA, 0, &gngga_data, gngga_data_parse);
+// REGISTER_MESSAGE_PARSER(GNGGA, 0, &gngga_data, gngga_data_parse);
 
 static void gnrmc_data_parse(void *data, const char *payload, size_t len)
 {
@@ -232,7 +233,7 @@ static void gnrmc_data_parse(void *data, const char *payload, size_t len)
             &gnrmc->date);
     return ;
 }
-REGISTER_MESSAGE_PARSER(GNRMC, 0, &gnrmc_data, gnrmc_data_parse);
+// REGISTER_MESSAGE_PARSER(GNRMC, 0, &gnrmc_data, gnrmc_data_parse);
 
 static void gnatt_data_parse(void *data, const char *payload, size_t len)
 {
@@ -250,7 +251,7 @@ static void gnatt_data_parse(void *data, const char *payload, size_t len)
             &gnatt->heading_uncertainty);
     return ;
 }   
-REGISTER_MESSAGE_PARSER(GNATT, 0, &gnatt_data, gnatt_data_parse);
+// REGISTER_MESSAGE_PARSER(GNATT, 0, &gnatt_data, gnatt_data_parse);
 
 static void pgnss3_data_parse(void *data, const char *payload, size_t len)
 {
@@ -270,7 +271,7 @@ static void pgnss3_data_parse(void *data, const char *payload, size_t len)
             &pgnss3->reserved);
     return ;
 }
-REGISTER_MESSAGE_PARSER(PGNSS, 3, &pgnss3_data, pgnss3_data_parse);
+// REGISTER_MESSAGE_PARSER(PGNSS, 3, &pgnss3_data, pgnss3_data_parse);
 
 static void pgnss4_data_parse(void *data, const char *payload, size_t len)
 {
@@ -289,7 +290,7 @@ static void pgnss4_data_parse(void *data, const char *payload, size_t len)
             &pgnss4->reserved2);
     return ;
 }
-REGISTER_MESSAGE_PARSER(PGNSS, 4, &pgnss4_data, pgnss4_data_parse);
+// REGISTER_MESSAGE_PARSER(PGNSS, 4, &pgnss4_data, pgnss4_data_parse);
 
 static void pgnss5_data_parse(void *data, const char *payload, size_t len)
 {
@@ -313,7 +314,7 @@ static void pgnss5_data_parse(void *data, const char *payload, size_t len)
             &pgnss5->reserved);
     return ;
 }
-REGISTER_MESSAGE_PARSER(PGNSS, 5, &pgnss5_data, pgnss5_data_parse);
+// REGISTER_MESSAGE_PARSER(PGNSS, 5, &pgnss5_data, pgnss5_data_parse);
 
 static void pgnss9_data_parse(void *data, const char *payload, size_t len)
 {
@@ -329,7 +330,7 @@ static void pgnss9_data_parse(void *data, const char *payload, size_t len)
             &pgnss9->reserved);
     return ;
 }
-REGISTER_MESSAGE_PARSER(PGNSS, 9, &pgnss9_data, pgnss9_data_parse);
+// REGISTER_MESSAGE_PARSER(PGNSS, 9, &pgnss9_data, pgnss9_data_parse);
 
 static void psnsr21_data_parse(void *data, const char *payload, size_t len)
 {
@@ -401,7 +402,7 @@ static void psnsr21_data_parse(void *data, const char *payload, size_t len)
     free(buf);
     return ;
 }
-REGISTER_MESSAGE_PARSER(PSNSR, 21, &psnsr21_data, psnsr21_data_parse);
+// REGISTER_MESSAGE_PARSER(PSNSR, 21, &psnsr21_data, psnsr21_data_parse);
 
 static void psnsr23_data_parse(void *data, const char *payload, size_t len)
 {
@@ -419,7 +420,7 @@ static void psnsr23_data_parse(void *data, const char *payload, size_t len)
             &psnsr23->accel_z);
     return ;
 }   
-REGISTER_MESSAGE_PARSER(PSNSR, 23, &psnsr23_data, psnsr23_data_parse);
+// REGISTER_MESSAGE_PARSER(PSNSR, 23, &psnsr23_data, psnsr23_data_parse);
 
 static void pblkend_data_parse(void *data, const char *payload, size_t len)
 {
@@ -432,7 +433,8 @@ static void pblkend_data_parse(void *data, const char *payload, size_t len)
             &pblkend->unix_time);
     return ;
 }
-REGISTER_MESSAGE_PARSER(PBEND, 255, &pblkend_data, pblkend_data_parse);
+// REGISTER_MESSAGE_PARSER(PBEND, 255, &pblkend_data, pblkend_data_parse);
+#endif
 
 void message_parser_entry(const char *line)
 {

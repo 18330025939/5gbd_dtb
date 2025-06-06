@@ -11,11 +11,11 @@ int init_queue(ThreadSafeQueue* q, size_t size)
 {
     pthread_mutex_init(&q->mutex, NULL);
     for (int i = 0; i < MAX_SEGMENTS; i++) {
-        q->buffers[i] = (uint8_t*)malloc(size * sizeof(uint8_t));
-        bzero(q->buffers[i], size * sizeof(uint8_t));
+        q->buffers[i] = (uint8_t*)malloc(size);
+        bzero(q->buffers[i], size);
     }
 
-    bzero(q->sizes, size * sizeof(uint8_t));
+    bzero(q->sizes, MAX_SEGMENTS);
     q->head = 0;
     q->tail = 0;
     return 0;
@@ -75,9 +75,9 @@ int dequeue(ThreadSafeQueue* q, uint8_t* data, size_t* len)
 
 int clean_queue(ThreadSafeQueue* q)
 {
-    // for (int i = 0; i < MAX_SEGMENTS; i++) {
-    //     free(q->buffers[i]);
-    // }
+    for (int i = 0; i < MAX_SEGMENTS; i++) {
+        free(q->buffers[i]);
+    }
     return 0;
 }
 

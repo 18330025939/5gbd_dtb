@@ -3,6 +3,7 @@
 #include <string.h>
 #include "publib.h"
 
+#if 0
 uint64_t get_timestamp_ms(void) 
 {
     struct timespec ts;
@@ -144,7 +145,7 @@ char *GetSysTimeStr(int isWithDate)
 
 	return p;
 }
-
+#endif
 void get_system_time(CustomTime *t)
 {
     time_t rawtime;
@@ -191,4 +192,13 @@ int _system_(const char *cmd, char *pRetMsg, int msg_len)
 	    pRetMsg[strlen(pRetMsg)-1] = '\0';
     }
 	return 0;
+}
+
+void db_to_bcd(uint16_t value, uint16_t* bcd_value)
+{
+    uint8_t high_byte = value / 100;
+    uint8_t low_byte = value % 100;
+
+    *bcd_value = (uint16_t)(((high_byte / 10) << 4) | (high_byte % 10)) << 8 |
+                (uint16_t)(((low_byte / 10) << 4) | (low_byte % 10));
 }

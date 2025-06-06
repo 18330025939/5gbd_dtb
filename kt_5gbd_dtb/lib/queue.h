@@ -2,7 +2,7 @@
 #ifndef __QUEUE_H
 #define __QUEUE_H
 
-#define MAX_SEGMENTS 32
+#define MAX_SEGMENTS 64
 #define MAX_DATA_LEN 1400
 
 typedef struct st_ThreadSafeQueue {

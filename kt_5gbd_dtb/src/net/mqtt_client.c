@@ -80,7 +80,7 @@ int mqtt_connect(AsyncMQTTClient* client)
 
 void on_publish_success(void* context, MQTTAsync_successData* response)
 {
-    spdlog_debug("publish success.");
+    // spdlog_debug("publish success.");
 }
 
 /* 消息发布 */
@@ -105,20 +105,20 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     pthread_mutex_unlock(&client->lock);
 
     spdlog_debug("mqtt_publish topic=%s, len=%ld, rc=%d.", topic, len, rc);
-    char *str = (char *)malloc(len * 4 + 1);
-    if (str != NULL) {
-        str[0] = '\0';
-        for (int i = 0; i < len; i++) {
-            sprintf(str + strlen(str), "%x ", ((uint8_t*)payload)[i]);
-        }
+    // char *str = (char *)malloc(len * 4 + 1);
+    // if (str != NULL) {
+    //     str[0] = '\0';
+    //     for (int i = 0; i < len; i++) {
+    //         sprintf(str + strlen(str), "%x ", ((uint8_t*)payload)[i]);
+    //     }
 
-        if (strlen(str) > 0) {
-            str[strlen(str) - 1] = '\0';
-        }
+    //     if (strlen(str) > 0) {
+    //         str[strlen(str) - 1] = '\0';
+    //     }
 
-        spdlog_debug("payload: %s", str);
-        free(str);
-    }
+    //     spdlog_debug("payload: %s", str);
+    //     free(str);
+    // }
 
     return rc;
 }

@@ -34,6 +34,6 @@ int BeTimeOutMN(struct timeval *stv, int ms);
 uint32_t calcTimeOff(struct timeval end, struct timeval begin);
 char *GetSysTimeStr(int isWithDate);
 int _system_(const char *cmd, char *pRetMsg, int msg_len);
-
+void db_to_bcd(uint16_t value, uint16_t* bcd_value);
 #endif /* __PUB_LIB_H */
 

@@ -128,13 +128,12 @@ void *tcp_client_connect_entry(void *arg)
 void *tcp_client_send_entry(void *arg)
 {
     TcpClient* client = (TcpClient*)arg;
-    uint8_t buf[1024] = {0};
+    uint8_t buf[1400] = {0};
     size_t len = 0;
 
     while (client->is_connected) {
         int ret = dequeue(&client->tx_queue, buf, &len);
         if (ret) {
-            // sleep(50);
             continue;
         }
         bufferevent_write(client->bev, buf, len);
@@ -149,12 +148,14 @@ static void tcp_client_connect(TcpClient* client)
 }
 
 /* 发送数据 */
-static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len) 
+static int tcp_client_send(TcpClient* client, uint8_t* data, size_t len) 
 {
-    if (client->is_connected) {
-        enqueue(&client->tx_queue, data, len);
+    int ret = 0;
 
-        spdlog_debug("tcp_client_send data len=%d.", len);
+    if (client->is_connected) {
+        ret = enqueue(&client->tx_queue, data, len);
+
+        // spdlog_debug("tcp_client_send data len=%d.", len);
         // char *str = (char *)malloc(len * 4 + 1);
         // if (str != NULL) {
         //     str[0] = '\0';
@@ -170,6 +171,8 @@ static void tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
         //     free(str);
         // }
     }
+
+    return ret;
 }
 
 /* 断开连接 */
@@ -190,7 +193,7 @@ static void tcp_client_register_cb(TcpClient* client, void (*cb)(char *buf, size
     client->on_message = cb;
 }
 
-TcpClientOps tcp_client_ops = {
+static struct TcpClientOps tcp_client_ops = {
     .connect = tcp_client_connect,
     .disconnect = tcp_client_disconnect,
     .register_cb = tcp_client_register_cb,
@@ -213,14 +216,17 @@ TcpClientOps tcp_client_ops = {
 TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
 {
     TcpClient* client = (TcpClient*)malloc(sizeof(TcpClient));
-    memset(client, 0, sizeof(TcpClient));
-    client->server_ip = strdup(server_ip);
-    client->port = port;
-    client->max_recnt_att = max_recnt;
-    client->recnt_att = 0;
-    client->is_connected = false;
-    client->ops = &tcp_client_ops;
-    init_queue(&client->tx_queue, 1350);
+    if (client != NULL) {
+        memset(client, 0, sizeof(TcpClient));
+        client->server_ip = strdup(server_ip);
+        client->port = port;
+        client->max_recnt_att = max_recnt;
+        client->recnt_att = 0;
+        client->is_connected = false;
+        client->ops = &tcp_client_ops;
+        init_queue(&client->tx_queue, 1400);
+        spdlog_debug("tcp_client_create ok 0x%x", client);
+    }
     // init_queue(&client->tx_queue);
     // init_queue(&client->rx_queue, 1024);
     return client;
