@@ -51,7 +51,7 @@ int init_updater_environment(void)
                 spdlog_error("ssh_client.execute updater.sh dev_info failed.");
                 return -1;
             }
-            memset((void*)&fkz9_devBaseInfo, 0, sizeof(DevbaseInfo));
+            memset((void*)&fkz9_devBaseInfo, 0, sizeof(struct DevBaseInfo));
             sscanf(resp, "%hd,%[^,],%d,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,", 
                     &fkz9_devBaseInfo.dev_addr,
                     fkz9_devBaseInfo.cloud_ip,

@@ -3,4 +3,5 @@
 *.o.d
 obj/
 bin/
+lib/*.o
 5GBD_MODULE
