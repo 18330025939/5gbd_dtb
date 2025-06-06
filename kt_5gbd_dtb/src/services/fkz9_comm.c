@@ -107,7 +107,7 @@ static int cloud_to_can_entry(void* arg)
     pHdr = (MsgFramHdr*)arg;
     mqtt_client = gp_fkz9_comm_ctx->mqtt_client;
     char topic[50] = {0};
-    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/can/%02x", gp_fkz9_comm_ctx->base_info->dev_add, pHdr->ucSign);
+    snprintf(topic, sizeof(topic), "fkz9/%04d/4G/can/%02x", gp_fkz9_comm_ctx->base_info->dev_addr, pHdr->ucSign);
     mqtt_client->ops->publish(mqtt_client, topic, arg, bswap_16(pHdr->usLen));
     
     return 0;
