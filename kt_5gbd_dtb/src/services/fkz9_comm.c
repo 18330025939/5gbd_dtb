@@ -39,16 +39,16 @@ static void func_dev_info_resp(void)
     pHdr->usLen = bswap_16(len);
 
     pInfo = (DevInfoDataSeg *)(buf + sizeof(MsgFramHdr));
-    pInfo->usDevAddr = bswap_16(fkz9_devBaseInfo.dev_addr);
-    pInfo->ucSwVerCPU = fkz9_devBaseInfo.cpu_sw;
-    pInfo->ucHwVerCPU = fkz9_devBaseInfo.cpu_hw;
+    pInfo->usDevAddr = bswap_16(gp_fkz9_comm_ctx->base_info->dev_addr);
+    pInfo->ucSwVerCPU = gp_fkz9_comm_ctx->base_info->cpu_sw;
+    pInfo->ucHwVerCPU = gp_fkz9_comm_ctx->base_info->cpu_hw;
     strncpy(pInfo->cSimID, gp_cloud_comm_ctx->fx650.sim_id, 20);
-    pInfo->ucSwVerCTU = fkz9_devBaseInfo.ctrl_sw;
-    pInfo->ucHwVerCTU = fkz9_devBaseInfo.ctrl_hw;
-    pInfo->ucSwVerAU = fkz9_devBaseInfo.ad_sw;
-    pInfo->ucHwVerAU = fkz9_devBaseInfo.ad_hw;
-    pInfo->ucSwVerNTU = fkz9_devBaseInfo.net_sw;
-    pInfo->ucHwVerNTU = fkz9_devBaseInfo.net_hw;
+    pInfo->ucSwVerCTU = gp_fkz9_comm_ctx->base_info->ctrl_sw;
+    pInfo->ucHwVerCTU = gp_fkz9_comm_ctx->base_info->ctrl_hw;
+    pInfo->ucSwVerAU = gp_fkz9_comm_ctx->base_info->ad_sw;
+    pInfo->ucHwVerAU = gp_fkz9_comm_ctx->base_info->ad_hw;
+    pInfo->ucSwVerNTU = gp_fkz9_comm_ctx->base_info->net_sw;
+    pInfo->ucHwVerNTU = gp_fkz9_comm_ctx->base_info->net_hw;
 
     pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(DevInfoDataSeg));
     pCrc->usCRC = checkSum_8(buf, len - sizeof(MsgDataFramCrc));
