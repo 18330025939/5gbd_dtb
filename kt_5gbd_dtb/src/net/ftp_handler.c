@@ -35,6 +35,7 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
     CURL *curl;
     CURLcode res;
     FILE *fp;
+    char *ftp_url = NULL;
     struct stat fileInfo;
     curl_off_t fsize;
 
@@ -58,19 +59,25 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
         return -1;
     }
 
-    char *ftp_url = malloc(strlen(url) + strlen(remote_path) + 2);
-    if (!ftp_url) {
-        spdlog_error("Memory allocation failed.");
-        fclose(fp);
-        curl_easy_cleanup(curl);
-        return -1;
-    }
-    sprintf(ftp_url, "%s/%s", url, remote_path);
+    if (remote_path != NULL) {
+        ftp_url = malloc(strlen(url) + strlen(remote_path) + 2);
+        if (!ftp_url) {
+            spdlog_error("Memory allocation failed.");
+            fclose(fp);
+            curl_easy_cleanup(curl);
+            return -1;
+        }
+        sprintf(ftp_url, "%s/%s", url, remote_path);
 
-    curl_easy_setopt(curl, CURLOPT_URL, ftp_url);
+        curl_easy_setopt(curl, CURLOPT_URL, ftp_url);
+        spdlog_debug("ftp_url:%s, fsize %d", ftp_url, fsize);
+    } else {
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+    }
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, upload_read_callback);
     curl_easy_setopt(curl, CURLOPT_READDATA, fp);
-    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+    // curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
     // curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_FTP);
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 20L);
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 3000L);
@@ -83,7 +90,8 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
 
     res = curl_easy_perform(curl);
 
-    free(ftp_url);
+    if (ftp_url)
+        free(ftp_url);
     fclose(fp);
     curl_easy_cleanup(curl);
 
@@ -101,6 +109,7 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
     CURL *curl;
     CURLcode res;
     FILE *fp;
+    char *ftp_url = NULL;
 
     spdlog_debug("ftp_download url:%s, local_path:%s, remote_path:%s, user:%s, pass:%s.", url, local_path, remote_path, user, pass);
     curl = curl_easy_init();
@@ -117,7 +126,7 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
     }
 
     if (remote_path != NULL) {
-        char *ftp_url = malloc(strlen(url) + strlen(remote_path) + 2);
+        ftp_url = malloc(strlen(url) + strlen(remote_path) + 2);
         if (!ftp_url) {
             spdlog_error("Memory allocation failed.");
             fclose(fp);
@@ -144,7 +153,8 @@ int ftp_download(const char *url, const char *local_path, const char *remote_pat
 
     res = curl_easy_perform(curl);
 
-    // free(ftp_url);
+    if (ftp_url)
+        free(ftp_url);
     fclose(fp);
     curl_easy_cleanup(curl);
 

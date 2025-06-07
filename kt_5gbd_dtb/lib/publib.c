@@ -202,3 +202,32 @@ void db_to_bcd(uint16_t value, uint16_t* bcd_value)
     *bcd_value = (uint16_t)(((high_byte / 10) << 4) | (high_byte % 10)) << 8 |
                 (uint16_t)(((low_byte / 10) << 4) | (low_byte % 10));
 }
+
+int byte_to_bcd(uint8_t value)
+{
+	int bcd = 0;
+
+	bcd = (((value >> 4) & 0x0f) * 10 + (value & 0x0f));
+
+	return bcd;
+}
+
+uint8_t bcd_to_byte(uint8_t bcd)
+{
+	uint8_t value = 0;
+
+	value = (((bcd / 10) << 4) | (bcd % 10));
+
+	return value;
+}
+
+int hex_to_bcd(uint16_t value)
+{
+	int bcd = 0;
+
+	bcd = (((value >> 12) & 0x0f) * 1000 +
+		   ((value >> 8) & 0x0f) * 100 +
+		   ((value >> 4) & 0x0f) * 10 +
+		   (value & 0x0f));
+	return bcd;
+}

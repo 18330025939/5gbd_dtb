@@ -210,7 +210,7 @@ static int get_smi_id(Fx650Ctx* ctx)
         fprintf(stderr, "CCID acquisition failed.\n");
         return -1;
     }
-    printf("CCID = %s", resp);
+    // printf("CCID = %s", resp);
 
     // char *token = strtok((char *)resp, ":");
     strncpy(ctx->sim_id, resp + 7, 20);

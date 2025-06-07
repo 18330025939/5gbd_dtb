@@ -28,7 +28,9 @@ typedef struct st_TcpClient TcpClient;
 #define WAVE_FILE_REMOTE_PATH "/upload/fkz9/wavedat/"
 #define WAVE_FILE_LOCAL_PATH "/upload/cktt/wavedat/"
 
-#define FTP_SERVER_URL   "ftp://192.168.10.158"
+#define FTP_SERVER_URL   "ftp://152.136.194.95"
+#define FTP_SERVER_USER  "ovp"
+#define FTP_SERVER_PASS  "abcd1234"
 
 /* 升级文件路径格式：UPGRADE_FILE_PATH + task_id + / + filename */
 // #define UPGRADE_FILE_REMOTE_PATH "/upgrade/"

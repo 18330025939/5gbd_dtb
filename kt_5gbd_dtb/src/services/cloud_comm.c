@@ -612,6 +612,8 @@ int func_wave_file_resp(void *arg)
     if (arg  == NULL) {
         return -1;
     }
+
+    spdlog_info("func_wave_file_resp");
     ctx = (CloundCommContext *)arg;
     pHdr = (MsgFramHdr *)buf;
     pHdr->usHdr = MSG_DATA_FRAM_HDR1;
@@ -623,11 +625,11 @@ int func_wave_file_resp(void *arg)
     db_to_bcd(ctx->base_info->dev_addr, &pResp->usDevAddr);
     CustomTime t;
     get_system_time(&t);
-    pResp->ucYear = t.usYear - 2000;
-    pResp->ucMonth = t.ucMonth;
-    pResp->ucDay = t.ucDay;
-    pResp->ucHour = t.ucHour;
-    pResp->ucMinute = t.ucMinute;
+    pResp->ucYear = bcd_to_byte(t.usYear - 2000);
+    pResp->ucMonth = bcd_to_byte(t.ucMonth);
+    pResp->ucDay = bcd_to_byte(t.ucDay);
+    pResp->ucHour = bcd_to_byte(t.ucHour);
+    pResp->ucMinute = bcd_to_byte(t.ucMinute);
     pResp->ucCode = 0;
 
     pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(WaveFileResp));
@@ -637,19 +639,19 @@ int func_wave_file_resp(void *arg)
     client = ctx->client;
     client->ops->send(client, buf, len);
 
-    char remote_path[128];
-    char local_path[128];
-    // uint16_t dev_addr = CLIENT_DEV_ADDR;
-    snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d/%4d-wavedat-%4d%2d%2d%2d%2d.dat.gz", ctx->base_info->dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, 
-                pResp->ucHour, ctx->base_info->dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, pResp->ucHour, pResp->ucMinute);
-    int ret = ftp_upload(FTP_SERVER_URL, local_path, remote_path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
-    if (ret != 0) {
-        return -1;
-    }
+    // char remote_path[128];
+    // char local_path[128];
+    // // uint16_t dev_addr = CLIENT_DEV_ADDR;
+    // snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d/%4d-wavedat-%4d%2d%2d%2d%2d.dat", ctx->base_info->dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, 
+    //             pResp->ucHour, ctx->base_info->dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, pResp->ucHour, pResp->ucMinute);
+    // int ret = ftp_upload(FTP_SERVER_URL, local_path, remote_path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
+    // if (ret != 0) {
+    //     return -1;
+    // }
 
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "rm -f %s", local_path);
-    _system_(cmd, NULL, 0);
+    // char cmd[256];
+    // snprintf(cmd, sizeof(cmd), "rm -f %s", local_path);
+    // _system_(cmd, NULL, 0);
 
     return 0;
 }
@@ -665,13 +667,31 @@ int func_wave_file_req(void *arg)
     
     spdlog_debug("func_wave_file_req.");
     pReq = (WaveFileReq *)((uint8_t *)arg + sizeof(MsgFramHdr));
-    char r_folder[128];
-    uint16_t year = pReq->ucYear + 2000; 
-    snprintf(r_folder, sizeof(r_folder), "%s%4d%2d%2d/%4d%2d%2d%2d/", WAVE_FILE_REMOTE_PATH, 
-                year, pReq->ucMonth, pReq->ucDay, 
-                year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
-    char file_name[32];
-    snprintf(file_name, sizeof(file_name), "%4d-wavedat-%4d%2d%2d%2d.dat.gz", pReq->usDevAddr, year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
+    int dev_addr = hex_to_bcd(pReq->usDevAddr);
+    int year = byte_to_bcd(pReq->ucYear) + 2000;
+    int month = byte_to_bcd(pReq->ucMonth);
+    int day = byte_to_bcd(pReq->ucDay);
+    int hour = byte_to_bcd(pReq->ucHour);
+    int minute = byte_to_bcd(pReq->ucMinute);
+
+    char r_folder[128] = {0};
+    snprintf(r_folder, sizeof(r_folder), "%s%04d%02d%02d/%04d%02d%02d%02d/", WAVE_FILE_REMOTE_PATH, year, month, day, year, month, day, hour);
+
+    char file_name[64] = {0};
+    snprintf(file_name, sizeof(file_name), "%04d-wavedat-%04d%02d%02d%02d%02d.dat.gz", dev_addr, year, month, day, hour, minute);
+
+    char l_path[128] = {0};
+    snprintf(l_path, sizeof(l_path), "%s%04d%02d%02d%02d/%s", WAVE_FILE_LOCAL_PATH, year, month, day, hour, file_name);
+
+    char r_path[256] = {0};
+    snprintf(r_path, sizeof(r_path), "%s%s", r_folder, file_name);
+
+    char cmd[140] = {0};
+    snprintf(cmd, sizeof(cmd), "mkdir -p %s%04d%02d%02d%02d", WAVE_FILE_LOCAL_PATH, year, month, day, hour);
+    _system_(cmd, NULL, 0);
+
+    spdlog_info("l_path:%s, r_path:%s", l_path, r_path);
+
     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     int ret = ssh_client.connect(&ssh_client);
     if (ret) {
@@ -680,12 +700,7 @@ int func_wave_file_req(void *arg)
         return -1;
     }
 
-    char l_folder[128];
-    snprintf(l_folder, sizeof(l_folder), "%s%4d%2d%2d%2d/", WAVE_FILE_LOCAL_PATH,
-                year, pReq->ucMonth, pReq->ucDay, pReq->ucHour);
-    char r_path[256];
-    snprintf(r_path, sizeof(r_path), "%s%s", r_folder, file_name);
-    ret = ssh_client.download_file(&ssh_client, r_path, l_folder);
+    ret = ssh_client.download_file(&ssh_client, r_path, l_path);
     if (ret) {
         SSHClient_Destroy(&ssh_client);
         spdlog_error("ssh_client.download_file cp_wave_file_from_fkz9 failed.");
@@ -693,6 +708,21 @@ int func_wave_file_req(void *arg)
     }
 
     SSHClient_Destroy(&ssh_client);
+
+    char remote_path[128] = {0};
+    // char local_path[128];
+    // uint16_t dev_addr = CLIENT_DEV_ADDR;
+    snprintf(remote_path, sizeof(remote_path), "/%04d/wavefile/%04d%02d/%02d/%02d/%04d-wavedat-%04d%02d%02d%02d%02d.dat.gz", dev_addr, year, month, day, 
+                hour, dev_addr, year, month, day, hour, minute);
+    ret = ftp_upload(FTP_SERVER_URL, l_path, remote_path, FTP_SERVER_USER, FTP_SERVER_PASS);
+    if (ret != 0) {
+        spdlog_info("ftp_upload error");
+        return -1;
+    }
+
+    snprintf(cmd, sizeof(cmd), "rm -rf /upload");
+    _system_(cmd, NULL, 0);
+
     return 0;
 }
 
@@ -732,7 +762,7 @@ void *cloud_event_task_entry(void *arg)
         uint16_t crc = checkSum_8((uint8_t *)buf, bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         pCrc = (MsgDataFramCrc *)(buf + bswap_16(pHdr->usLen) - sizeof(MsgDataFramCrc));
         spdlog_debug("cloud_recv: pHdr->usHdr=0x%x, pHdr->ucSign=0x%x, pCrc->usCRC=0x%x, crc=0x%x.", bswap_16(pHdr->usHdr), pHdr->ucSign, bswap_16(pCrc->usCRC), crc);
-        if (pHdr->usHdr != MSG_DATA_FRAM_HDR1 || pHdr->usHdr != MSG_DATA_FRAM_HDR2 || crc != bswap_16(pCrc->usCRC)) {
+        if ((pHdr->usHdr != MSG_DATA_FRAM_HDR1 && pHdr->usHdr != MSG_DATA_FRAM_HDR2) || crc != bswap_16(pCrc->usCRC)) {
             continue ;
         }
 
