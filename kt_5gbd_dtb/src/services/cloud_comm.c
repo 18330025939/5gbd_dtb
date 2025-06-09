@@ -352,9 +352,9 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
         if (ret) {
             spdlog_error("up->update_func failed.");
         } else {
-            if (fw_up->update_cb != NULL) {
-                fw_up->update_cb((void *)pInfo);
-            }
+            // if (fw_up->update_cb != NULL) {
+            //     fw_up->update_cb((void *)pInfo);
+            // }
         }
     }
 
@@ -625,11 +625,11 @@ int func_wave_file_resp(void *arg)
     db_to_bcd(ctx->base_info->dev_addr, &pResp->usDevAddr);
     CustomTime t;
     get_system_time(&t);
-    pResp->ucYear = bcd_to_byte(t.usYear - 2000);
-    pResp->ucMonth = bcd_to_byte(t.ucMonth);
-    pResp->ucDay = bcd_to_byte(t.ucDay);
-    pResp->ucHour = bcd_to_byte(t.ucHour);
-    pResp->ucMinute = bcd_to_byte(t.ucMinute);
+    pResp->ucYear = byte_to_bcd(t.usYear - 2000);
+    pResp->ucMonth = byte_to_bcd(t.ucMonth);
+    pResp->ucDay = byte_to_bcd(t.ucDay);
+    pResp->ucHour = byte_to_bcd(t.ucHour);
+    pResp->ucMinute = byte_to_bcd(t.ucMinute);
     pResp->ucCode = 0;
 
     pCrc = (MsgDataFramCrc *)(buf + sizeof(MsgFramHdr) + sizeof(WaveFileResp));
@@ -667,12 +667,12 @@ int func_wave_file_req(void *arg)
     
     spdlog_debug("func_wave_file_req.");
     pReq = (WaveFileReq *)((uint8_t *)arg + sizeof(MsgFramHdr));
-    int dev_addr = hex_to_bcd(pReq->usDevAddr);
-    int year = byte_to_bcd(pReq->ucYear) + 2000;
-    int month = byte_to_bcd(pReq->ucMonth);
-    int day = byte_to_bcd(pReq->ucDay);
-    int hour = byte_to_bcd(pReq->ucHour);
-    int minute = byte_to_bcd(pReq->ucMinute);
+    int dev_addr = bcd_to_db(pReq->usDevAddr);
+    int year = bcd_to_byte(pReq->ucYear) + 2000;
+    int month = bcd_to_byte(pReq->ucMonth);
+    int day = bcd_to_byte(pReq->ucDay);
+    int hour = bcd_to_byte(pReq->ucHour);
+    int minute = bcd_to_byte(pReq->ucMinute);
 
     char r_folder[128] = {0};
     snprintf(r_folder, sizeof(r_folder), "%s%04d%02d%02d/%04d%02d%02d%02d/", WAVE_FILE_REMOTE_PATH, year, month, day, year, month, day, hour);
@@ -772,6 +772,7 @@ void *cloud_event_task_entry(void *arg)
                 if (ret == 0 && start->pFuncCb != NULL) {
                     start->pFuncCb(arg);
                 }
+                break;
             }
         }
     }

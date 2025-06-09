@@ -259,12 +259,12 @@ void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     // hb_data->usDevAddr = bswap_16(CLIENT_DEV_ADDR);
     CustomTime t;
     get_system_time(&t);
-    hb_data->ucYear = t.usYear - 2000;
-    hb_data->ucMonth = t.ucMonth;
-    hb_data->ucDay = t.ucDay;
-    hb_data->ucHour = t.ucHour;
-    hb_data->ucMinute = t.ucHour;
-    hb_data->ucSecond = t.ucSecond;
+    hb_data->ucYear = byte_to_bcd(t.usYear - 2000);
+    hb_data->ucMonth = byte_to_bcd(t.ucMonth);
+    hb_data->ucDay = byte_to_bcd(t.ucDay);
+    hb_data->ucHour = byte_to_bcd(t.ucHour);
+    hb_data->ucMinute = byte_to_bcd(t.ucHour);
+    hb_data->ucSecond = byte_to_bcd(t.ucSecond);
     crc = (MsgDataFramCrc*)(hb_data + 1);
     crc->usCRC = checkSum_8((uint8_t*)hdr, len - sizeof(MsgDataFramCrc));
     crc->usCRC = bswap_16(crc->usCRC);
@@ -445,12 +445,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         return;
     }
     mqtt_client->ops->register_cb(mqtt_client, on_message_cb);
-    int ret = mqtt_client->ops->connect(mqtt_client);
-    if(ret) {
-        spdlog_error("mqtt connect failed.");
-        ctx->is_running = false;
-        return;
-    }
+    mqtt_client->ops->connect(mqtt_client);
 
     ctx->mqtt_client = mqtt_client;
     init_queue(&ctx->event_queue, MAX_MSG_SIZE);

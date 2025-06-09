@@ -32,9 +32,9 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 
     if (client->recnt_att < client->max_recnt_att) {
         client->recnt_att++;
-        pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
+        // pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
         spdlog_debug("Reconnecting... Attempt %d/%d.", client->recnt_att, client->max_recnt_att);
-        struct timeval timeout = {1, 0}; // 1秒后重试
+        struct timeval timeout = {3, 0}; // 1秒后重试
         event_base_once(client->base, -1, EV_TIMEOUT, tcp_client_reconnect, client, &timeout);
     } else {
         // client->is_connected = false;
@@ -77,10 +77,21 @@ static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg
         if (client->is_connected == true) {
             client->is_connected = false;
             pthread_join(client->send_thread, NULL);
+        } 
+        // if (client->recnt_att) {
+        //     event_base_loopbreak(client->base);
+        //     pthread_join(client->conn_thread, NULL);
+        // }
+        // tcp_client_reconnect(-1, EV_TIMEOUT, client);
+        if (client->recnt_att < client->max_recnt_att) {
+            event_base_loopbreak(client->base);
+            pthread_join(client->conn_thread, NULL);
+            client->recnt_att++;
+            spdlog_debug("Reconnecting... Attempt %d/%d.", client->recnt_att, client->max_recnt_att);
+            pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
         }
-        event_base_loopbreak(client->base);
-        pthread_join(client->conn_thread, NULL);
-        tcp_client_reconnect(-1, EV_TIMEOUT, client);
+        // pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
+        // spdlog_debug("Reconnecting... Attempt %d/%d.", client->recnt_att, client->max_recnt_att);
     }
 }
 

@@ -146,7 +146,7 @@ static FX650_Error send_at_command(Fx650Ctx* ctx, const char* cmd,
 static int check_sim_status(Fx650Ctx* ctx) 
 {
     char resp[AT_MAX_RESPONSE_LEN] = {0};
-    if (send_at_command(ctx, "AT+CPIN?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (send_at_command(ctx, "AT+CPIN?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -161,7 +161,7 @@ static int check_sim_status(Fx650Ctx* ctx)
 static int check_network_segment(Fx650Ctx* ctx) 
 {
     char resp[AT_MAX_RESPONSE_LEN] = {0};
-    if (send_at_command(ctx, "AT+GTDHCPCFG?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (send_at_command(ctx, "AT+GTDHCPCFG?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -184,7 +184,7 @@ static int check_network_segment(Fx650Ctx* ctx)
 static int set_apn(Fx650Ctx* ctx, const char *apn) 
 {
     char cmd[128] = {0};
-    snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"\r\n", apn);
+    snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"\r", apn);
     char resp[AT_MAX_RESPONSE_LEN] = {0};
     if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
@@ -202,7 +202,7 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
 static int get_smi_id(Fx650Ctx* ctx)
 {
     char resp[AT_MAX_RESPONSE_LEN] = {0};
-    if (send_at_command(ctx, "AT+CCID?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (send_at_command(ctx, "AT+CCID?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -225,7 +225,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
     char resp[AT_MAX_RESPONSE_LEN] = {0};
 
     // 查询IP分配状态
-    if (send_at_command(ctx, "AT+GTRNDIS?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (send_at_command(ctx, "AT+GTRNDIS?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
@@ -244,7 +244,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
         }
     } else if (strstr(resp, "+GTRNDIS: 1,1") && status == 0) {
         memset(cmd, 0, sizeof(cmd));
-        snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=0,1\r\n");
+        snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=0,1\r");
         memset(resp, 0, sizeof(resp));
         if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
@@ -265,7 +265,7 @@ static int check_network_connection(void)
 {
     CURL *curl;
     CURLcode res;
-    int connected = 0;
+    int connected = -1;
 
     curl = curl_easy_init();
 
@@ -275,7 +275,7 @@ static int check_network_connection(void)
 
         res = curl_easy_perform(curl);
         if (res == CURLE_OK) {
-            connected = 1;
+            connected = 0;
         } else {
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         }

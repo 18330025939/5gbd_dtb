@@ -67,7 +67,7 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
             curl_easy_cleanup(curl);
             return -1;
         }
-        sprintf(ftp_url, "%s/%s", url, remote_path);
+        sprintf(ftp_url, "%s%s", url, remote_path);
 
         curl_easy_setopt(curl, CURLOPT_URL, ftp_url);
         spdlog_debug("ftp_url:%s, fsize %d", ftp_url, fsize);

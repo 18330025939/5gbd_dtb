@@ -35,8 +35,8 @@ uint32_t calcTimeOff(struct timeval end, struct timeval begin);
 char *GetSysTimeStr(int isWithDate);
 int _system_(const char *cmd, char *pRetMsg, int msg_len);
 void db_to_bcd(uint16_t value, uint16_t* bcd_value);
-int byte_to_bcd(uint8_t value);
-uint8_t bcd_to_byte(uint8_t bcd);
-int hex_to_bcd(uint16_t value);
+int bcd_to_byte(uint8_t value);
+uint8_t byte_to_bcd(uint8_t bcd);
+int bcd_to_db(uint16_t value);
 #endif /* __PUB_LIB_H */
 

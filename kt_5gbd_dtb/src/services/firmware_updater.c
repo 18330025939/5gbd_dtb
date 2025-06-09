@@ -29,8 +29,19 @@ int fkz9_fw_trans_func(void *arg)
         return -1;
     }
 
+    char cmd[256] = {0};
+    char resp[128] = {0};
+    snprintf(cmd, sizeof(cmd), "mkdir -p %s/%d", UPGRADE_FILE_REMOTE_PATH, pInfo->id);
+    ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+    if (ret) {
+        //远程路径创建失败
+        SSHClient_Destroy(&ssh_client);
+        spdlog_error("ssh_client.execute %s", cmd);
+        return -1;
+    }
+
     char remote_path[128] = {0};
-    snprintf(remote_path, sizeof(remote_path), "%s/%2d/%s", UPGRADE_FILE_REMOTE_PATH, pInfo->id, pInfo->name);
+    snprintf(remote_path, sizeof(remote_path), "%s/%d/%s", UPGRADE_FILE_REMOTE_PATH, pInfo->id, pInfo->name);
     ret = ssh_client.upload_file(&ssh_client, pInfo->path, remote_path);
     if (ret) {
         //上传失败是否再次上传
@@ -39,14 +50,14 @@ int fkz9_fw_trans_func(void *arg)
         return -1;
     }
 
-    char cmd[256] = {0};
+    memset(cmd, 0, sizeof(cmd));
     snprintf(cmd, sizeof(cmd), "md5sum %s", remote_path);
-    char resp[256] = {0};
+    memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-    if ((ret) || (strcmp(pInfo->md5, resp) != 0)) {
+    if ((ret) || (strstr(resp, pInfo->md5) == NULL)) {
         //校验失败是否再次上传
         SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.execute md5 of the file,l_md5:%s,r_md5%sfailed.", pInfo->md5, resp);
+        spdlog_error("ssh_client.execute md5 of the file,l_md5 : %s,r_md5 %s , failed.", pInfo->md5, resp);
         return -1;
     }
 
@@ -87,8 +98,8 @@ int fkz9_fw_update_func(void *arg)
     }
 
     char report_file[64];
-    snprintf(report_file, sizeof(report_file), "*_%2d_*.log", pInfo->id);
-    snprintf(cmd, sizeof(cmd), "find %s%2d -name \"%s\"", OTA_UPREPORT_REMOTE_PATH, pInfo->id, report_file);
+    snprintf(report_file, sizeof(report_file), "*_%d_*.log", pInfo->id);
+    snprintf(cmd, sizeof(cmd), "find %s%d -name \"%s\"", OTA_UPREPORT_REMOTE_PATH, pInfo->id, report_file);
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if (ret) {
         SSHClient_Destroy(&ssh_client);
