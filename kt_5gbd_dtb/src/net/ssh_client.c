@@ -22,17 +22,20 @@ static int SSHClient_Connect(SSHClient *client)
 
     if (ssh_userauth_password(client->session, NULL, client->password) != SSH_AUTH_SUCCESS) {
         spdlog_error("Authentication failed: %s.", ssh_get_error(client->session));
+        ssh_disconnect(client->session);
         return -1;
     }
 
     client->sftp = sftp_new(client->session);
     if (client->sftp == NULL) {
         spdlog_error("Failed to create SFTP session: %s.", ssh_get_error(client->session));
+        ssh_disconnect(client->session);
         return -1;
     }
 
     if (sftp_init(client->sftp) != SSH_OK) {
         spdlog_error("Failed to initialize SFTP session: %s.", ssh_get_error(client->session));
+        ssh_disconnect(client->session);
         sftp_free(client->sftp);
         return -1;
     }

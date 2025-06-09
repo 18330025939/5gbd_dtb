@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <termios.h>
+#include <curl/curl.h>
 #include <event2/event.h>
 #include "spdlog_c.h"
 #include "firmware_updater.h"
@@ -26,14 +27,16 @@ int init_updater_environment(void)
 {
     SSHClient ssh_client;
     int ret = 0;
+    int try_num = 0;
 
     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     do {
-        ret = ssh_client.connect(&ssh_client);
-        if (ret) {
-            sleep(1);
+        if (0 == ssh_client.connect(&ssh_client)) {
+            break;
         }
-    } while(ret);
+        sleep(3);
+        try_num ++;
+    } while(try_num < 10);
 
     char resp[128] = {0};
     ret = ssh_client.execute(&ssh_client, "find /home/cktt/script/ -name \"updater.sh\"", 
@@ -158,7 +161,7 @@ int main(int argc, char ** args)
     fkz9_ctx.base_info = &fkz9_devBaseInfo;
     // RUN_LED_INIT();
     // FAULT_LED_INIT();
-
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     init_updater_environment();
     clound_comm_init(&cloud_ctx);
     fkz9_comm_init(&fkz9_ctx);
@@ -168,6 +171,8 @@ int main(int argc, char ** args)
     pthread_join(event_thread, NULL);
     clound_comm_uninit(&cloud_ctx); 
     fkz9_comm_uninit(&fkz9_ctx);
+
+    curl_global_cleanup();
  //   FAULT_LED_ON();
 
     spdlog_info("Application exiting...");

@@ -911,5 +911,6 @@ void clound_comm_uninit(CloundCommContext *ctx)
     laneTo_uninit(&ctx->laneTo);
     fx650_uninit(&ctx->fx650);
     clean_queue(&ctx->event_queue);
+    gp_cloud_comm_ctx = NULL;
 }
 

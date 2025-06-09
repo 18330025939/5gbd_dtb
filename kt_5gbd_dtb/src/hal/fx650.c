@@ -184,7 +184,7 @@ static int check_network_segment(Fx650Ctx* ctx)
 static int set_apn(Fx650Ctx* ctx, const char *apn) 
 {
     char cmd[128] = {0};
-    snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"\r", apn);
+    snprintf(cmd, sizeof(cmd), "AT+CGDCONT=1,\"IP\",\"%s\"\r\n", apn);
     char resp[AT_MAX_RESPONSE_LEN] = {0};
     if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
@@ -225,13 +225,13 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
     char resp[AT_MAX_RESPONSE_LEN] = {0};
 
     // 查询IP分配状态
-    if (send_at_command(ctx, "AT+GTRNDIS?\r", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
+    if (send_at_command(ctx, "AT+GTRNDIS?\r\n", resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
         return -1;
     }
 
     if (strstr(resp, "+GTRNDIS: 0") && status == 1) {
         memset(cmd, 0, sizeof(cmd));
-        snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=1,1\r");
+        snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=1,1\r\n");
         memset(resp, 0, sizeof(resp));
         if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
@@ -244,7 +244,7 @@ static int activate_dia(Fx650Ctx* ctx, uint8_t status)
         }
     } else if (strstr(resp, "+GTRNDIS: 1,1") && status == 0) {
         memset(cmd, 0, sizeof(cmd));
-        snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=0,1\r");
+        snprintf(cmd, sizeof(cmd), "AT+GTRNDIS=0,1\r\n");
         memset(resp, 0, sizeof(resp));
         if (send_at_command(ctx, cmd, resp, sizeof(resp), AT_TIMEOUT_MS) < 0) {
             return -1;
@@ -298,10 +298,11 @@ static int run_dhcp_client(const char* net)
     }
 
     memset(cmd, 0, sizeof(cmd));
-    snprintf(cmd, sizeof(cmd), "udhcpc -i %s &", net);
+    snprintf(cmd, sizeof(cmd), "udhcpc -i %s 2>&1 &", net);
     if((ret = system(cmd)) == -1) {
         return ret;
     }
+    sleep(3);
 
     memset(cmd, 0, sizeof(cmd));
     snprintf(cmd, sizeof(cmd), "ip route del default");
@@ -405,19 +406,21 @@ FX650_Error fx650_init(Fx650Ctx* ctx)
         fprintf(stderr, "Failed to send AT command.\n");
         fx650_port->base.ops->close(&fx650_port->base);
         free(fx650_port);
+        ctx->uart = NULL;
         return ret;
     }
 
-    get_smi_id(ctx);
-    if (check_network_connection()) {
-        return FX650_OK;
-    }
     // 关闭回显
     // ret = send_at_command(ctx, "ATE0\r", resp, sizeof(resp), AT_TIMEOUT_MS);
 
-    ret = fx650_connect_network(ctx);
+    if (0 != check_network_connection()) {
+        ret = fx650_connect_network(ctx);
+    }
+
+    get_smi_id(ctx);
     fx650_port->base.ops->close(&fx650_port->base);
     free(fx650_port);
+    ctx->uart = NULL;
 
     return ret;
 }
@@ -429,10 +432,11 @@ void fx650_uninit(Fx650Ctx* ctx)
     }
 
     printf("fx650_uninit.\n");
-    if (ctx->uart) {
+    if (ctx->uart != NULL) {
         fx650_disconnect_network(ctx);
         ctx->uart->base.ops->close(&ctx->uart->base);
         free(ctx->uart);
+        ctx->uart = NULL;
     }
     if (ctx->net_name) {
         free(ctx->net_name);

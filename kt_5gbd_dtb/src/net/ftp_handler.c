@@ -74,14 +74,15 @@ int ftp_upload(const char *url, const char *local_path, const char *remote_path,
     } else {
         curl_easy_setopt(curl, CURLOPT_URL, url);
     }
+    curl_easy_setopt(curl, CURLOPT_FTP_CREATE_MISSING_DIRS, 1L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, upload_read_callback);
     curl_easy_setopt(curl, CURLOPT_READDATA, fp);
-    // curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
     // curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_FTP);
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 20L);
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 3000L);
-    curl_easy_setopt(curl, CURLOPT_INFILESIZE, fsize);
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, fsize);
 
     if (user && pass) {
         curl_easy_setopt(curl, CURLOPT_USERNAME, user);

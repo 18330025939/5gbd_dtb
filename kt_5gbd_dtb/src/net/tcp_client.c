@@ -21,6 +21,7 @@
 
 
 void *tcp_client_send_entry(void *arg);
+void *tcp_client_connect_entry(void *arg);
 static void tcp_client_disconnect(TcpClient* client);
 
 TcpClient *gp_tcp_client = NULL;
@@ -31,13 +32,14 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 
     if (client->recnt_att < client->max_recnt_att) {
         client->recnt_att++;
+        pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
         spdlog_debug("Reconnecting... Attempt %d/%d.", client->recnt_att, client->max_recnt_att);
         struct timeval timeout = {1, 0}; // 1秒后重试
         event_base_once(client->base, -1, EV_TIMEOUT, tcp_client_reconnect, client, &timeout);
     } else {
         // client->is_connected = false;
         spdlog_debug("Max reconnect attempts reached. Exiting.");
-        tcp_client_disconnect(client);
+        // tcp_client_disconnect(client);
         // tcp_client_destroy(client);
     }
 }
@@ -65,18 +67,19 @@ static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg
     if (events & BEV_EVENT_CONNECTED) {
         spdlog_debug("Connected to server.");
         client->recnt_att = 0;
-        client->is_connected = true;
-        pthread_create(&client->send_thread, NULL, tcp_client_send_entry, (void*)client);
-    } else if (events & BEV_EVENT_EOF) {
-        spdlog_debug("Connection closed.");
-        client->is_connected = false;
-        pthread_join(client->send_thread, NULL);
-        tcp_client_reconnect(-1, EV_TIMEOUT, client);
-    } else if (events & BEV_EVENT_ERROR) {
+        if (client->is_connected == false) {
+            client->is_connected = true;
+            pthread_create(&client->send_thread, NULL, tcp_client_send_entry, (void*)client);
+        }
+    } else {
         int err = EVUTIL_SOCKET_ERROR();
         spdlog_error("An error occurred: %d, %s.", err, strerror(err));
-        client->is_connected = false;
-        pthread_join(client->send_thread, NULL);
+        if (client->is_connected == true) {
+            client->is_connected = false;
+            pthread_join(client->send_thread, NULL);
+        }
+        event_base_loopbreak(client->base);
+        pthread_join(client->conn_thread, NULL);
         tcp_client_reconnect(-1, EV_TIMEOUT, client);
     }
 }
