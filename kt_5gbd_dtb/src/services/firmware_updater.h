@@ -10,16 +10,28 @@
 #define OTA_UPREPORT_REMOTE_PATH "/upgrade/"
 #define OTA_UPREPORT_LOCAL_PATH "/upgrade/cktt/upgradereport/"
 
+struct UpdateRespInfo 
+{
+    char log_path[80];
+    char time[64];
+    char report[256];
+} ;
+
 struct FwUpdateInfo
 {
     char path[128];
     char name[64];
     char md5[64];
     uint16_t id;
-    uint8_t flag;
+    char type[20];
+    char log_path[100];
+    struct UpdateRespInfo resp_info;
 } ;
-#define UPGRADE_FILE_REMOTE_PATH "/upgrade"
 
+#define UPGRADE_FILE_REMOTE_PATH "/upgrade"
+/* 升级文件路径格式：UPGRADE_FILE_PATH + task_id + / + filename */
+// #define UPGRADE_FILE_REMOTE_PATH "/upgrade/"
+#define UPGRADE_FILE_LOCAL_PATH "/upgrade/cktt/"
 
 struct FwUpdater
 {
@@ -36,5 +48,25 @@ struct FwUpdater
         .update_func = update, \
         .update_cb = up_cb \
     }
+
+
+
+#define UPDATE_LOG(file_name, string) \
+    do { \
+        FILE *fp = fopen(file_name, "a"); \
+        if (fp != NULL) { \
+            fprintf(fp, string); \
+            fclose(fp); \
+        } \
+    } while (0)
+
+#define UPDATE_LOG_FMT(file_name, fmt, ...) \
+    do { \
+        FILE *fp = fopen(file_name, "a"); \
+        if (fp != NULL) { \
+            fprintf(fp, fmt, ##__VA_ARGS__); \
+            fclose(fp); \
+        } \
+    } while (0)
 
 #endif /* __FIRMWARE_UPDATER_H */

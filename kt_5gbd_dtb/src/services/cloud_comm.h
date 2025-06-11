@@ -32,10 +32,6 @@ typedef struct st_TcpClient TcpClient;
 #define FTP_SERVER_USER  "ovp"
 #define FTP_SERVER_PASS  "abcd1234"
 
-/* 升级文件路径格式：UPGRADE_FILE_PATH + task_id + / + filename */
-// #define UPGRADE_FILE_REMOTE_PATH "/upgrade/"
-#define UPGRADE_FILE_LOCAL_PATH "/upgrade/cktt/"
-
 #define MSG_DATA_FRAM_HDR1         0xAAAA
 #define MSG_DATA_FRAM_HDR2         0xBBBB
 #pragma pack(push, 1)
@@ -208,10 +204,10 @@ typedef struct st_OtaHeartBeat
 
 typedef struct st_OtaReport
 {
-    char dev_addr[STRING_LEN_MAX];
-    char task_id[STRING_LEN_MAX];
-    char time[STRING_LEN_MAX];
-    char report[STRING_LEN_MAX];
+    char dev_addr[10];
+    uint16_t task_id;
+    char time[32];
+    char report[256];
 } OtaReport;
 
 typedef enum 

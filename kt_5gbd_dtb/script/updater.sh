@@ -172,61 +172,63 @@ function download_ota_file()
 function get_ota_report_info()
 {
     $task_id=$1
-    $task_url=$2
-    $task_md5=$3
+    $filename=$3
     $task_type=$4
 
-    create_dir $task_id
+    db_res=`psql -U cktt  -d fkz9 -t -c "set search_path=obc; select dev_addr from device_info" | awk -F ' ' '{print $1}'`
+    devaddr=`printf "%04d" $db_res`
+
+    # create_dir $task_id
     file=`create_file $task_id $devaddr $task_id`
     time=`date "+%Y-%m-%d %H:%M:%S"`
-    echo "$time upgrade mission $task_id" >> $file 2>&1
+    # echo "$time upgrade mission $task_id" >> $file 2>&1
 
-    filename=`echo $task_url | awk -F '/' '{print $NF}'`
-    extension=${filename#*.}
-    if [ "$extension" != "tar.gz" ]; then
+    # filename=`echo $task_url | awk -F '/' '{print $NF}'`
+    # extension=${filename#*.}
+    # if [ "$extension" != "tar.gz" ]; then
 
-        echo "task $task_id file extension is not tar.gz" >> $file 2>&1
+    #     echo "task $task_id file extension is not tar.gz" >> $file 2>&1
+    #     time=`date "+%Y-%m-%d %H:%M:%S"`
+    #     report=`base64 $file | tr -d '\n\r'`
+    #     # ota_report "$devaddr" "$task_id" "$time" "$report"e
+    #     # continue
+    # else
+    echo "start to check $filename md5" >> $file 2>&1
+    # md5_res=$(md5sum /upgrade/$task_id/$filename | cut -d ' ' -f 1)
+    # if [ "$task_md5" != "$md5_res" ]; then
+    #     echo "md5 not match, do not excute task $task_id, ota failed" >> $file 2>&1
+    #     time=`date "+%Y-%m-%d %H:%M:%S"`
+    #     report=`base64 $file | tr -d '\n\r'`
+    #     # res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
+    #     # if [ $? -ne 0 ]; then
+    #     #     touch /home/cktt/script/"$task_id"_ota_report
+    #     # fi 
+    #     #rm /upgrade/$task_id/$filename
+    #     # continue
+    # else
+    echo "end to check $filename md5" >> $file 2>&1
+    if [ "$task_type" = "AT_ONCE" ]; then
+        echo "start the ota task now" >> $file 2>&1
+        upgrade $task_id "$file"
+        time=`date "+%Y-%m-%d %H:%M:%S"`
+        report=`base64 $2 | tr -d '\n\r'`
+    else
+        # if [ ! -f "$mission_file" ]; then
+        #     touch "$mission_file"
+        # fi
+        echo "start the ota task when next reboot" >> $file 2>&1
         time=`date "+%Y-%m-%d %H:%M:%S"`
         report=`base64 $file | tr -d '\n\r'`
-        # ota_report "$devaddr" "$task_id" "$time" "$report"e
-        # continue
-    else
-        echo "start to check $filename md5" >> $file 2>&1
-        md5_res=$(md5sum /upgrade/$task_id/$filename | cut -d ' ' -f 1)
-        if [ "$task_md5" != "$md5_res" ]; then
-            echo "md5 not match, do not excute task $task_id, ota failed" >> $file 2>&1
-            time=`date "+%Y-%m-%d %H:%M:%S"`
-            report=`base64 $file | tr -d '\n\r'`
-            # res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
-            # if [ $? -ne 0 ]; then
-            #     touch /home/cktt/script/"$task_id"_ota_report
-            # fi 
-            #rm /upgrade/$task_id/$filename
-            # continue
-        else
-            echo "end to check $filename md5" >> $file 2>&1
-            if [ "$task_type" = "AT_ONCE" ]; then
-                echo "start the ota task now" >> $file 2>&1
-                upgrade $task_id "$file"
-                time=`date "+%Y-%m-%d %H:%M:%S"`
-                report=`base64 $2 | tr -d '\n\r'`
-            else
-                # if [ ! -f "$mission_file" ]; then
-                #     touch "$mission_file"
-                # fi
-                echo "start the ota task when next reboot" >> $file 2>&1
-                time=`date "+%Y-%m-%d %H:%M:%S"`
-                report=`base64 $file | tr -d '\n\r'`
-                # res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
-                # if [ $res -ne 0 ]; then
-                #     touch /home/cktt/script/"$task_id"_ota_report
-                # fi 
-                # echo $task_id $file >> $mission_file
-            fi
-        fi
+        # res=$(ota_report "$devaddr" "$task_id" "$time" "$report")
+        # if [ $res -ne 0 ]; then
+        #     touch /home/cktt/script/"$task_id"_ota_report
+        # fi 
+        # echo $task_id $file >> $mission_file
     fi
+    # fi
+    # fi
 
-    echo "$devaddr,$task_id,$time,$report,"
+    echo "$report,$file"
 }
 
 function get_heartbeat_base_info()

@@ -262,44 +262,49 @@ int create_ota_heartbeat_data(char *data)
     return 0;
 }
 
-int get_ota_report_info(struct FwDownInfo *info, void *arg)
+int get_ota_report_info(struct FwUpdateInfo *info, void *arg)
 {
-    SSHClient ssh_client;
+    // SSHClient ssh_client;
     struct st_OtaReport *pReport = NULL;
 
-    if (arg != NULL) {
+    if (arg == NULL) {
         return -1;
     }
 
     pReport = (struct st_OtaReport*)arg;
-    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-    int ret = ssh_client.connect(&ssh_client);
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.connect failed.");
-        return -1;
-    }
+    snprintf(pReport->dev_addr, sizeof(pReport->dev_addr), "%d", gp_cloud_comm_ctx->base_info->dev_addr);
+    pReport->task_id = info->id;
+    strcpy(pReport->time, info->resp_info.time);
+    strcpy(pReport->report, info->resp_info.report); 
+    // SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+    // int ret = ssh_client.connect(&ssh_client);
+    // if (ret) {
+    //     SSHClient_Destroy(&ssh_client);
+    //     spdlog_error("ssh_client.connect failed.");
+    //     return -1;
+    // }
 
-    char resp[256] = {0};
-    char cmd[300] = {0};
-    snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh download_info %2d %s %s %s", 
-                info->id, info->url, info->md5, info->type);
-    ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.execute updater.sh report_info failed.");
-        return -1;
-    }
+    // char resp[256] = {0};
+    // char cmd[300] = {0};
+    // snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh download_info %2d %s %s %s", 
+    //             info->id, info->url, info->md5, info->type);
+    // snprintf(cmd, sizeof(cmd), "base64 %s | tr -d '\n\r' ", info->log_path);
+    // ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+    // if (ret) {
+    //     SSHClient_Destroy(&ssh_client);
+    //     spdlog_error("ssh_client.execute upgrade.sh task_id failed.");
+    //     return -1;
+    // }
 
-    sscanf(resp, "%[^,],%[^,],%[^,],%[^,],",
-            pReport->dev_addr, pReport->task_id, pReport->time, pReport->report);
+    // sscanf(resp, "%[^,],%[^,],%[^,],%[^,],",
+    //         pReport->dev_addr, pReport->task_id, pReport->time, pReport->report);
 
-    SSHClient_Destroy(&ssh_client);
+    // SSHClient_Destroy(&ssh_client);
 
     return 0;
 }
 
-int create_ota_report_data(struct FwDownInfo *info, char *data)
+int create_ota_report_data(struct FwUpdateInfo *info, char *data)
 {
     cJSON *root = NULL;
     OtaReport report;
@@ -318,7 +323,7 @@ int create_ota_report_data(struct FwDownInfo *info, char *data)
     root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "lang", "zh_CN");
     cJSON_AddStringToObject(root, "deviceAddress", report.dev_addr);
-    cJSON_AddStringToObject(root, "taskId", report.task_id);
+    cJSON_AddNumberToObject(root, "taskId", report.task_id);
     cJSON_AddStringToObject(root, "executionTime", report.time);
     cJSON_AddStringToObject(root, "executionReport", report.report);
     buf = cJSON_Print(root);
@@ -361,7 +366,7 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
     return ret;
 }
 
-void do_ota_report(struct FwDownInfo *info)
+void do_ota_report(struct FwUpdateInfo *info)
 {
     char buf[1024] = {0};
     char *resp = NULL;
@@ -370,7 +375,7 @@ void do_ota_report(struct FwDownInfo *info)
     if (ret) {
         return ;
     }
-    http_post_request(OTA_HEARTBEAT_URL, buf, &resp);
+    http_post_request(OTA_UPREPORT_URL, buf, &resp);
     spdlog_debug("do_ota_report %s", resp);
     
     // if (buf != NULL)
@@ -397,24 +402,34 @@ int do_downlaod_firmware(struct List *task_list)
         while((pNode = List_GetHead(task_list)) != NULL) {
             pInfo = (struct FwDownInfo *)pNode->arg;
 
+            memset(&up_info, 0, sizeof(struct FwUpdateInfo));
             strcpy(remp_url, pInfo->url);
             GetFileName(remp_url, file_name);
             snprintf(cmd, sizeof(cmd), "mkdir -p %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
             _system_(cmd, NULL, 0);
             snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, file_name);
+            // char log_path[128] = {0};
+            CustomTime t;
+            get_system_time(&t);
+            snprintf(up_info.log_path, sizeof(up_info.log_path), "%s%d/%04d_%d_%04d%02d%02d%02d%02d.log", UPGRADE_FILE_LOCAL_PATH, pInfo->id, gp_cloud_comm_ctx->base_info->dev_addr,
+                           pInfo->id, t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute); 
+            UPDATE_LOG_FMT(up_info.log_path, "%04d-%02d-%02d %02d:%02d:%02d upgrade mission %d\n", t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute, t.ucSecond, pInfo->id);
+            UPDATE_LOG_FMT(up_info.log_path, "start to download ota file %s\n", file_name);
             int ret = ftp_download(pInfo->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
             if (!ret) {
+                UPDATE_LOG_FMT(up_info.log_path, "download ota file %s success\n", file_name);
                 //通知去执行更新
-                memset(&up_info, 0, sizeof(struct FwUpdateInfo));
-                up_info.flag = 1;
+                strcpy(up_info.type, pInfo->type);
                 up_info.id = pInfo->id;
                 strncpy(up_info.md5, pInfo->md5, sizeof(up_info.md5));
                 strncpy(up_info.path, local_path, sizeof(up_info.path));
                 strncpy(up_info.name, file_name, sizeof(up_info.name));
                 ret = do_upgrade_firmware(&up_info);
                 if (!ret) {
-                    do_ota_report(pInfo);
+                    do_ota_report(&up_info);
                 }
+            } else {
+                UPDATE_LOG_FMT(up_info.log_path, "task %d download file failed\n", pInfo->id);
             }
 
             List_DelHead(task_list);

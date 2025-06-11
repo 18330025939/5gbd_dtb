@@ -149,7 +149,7 @@ int main(int argc, char ** args)
     CloundCommContext cloud_ctx;
     Fkz9CommContext fkz9_ctx;
     
-    spdlog_c_init("/opt/log/rt_a100.log", 1024 * 1024, 2);
+    spdlog_c_init("/opt/log/rt_a100.log", 1024 * 1024 * 5, 2);
     spdlog_info("BUILD_TIMESTAMP: %s",BUILD_TIMESTAMP);
     spdlog_info("CLIENT_VERSION: %s", CLIENT_VERSION);
     spdlog_info("RT_A100_VERSION_MAJOR: %d.%d.%d", RT_A100_VERSION_MAJOR, RT_A100_VERSION_MINOR, RT_A100_VERSION_PATCH);
