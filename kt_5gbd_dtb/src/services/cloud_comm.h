@@ -206,8 +206,8 @@ typedef struct st_OtaReport
 {
     char dev_addr[10];
     uint16_t task_id;
-    char time[32];
-    char report[256];
+    char *time;
+    char *report;
 } OtaReport;
 
 typedef enum 

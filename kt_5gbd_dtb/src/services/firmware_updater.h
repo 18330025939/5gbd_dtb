@@ -6,15 +6,28 @@
 #define SERVER_USERNAME "root"//"cktt"
 #define SERVER_PASSWORD "root"//"cktt"
 
+#define OTA_FILEUPLOAD_URL   "https://ota.cktt.com.cn/ota-server/fileUpload"
+
 /* OTA升级报告路径格式： OTA_UPREPORT_PATH + task_id + / + filename*/
 #define OTA_UPREPORT_REMOTE_PATH "/upgrade/"
 #define OTA_UPREPORT_LOCAL_PATH "/upgrade/cktt/upgradereport/"
+
+struct FileUploadfInfo
+{   
+    char dev_addr[10];
+    char upload_path[80];
+    char base64_str[1024*100];
+} ;
+
 
 struct UpdateRespInfo 
 {
     char log_path[80];
     char time[64];
-    char report[256];
+    char report[1024];
+    char conf_path[80];
+    // int conf_num;
+    // struct ConfFileInfo *conf_info;
 } ;
 
 struct FwUpdateInfo
@@ -26,6 +39,13 @@ struct FwUpdateInfo
     char type[20];
     char log_path[100];
     struct UpdateRespInfo resp_info;
+} ;
+
+struct FileUploadReport
+{
+    char dev_addr[10];
+    char *file_path;
+    char *base64_str;
 } ;
 
 #define UPGRADE_FILE_REMOTE_PATH "/upgrade"

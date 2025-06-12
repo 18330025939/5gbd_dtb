@@ -274,8 +274,8 @@ int get_ota_report_info(struct FwUpdateInfo *info, void *arg)
     pReport = (struct st_OtaReport*)arg;
     snprintf(pReport->dev_addr, sizeof(pReport->dev_addr), "%d", gp_cloud_comm_ctx->base_info->dev_addr);
     pReport->task_id = info->id;
-    strcpy(pReport->time, info->resp_info.time);
-    strcpy(pReport->report, info->resp_info.report); 
+    pReport->time = info->resp_info.time;
+    pReport->report = info->resp_info.report; 
     // SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
     // int ret = ssh_client.connect(&ssh_client);
     // if (ret) {
@@ -328,7 +328,7 @@ int create_ota_report_data(struct FwUpdateInfo *info, char *data)
     cJSON_AddStringToObject(root, "executionReport", report.report);
     buf = cJSON_Print(root);
     strncpy(data, buf, strlen(buf));
-    spdlog_debug("ota report data: %s", buf);
+    // spdlog_debug("ota report data: %s", buf);
     cJSON_Delete(root);
     free(buf);
 
