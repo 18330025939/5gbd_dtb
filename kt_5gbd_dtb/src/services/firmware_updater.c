@@ -44,7 +44,7 @@ int is_file_empty(const char *filename)
 int create_file_upload_data(struct FileUploadfInfo *info, char *data)
 {
     cJSON *root = NULL;
-    // char *buf = NULL;
+    char *buf = NULL;
 
     if (info == NULL) {
          return -1;
@@ -57,18 +57,18 @@ int create_file_upload_data(struct FileUploadfInfo *info, char *data)
     cJSON_AddStringToObject(root, "deviceAddress", info->dev_addr);
     cJSON_AddStringToObject(root, "filePath", info->upload_path);
     cJSON_AddStringToObject(root, "base64Str", info->base64_str);
-    data = cJSON_Print(root);
-    // strncpy(data, buf, strlen(buf));
+    buf = cJSON_Print(root);
+    strncpy(data, buf, strlen(buf));
     // spdlog_debug("ota report data: %s", buf);
     cJSON_Delete(root);
-    // free(buf);
+    free(buf);
 
     return 0;
 }
 
 void do_file_upload(struct FileUploadfInfo *info)
 {
-    char *buf = NULL;
+    char buf[1024*100] = {0};
     char *resp = NULL;
     
     int ret = create_file_upload_data(info, buf);
@@ -80,8 +80,8 @@ void do_file_upload(struct FileUploadfInfo *info)
     
     if (resp != NULL) 
         free(resp);
-    if (buf != NULL)
-        free(buf);
+    // if (buf != NULL)
+    //     free(buf);
 }
 
 int fkz9_fw_trans_func(void *arg)
