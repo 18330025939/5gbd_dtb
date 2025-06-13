@@ -66,22 +66,29 @@ int create_file_upload_data(struct FileUploadfInfo *info, char *data)
     return 0;
 }
 
-void do_file_upload(struct FileUploadfInfo *info)
+int do_file_upload(struct FileUploadfInfo *info)
 {
     char buf[1024*100] = {0};
     char *resp = NULL;
     
     int ret = create_file_upload_data(info, buf);
     if (ret) {
-        return ;
+        return -1;
     }
     http_post_request(OTA_FILEUPLOAD_URL, buf, &resp);
     spdlog_debug("do_file_upload %s", resp);
     
+    if (strstr(resp, "SUCCESS") != NULL) {
+        ret = 0;
+    } else {
+        ret = -1;
+    }
     if (resp != NULL) 
         free(resp);
     // if (buf != NULL)
     //     free(buf);
+
+    return ret;
 }
 
 int fkz9_fw_trans_func(void *arg)
@@ -133,7 +140,7 @@ int fkz9_fw_trans_func(void *arg)
     snprintf(remote_path, sizeof(remote_path), "%s/%d/%s", UPGRADE_FILE_REMOTE_PATH, pInfo->id, pInfo->name);
     ret = ssh_client.upload_file(&ssh_client, pInfo->path, remote_path);
     if (ret) {
-        //上传失败是否再次上传
+        //上传失败,是否再次上传?
         SSHClient_Destroy(&ssh_client);
         spdlog_error("ssh_client.upload_file up_file:%s failed.", pInfo->path);
         return -1;
@@ -144,7 +151,7 @@ int fkz9_fw_trans_func(void *arg)
     memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
     if ((ret) || (strstr(resp, pInfo->md5) == NULL)) {
-        //校验失败是否再次上传
+        //校验失败,是否再次上传?
         SSHClient_Destroy(&ssh_client);
         spdlog_error("ssh_client.execute md5 of the file,l_md5 : %s,r_md5 %s , failed.", pInfo->md5, resp);
         return -1;
@@ -167,16 +174,14 @@ int fkz9_fw_update_func(void *arg)
         return -1;
     }
 
-    spdlog_info("fkz9_fw_update_func");
+    // spdlog_info("fkz9_fw_update_func");
     pInfo = (struct FwUpdateInfo *)arg;
     snprintf(path, sizeof(path), "%s%d/%s/rt-a100", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
     if (dir_exists(path)) {
         UPDATE_LOG(pInfo->log_path, "start the ota task now\n");
         snprintf(cmd, sizeof(cmd), "bash %s%d/%s/run.sh", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
         _system_(cmd, resp, sizeof(resp));
-        
-        snprintf(cmd, sizeof(cmd), "rm -rf %s", UPGRADE_FILE_LOCAL_PATH);
-        _system_(cmd, NULL, 0);
+        UPDATE_LOG_FMT(pInfo->log_path, "%s\n", resp);
     } else {
 
         SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
@@ -273,8 +278,11 @@ int fkz9_fw_update_func(void *arg)
                 memset(cmd, 0, sizeof(cmd));
                 snprintf(cmd, sizeof(cmd), "base64 -w 0 %s", local_path);
                 _system_(cmd, upload_info.base64_str, sizeof(upload_info.base64_str));
-                do_file_upload(&upload_info);
-                UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud success", file_path);
+                if (do_file_upload(&upload_info)) {
+                    UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud failed", file_path);
+                } else {
+                    UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud success", file_path);
+                }
             }
 
             UPDATE_LOG(pInfo->log_path, "send file end");

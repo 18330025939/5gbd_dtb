@@ -154,6 +154,10 @@ int main(int argc, char ** args)
     spdlog_info("CLIENT_VERSION: %s", CLIENT_VERSION);
     spdlog_info("RT_A100_VERSION_MAJOR: %d.%d.%d", RT_A100_VERSION_MAJOR, RT_A100_VERSION_MINOR, RT_A100_VERSION_PATCH);
 
+    if (init_updater_environment()) {
+        exit(-1);
+    }
+
     memset((void*)&cloud_ctx, 0, sizeof(CloundCommContext));
     cloud_ctx.base_info = &fkz9_devBaseInfo;
 
@@ -162,7 +166,6 @@ int main(int argc, char ** args)
     // RUN_LED_INIT();
     // FAULT_LED_INIT();
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    init_updater_environment();
     clound_comm_init(&cloud_ctx);
     fkz9_comm_init(&fkz9_ctx);
 

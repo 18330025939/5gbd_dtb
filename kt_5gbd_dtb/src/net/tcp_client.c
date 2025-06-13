@@ -32,15 +32,11 @@ void tcp_client_reconnect(evutil_socket_t fd, short event, void *arg)
 
     if (client->recnt_att < client->max_recnt_att) {
         client->recnt_att++;
-        // pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
+
         spdlog_debug("Reconnecting... Attempt %d/%d.", client->recnt_att, client->max_recnt_att);
-        struct timeval timeout = {3, 0}; // 1秒后重试
-        event_base_once(client->base, -1, EV_TIMEOUT, tcp_client_reconnect, client, &timeout);
+        pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
     } else {
-        // client->is_connected = false;
         spdlog_debug("Max reconnect attempts reached. Exiting.");
-        // tcp_client_disconnect(client);
-        // tcp_client_destroy(client);
     }
 }
 
@@ -76,22 +72,9 @@ static void tcp_client_event_cb(struct bufferevent* bev, short events, void* arg
         spdlog_error("An error occurred: %d, %s.", err, strerror(err));
         if (client->is_connected == true) {
             client->is_connected = false;
-            pthread_join(client->send_thread, NULL);
         } 
-        // if (client->recnt_att) {
-        //     event_base_loopbreak(client->base);
-        //     pthread_join(client->conn_thread, NULL);
-        // }
-        // tcp_client_reconnect(-1, EV_TIMEOUT, client);
-        if (client->recnt_att < client->max_recnt_att) {
-            event_base_loopbreak(client->base);
-            pthread_join(client->conn_thread, NULL);
-            client->recnt_att++;
-            spdlog_debug("Reconnecting... Attempt %d/%d.", client->recnt_att, client->max_recnt_att);
-            pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
-        }
-        // pthread_create(&client->conn_thread, NULL, tcp_client_connect_entry, (void*)client);
-        // spdlog_debug("Reconnecting... Attempt %d/%d.", client->recnt_att, client->max_recnt_att);
+        struct timeval timeout = {3, 0}; // 3秒后重试
+        event_base_once(client->base, -1, EV_TIMEOUT, tcp_client_reconnect, client, &timeout);
     }
 }
 
@@ -153,6 +136,7 @@ void *tcp_client_send_entry(void *arg)
         bufferevent_write(client->bev, buf, len);
     }
 
+    pthread_exit(NULL);
     return NULL;
 }
 
@@ -192,7 +176,7 @@ static int tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
 /* 断开连接 */
 static void tcp_client_disconnect(TcpClient* client) 
 {
-    if (client == NULL) {
+    if (client == NULL || client->is_connected == false) {
         return ;
     }
 
@@ -241,8 +225,6 @@ TcpClient* tcp_client_create(const char* server_ip, int port, int max_recnt)
         init_queue(&client->tx_queue, 1400);
         spdlog_debug("tcp_client_create ok 0x%x", client);
     }
-    // init_queue(&client->tx_queue);
-    // init_queue(&client->rx_queue, 1024);
     return client;
 }
 
@@ -255,7 +237,6 @@ void tcp_client_destroy(TcpClient* client)
     }
     spdlog_debug("tcp_client_destroy.");
     clean_queue(&client->tx_queue);
-    // clean_queue(&client->rx_queue);
     free(client->server_ip);
     free(client);
 }
