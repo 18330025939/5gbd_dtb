@@ -231,3 +231,28 @@ int bcd_to_db(uint16_t value)
 		   (value & 0x0f));
 	return bcd;
 }
+
+int dir_exists(const char *path) 
+{
+    struct stat statbuf;
+
+    if (stat(path, &statbuf) == 0) { 
+        return S_ISDIR(statbuf.st_mode);
+    }
+    return 0; 
+}
+
+int is_file_empty(const char *filename) 
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        return -1; 
+    }
+
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    fclose(file);
+
+    return file_size == 0 ? 1 : 0;
+}

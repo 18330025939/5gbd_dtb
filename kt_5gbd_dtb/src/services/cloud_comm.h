@@ -219,12 +219,15 @@ typedef enum
     EVENT_TYPE_MAX
 } EventType;
 
+#define FW_NEED_DOWNLOAD  0xA0
+
 struct FwDownInfo
 {
     uint16_t id;
     char url[128];
     char md5[64];
     char type[20];
+    uint8_t flag;
 } ;
 
 

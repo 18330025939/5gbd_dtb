@@ -264,7 +264,6 @@ int create_ota_heartbeat_data(char *data)
 
 int get_ota_report_info(struct FwUpdateInfo *info, void *arg)
 {
-    // SSHClient ssh_client;
     struct st_OtaReport *pReport = NULL;
 
     if (arg == NULL) {
@@ -276,30 +275,6 @@ int get_ota_report_info(struct FwUpdateInfo *info, void *arg)
     pReport->task_id = info->id;
     pReport->time = info->resp_info.time;
     pReport->report = info->resp_info.report; 
-    // SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-    // int ret = ssh_client.connect(&ssh_client);
-    // if (ret) {
-    //     SSHClient_Destroy(&ssh_client);
-    //     spdlog_error("ssh_client.connect failed.");
-    //     return -1;
-    // }
-
-    // char resp[256] = {0};
-    // char cmd[300] = {0};
-    // snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh download_info %2d %s %s %s", 
-    //             info->id, info->url, info->md5, info->type);
-    // snprintf(cmd, sizeof(cmd), "base64 %s | tr -d '\n\r' ", info->log_path);
-    // ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-    // if (ret) {
-    //     SSHClient_Destroy(&ssh_client);
-    //     spdlog_error("ssh_client.execute upgrade.sh task_id failed.");
-    //     return -1;
-    // }
-
-    // sscanf(resp, "%[^,],%[^,],%[^,],%[^,],",
-    //         pReport->dev_addr, pReport->task_id, pReport->time, pReport->report);
-
-    // SSHClient_Destroy(&ssh_client);
 
     return 0;
 }
@@ -357,9 +332,9 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
         if (ret) {
             spdlog_error("up->update_func failed.");
         } else {
-            // if (fw_up->update_cb != NULL) {
-            //     fw_up->update_cb((void *)pInfo);
-            // }
+            if (fw_up->update_cb != NULL) {
+                fw_up->update_cb((void *)pInfo);
+            }
         }
     }
 
@@ -393,6 +368,7 @@ int do_downlaod_firmware(struct List *task_list)
     char remp_url[128] = {0};
     char cmd[64] = {0};
     struct FwUpdateInfo up_info;
+     CustomTime t;
 
     if (task_list == NULL) {
         return -1;
@@ -405,33 +381,42 @@ int do_downlaod_firmware(struct List *task_list)
             memset(&up_info, 0, sizeof(struct FwUpdateInfo));
             strcpy(remp_url, pInfo->url);
             GetFileName(remp_url, file_name);
-            snprintf(cmd, sizeof(cmd), "mkdir -p %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
-            _system_(cmd, NULL, 0);
             snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, file_name);
-            // char log_path[128] = {0};
-            CustomTime t;
-            get_system_time(&t);
-            snprintf(up_info.log_path, sizeof(up_info.log_path), "%s%d/%04d_%d_%04d%02d%02d%02d%02d.log", UPGRADE_FILE_LOCAL_PATH, pInfo->id, gp_cloud_comm_ctx->base_info->dev_addr,
-                           pInfo->id, t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute); 
-            UPDATE_LOG_FMT(up_info.log_path, "%04d-%02d-%02d %02d:%02d:%02d upgrade mission %d\n", t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute, t.ucSecond, pInfo->id);
-            UPDATE_LOG_FMT(up_info.log_path, "start to download ota file %s\n", file_name);
-            int ret = ftp_download(pInfo->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
-            if (!ret) {
-                UPDATE_LOG_FMT(up_info.log_path, "download ota file %s success\n", file_name);
-                //通知去执行更新
-                strcpy(up_info.type, pInfo->type);
-                up_info.id = pInfo->id;
-                strncpy(up_info.md5, pInfo->md5, sizeof(up_info.md5));
-                strncpy(up_info.path, local_path, sizeof(up_info.path));
-                strncpy(up_info.name, file_name, sizeof(up_info.name));
-                ret = do_upgrade_firmware(&up_info);
+            if (pInfo->flag == FW_NEED_DOWNLOAD) {
+                // strcpy(remp_url, pInfo->url);
+                // GetFileName(remp_url, file_name);
+                snprintf(cmd, sizeof(cmd), "mkdir -p %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
+                _system_(cmd, NULL, 0);
+                // snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, file_name);
+                get_system_time(&t);
+                snprintf(up_info.log_path, sizeof(up_info.log_path), "%s%d/%04d_%d_%04d%02d%02d%02d%02d.log", UPGRADE_FILE_LOCAL_PATH, pInfo->id, gp_cloud_comm_ctx->base_info->dev_addr,
+                            pInfo->id, t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute); 
+                UPDATE_LOG_FMT(up_info.log_path, "%04d-%02d-%02d %02d:%02d:%02d upgrade mission %d\n", t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute, t.ucSecond, pInfo->id);
+                UPDATE_LOG_FMT(up_info.log_path, "start to download ota file %s\n", file_name);
+                int ret = ftp_download(pInfo->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
                 if (!ret) {
-                    do_ota_report(&up_info);
+                    UPDATE_LOG_FMT(up_info.log_path, "download ota file %s success\n", file_name);
+                } else {
+                    UPDATE_LOG_FMT(up_info.log_path, "task %d download file failed\n", pInfo->id);
                 }
             } else {
-                UPDATE_LOG_FMT(up_info.log_path, "task %d download file failed\n", pInfo->id);
+                snprintf(cmd, sizeof(cmd), "find %s%d/ -name \"%04d_%d*.log\"", UPGRADE_FILE_LOCAL_PATH, pInfo->id, gp_cloud_comm_ctx->base_info->dev_addr, pInfo->id);
+                _system_(cmd, up_info.log_path, sizeof(up_info.log_path));
+                get_system_time(&t);
+                UPDATE_LOG_FMT(up_info.log_path, "%04d-%02d-%02d %02d:%02d:%02d start to excute mission %d %s", t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute, t.ucSecond, pInfo->id, up_info.log_path);
+            }
+            //通知去执行更新    
+            strcpy(up_info.type, pInfo->type);
+            up_info.id = pInfo->id;
+            strncpy(up_info.md5, pInfo->md5, sizeof(up_info.md5));
+            strncpy(up_info.path, local_path, sizeof(up_info.path));
+            strncpy(up_info.name, file_name, sizeof(up_info.name));
+            ret = do_upgrade_firmware(&up_info);
+            if (!ret) {
+                do_ota_report(&up_info);
             }
 
+            free(pInfo);
             List_DelHead(task_list);
         }
     }
@@ -506,6 +491,7 @@ int ota_heartbeat_resp_parse(struct List *task_list, char *respond)
                     strcpy(pInfo->url, url_obj->valuestring);
                     strcpy(pInfo->md5, md5_obj->valuestring);
                     strcpy(pInfo->type,type_obj->valuestring);
+                    pInfo->flag = FW_NEED_DOWNLOAD;
                     List_Insert(task_list, (void*)pInfo);
 
                     spdlog_debug("pInfo ID: %d, URL: %s, MD5: %s, Type: %s\n", pInfo->id, pInfo->url, pInfo->md5, pInfo->type);
@@ -570,9 +556,6 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     uint16_t len = sizeof(MsgFramHdr) + sizeof(NAVDataSeg) + sizeof(MsgDataFramCrc);
     hdr->usLen = bswap_16(len);
     nav_data = (NAVDataSeg *)(buf + sizeof(MsgFramHdr));
-    // get_system_time(&t);
-    // TIME_TO_STR(&t, str);
-    // printf("time %s, sg_data.message_id %s, sg_data.latitude %.8lf\n", str, sg_data.message_id, sg_data.latitude);
     nav_data->usDevAddr = 0;
     nav_data->usYear = bswap_16(sg_data.utc_year);
     nav_data->ucMonth = sg_data.utc_month;
@@ -613,6 +596,42 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
     client->ops->send(client, buf, len);
 
     return;
+}
+
+
+void reboot_upgrade_task_cb(evutil_socket_t fd, short event, void *arg) 
+{
+
+    if (arg == NULL) {
+        return ;
+    }
+
+    CloundCommContext *ctx = (CloundCommContext *)arg;
+
+    int ret = is_file_empty(MISSION_FILE_LOCAL_PATH);
+    if (!ret) {
+        struct FwDownInfo *pInfo = (struct FwDownInfo *)malloc(sizeof(struct FwDownInfo));
+        pInfo->
+        pthread_mutex_lock(&ctx->down_task.mutex);
+
+        pthread_cond_signal(&ctx->down_task.cond);
+        pthread_mutex_unlock(&ctx->down_task.mutex);
+    }
+
+    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+    int ret = ssh_client.connect(&ssh_client);
+    if (ret) {
+        SSHClient_Destroy(&ssh_client);
+        spdlog_error("ssh_client.connect failed.");
+        return -1;
+    }
+
+    char cmd[256] = {0};
+    snprintf(cmd, sizeof(cmd), "cut -d . -f1 /proc/uptime", pInfo->path, pInfo->name);
+    ret = ssh_client.download_file(&ssh_client, file_path, pInfo->path);
+
+    SSHClient_Destroy(&ssh_client);
+
 }
 
 int func_wave_file_resp(void *arg)
@@ -824,6 +843,7 @@ void *cloud_timer_task_entry(void *arg)
     base = event_base_new();
     ctx->base = base;
     cloud_add_timer_task(arg, nav_data_msg_task_cb, 1000);
+    cloud_add_timer_task(arg, reboot_upgrade_task_cb, 30000);
     cloud_add_timer_task(arg, ota_heartbeat_task_cb, 60000);
 
     event_base_dispatch(base);  // 启动事件循环

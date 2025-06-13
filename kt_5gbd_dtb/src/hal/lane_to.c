@@ -466,17 +466,13 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
         return;
     }
     if (ctx->uart) {
-        // printf("laneTo uart\n");
         serial = &ctx->uart->base;
         bytes_read = serial->ops->read(serial, buffer, sizeof(buffer));
     } else {
-        // printf("laneTo sock\n");
         bytes_read = read(ctx->sockfd, buffer, sizeof(buffer));
     }
-    // printf("byte_read %ld\n", bytes_read);
     if (bytes_read > 0) {
         buffer[bytes_read] = '\0';
-        // printf("buf, %s, sock %d\n", buffer, ctx->sockfd);
         start = strstr(buffer, SG_MSG_ID);
         end = strstr(buffer, PBLKEND_MSG_ID);
         // end = strchr(start, "\n");

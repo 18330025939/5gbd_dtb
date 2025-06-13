@@ -12,6 +12,8 @@
 #define OTA_UPREPORT_REMOTE_PATH "/upgrade/"
 #define OTA_UPREPORT_LOCAL_PATH "/upgrade/cktt/upgradereport/"
 
+#define OTA_TASK_NOW  "AT_ONCE"
+
 struct FileUploadfInfo
 {   
     char dev_addr[10];
@@ -52,6 +54,7 @@ struct FileUploadReport
 /* 升级文件路径格式：UPGRADE_FILE_PATH + task_id + / + filename */
 // #define UPGRADE_FILE_REMOTE_PATH "/upgrade/"
 #define UPGRADE_FILE_LOCAL_PATH "/upgrade/cktt/"
+#define MISSION_FILE_LOCAL_PATH "/upgrade/cktt/ota_mission"
 
 struct FwUpdater
 {

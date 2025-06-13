@@ -15,32 +15,6 @@
 #include "spdlog_c.h"
 
 
-int dir_exists(const char *path) 
-{
-    struct stat statbuf;
-
-    if (stat(path, &statbuf) == 0) { 
-        return S_ISDIR(statbuf.st_mode);
-    }
-    return 0; 
-}
-
-int is_file_empty(const char *filename) 
-{
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        return -1; 
-    }
-
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-    fclose(file);
-
-    return file_size == 0 ? 1 : 0;
-}
-
-
 int create_file_upload_data(struct FileUploadfInfo *info, char *data)
 {
     cJSON *root = NULL;
@@ -159,6 +133,13 @@ int fkz9_fw_trans_func(void *arg)
 
     SSHClient_Destroy(&ssh_client);
 
+    if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
+        UPDATE_LOG(pInfo->log_path, "start the ota task now\n");
+    } else {
+        UPDATE_LOG(pInfo->log_path, "start the ota task when next reboot\n");
+
+    }
+
     return 0;
 }
 
@@ -174,121 +155,132 @@ int fkz9_fw_update_func(void *arg)
         return -1;
     }
 
-    // spdlog_info("fkz9_fw_update_func");
-    pInfo = (struct FwUpdateInfo *)arg;
-    snprintf(path, sizeof(path), "%s%d/%s/rt-a100", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
-    if (dir_exists(path)) {
-        UPDATE_LOG(pInfo->log_path, "start the ota task now\n");
-        snprintf(cmd, sizeof(cmd), "bash %s%d/%s/run.sh", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
-        _system_(cmd, resp, sizeof(resp));
-        UPDATE_LOG_FMT(pInfo->log_path, "%s\n", resp);
-    } else {
+    spdlog_info("fkz9_fw_update_func");
+    if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
+        pInfo = (struct FwUpdateInfo *)arg;
+        snprintf(path, sizeof(path), "%s%d/%s/rt-a100", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
+        if (dir_exists(path)) {
+            snprintf(cmd, sizeof(cmd), "bash %s%d/%s/run.sh", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
+            _system_(cmd, resp, sizeof(resp));
+            UPDATE_LOG_FMT(pInfo->log_path, "%s\n", resp);
+        } else {
 
-        SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-        int ret = ssh_client.connect(&ssh_client);
-        if (ret) {
-            SSHClient_Destroy(&ssh_client);
-            spdlog_error("ssh_client.connect failed.");
-            return -1;
-        }
-
-        memset(cmd, 0, sizeof(cmd));
-        // snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh report_info %d %s %s", pInfo->id, pInfo->name, pInfo->type);
-        snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/upgrade.sh %d", pInfo->id);
-        memset(resp, 0, sizeof(resp));
-        ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-        if (ret) {
-            //执行失败
-            SSHClient_Destroy(&ssh_client);
-            spdlog_error("ssh_client.execute updater.sh report_info failed.");
-            return -1;
-        }
-
-        sscanf(resp, "%[^,],%[^,]", pInfo->resp_info.log_path, pInfo->resp_info.conf_path);
-        spdlog_info("resp: %s, log_path: %s, conf_path: %s", resp, pInfo->resp_info.log_path, pInfo->resp_info.conf_path);
-
-        char local_path[80] = {0};
-        snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, basename(pInfo->resp_info.log_path));
-        ret = ssh_client.download_file(&ssh_client, pInfo->resp_info.log_path, local_path);
-        if (ret) {
-            SSHClient_Destroy(&ssh_client);
-            spdlog_error("ssh_client.upload_file down_file:%s failed.", pInfo->resp_info.log_path);
-            return -1;
-        }
-
-        FILE *fp = fopen(local_path, "r");
-        if (fp != NULL) {
-            char buf[1024] = {0};
-            size_t bytes = 0;
-            while ((bytes = fread(buf, 1, sizeof(buf) - 1, fp)) > 0) {
-                UPDATE_LOG_FMT(pInfo->log_path, "%s", buf);
-            }
-            fclose(fp);
-        }
-
-        memset(cmd, 0, sizeof(cmd));
-        snprintf(cmd, sizeof(cmd), "wc -l %s", pInfo->resp_info.conf_path);
-        memset(resp, 0, sizeof(resp));
-        ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-        if (ret) {
-            //执行失败
-            SSHClient_Destroy(&ssh_client);
-            spdlog_error("ssh_client.execute wc -l failed.");
-            return -1;
-        }
-        int file_num = 0;
-        sscanf(resp, "%d", &file_num);
-        if (file_num) {
-            spdlog_info("file_num=%d", file_num);
-            struct FileUploadfInfo upload_info;
-            char file_path[80] = {0};
-            for (int i = 0; i < file_num; i++) {
-                memset(cmd, 0, sizeof(cmd));
-                snprintf(cmd, sizeof(cmd), "sed -n '%dp' %s", i + 1, pInfo->resp_info.conf_path);
-                memset(resp, 0, sizeof(resp));
-                ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-                if (ret) {
-                    //执行失败
-                    SSHClient_Destroy(&ssh_client);
-                    spdlog_error("ssh_client.execute wc -l failed.");
-                    return -1;
-                }
-                memset(file_path, 0, sizeof(file_path));
-                sscanf(resp, "%[^,],%[^,],%[^,],", upload_info.dev_addr, file_path, upload_info.upload_path);
-                // spdlog_info("resp : %s, dev_addr : %s, file_path: %s, upload_path : %s", resp, upload_info.dev_addr, file_path, upload_info.upload_path);
-                memset(local_path, 0, sizeof(local_path));
-                snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, basename(file_path));
-                ret = ssh_client.download_file(&ssh_client, file_path, local_path);
-                if (ret) {
-                    SSHClient_Destroy(&ssh_client);
-                    spdlog_error("ssh_client.upload_file down_file:%s failed.", pInfo->resp_info.log_path);
-                    return -1;
-                }
-                // strcpy(pInfo->resp_info.conf_info[i].path, local_path);
-                // memset(cmd, 0, sizeof(cmd));
-                // snprintf(cmd, sizeof(cmd), "base64 -w 0 %s", file_path);
-                // ret = ssh_client.execute(&ssh_client, cmd, upload_info.base64_str, sizeof(upload_info.base64_str));
-                // if (ret) {
-                //     //执行失败
-                //     SSHClient_Destroy(&ssh_client);
-                //     spdlog_error("ssh_client.execute base64 -w 0 %s failed.", file_path);
-                //     return -1;
-                // }
-
-                memset(cmd, 0, sizeof(cmd));
-                snprintf(cmd, sizeof(cmd), "base64 -w 0 %s", local_path);
-                _system_(cmd, upload_info.base64_str, sizeof(upload_info.base64_str));
-                if (do_file_upload(&upload_info)) {
-                    UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud failed", file_path);
-                } else {
-                    UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud success", file_path);
-                }
+            SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+            int ret = ssh_client.connect(&ssh_client);
+            if (ret) {
+                SSHClient_Destroy(&ssh_client);
+                spdlog_error("ssh_client.connect failed.");
+                return -1;
             }
 
-            UPDATE_LOG(pInfo->log_path, "send file end");
-        }
+            memset(cmd, 0, sizeof(cmd));
+            // snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/updater.sh report_info %d %s %s", pInfo->id, pInfo->name, pInfo->type);
+            snprintf(cmd, sizeof(cmd), "bash /home/cktt/script/upgrade.sh %d", pInfo->id);
+            memset(resp, 0, sizeof(resp));
+            ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+            if (ret) {
+                //执行失败
+                SSHClient_Destroy(&ssh_client);
+                spdlog_error("ssh_client.execute updater.sh report_info failed.");
+                return -1;
+            }
 
-        SSHClient_Destroy(&ssh_client);
+            sscanf(resp, "%[^,],%[^,]", pInfo->resp_info.log_path, pInfo->resp_info.conf_path);
+            spdlog_info("resp: %s, log_path: %s, conf_path: %s", resp, pInfo->resp_info.log_path, pInfo->resp_info.conf_path);
+
+            char local_path[80] = {0};
+            snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, basename(pInfo->resp_info.log_path));
+            ret = ssh_client.download_file(&ssh_client, pInfo->resp_info.log_path, local_path);
+            if (ret) {
+                SSHClient_Destroy(&ssh_client);
+                spdlog_error("ssh_client.upload_file down_file:%s failed.", pInfo->resp_info.log_path);
+                return -1;
+            }
+
+            FILE *fp = fopen(local_path, "r");
+            if (fp != NULL) {
+                char buf[1024] = {0};
+                size_t bytes = 0;
+                while ((bytes = fread(buf, 1, sizeof(buf) - 1, fp)) > 0) {
+                    UPDATE_LOG_FMT(pInfo->log_path, "%s", buf);
+                }
+                fclose(fp);
+            }
+
+            memset(cmd, 0, sizeof(cmd));
+            snprintf(cmd, sizeof(cmd), "wc -l %s", pInfo->resp_info.conf_path);
+            memset(resp, 0, sizeof(resp));
+            ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+            if (ret) {
+                //执行失败
+                SSHClient_Destroy(&ssh_client);
+                spdlog_error("ssh_client.execute wc -l failed.");
+                return -1;
+            }
+            int file_num = 0;
+            sscanf(resp, "%d", &file_num);
+            if (file_num) {
+                spdlog_info("file_num=%d", file_num);
+                struct FileUploadfInfo upload_info;
+                char file_path[80] = {0};
+                for (int i = 0; i < file_num; i++) {
+                    memset(cmd, 0, sizeof(cmd));
+                    snprintf(cmd, sizeof(cmd), "sed -n '%dp' %s", i + 1, pInfo->resp_info.conf_path);
+                    memset(resp, 0, sizeof(resp));
+                    ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+                    if (ret) {
+                        //执行失败
+                        SSHClient_Destroy(&ssh_client);
+                        spdlog_error("ssh_client.execute wc -l failed.");
+                        return -1;
+                    }
+                    memset(file_path, 0, sizeof(file_path));
+                    sscanf(resp, "%[^,],%[^,],%[^,],", upload_info.dev_addr, file_path, upload_info.upload_path);
+                    // spdlog_info("resp : %s, dev_addr : %s, file_path: %s, upload_path : %s", resp, upload_info.dev_addr, file_path, upload_info.upload_path);
+                    memset(local_path, 0, sizeof(local_path));
+                    snprintf(local_path, sizeof(local_path), "%s%d/%s", UPGRADE_FILE_LOCAL_PATH, pInfo->id, basename(file_path));
+                    ret = ssh_client.download_file(&ssh_client, file_path, local_path);
+                    if (ret) {
+                        SSHClient_Destroy(&ssh_client);
+                        spdlog_error("ssh_client.upload_file down_file:%s failed.", pInfo->resp_info.log_path);
+                        return -1;
+                    }
+                    // strcpy(pInfo->resp_info.conf_info[i].path, local_path);
+                    // memset(cmd, 0, sizeof(cmd));
+                    // snprintf(cmd, sizeof(cmd), "base64 -w 0 %s", file_path);
+                    // ret = ssh_client.execute(&ssh_client, cmd, upload_info.base64_str, sizeof(upload_info.base64_str));
+                    // if (ret) {
+                    //     //执行失败
+                    //     SSHClient_Destroy(&ssh_client);
+                    //     spdlog_error("ssh_client.execute base64 -w 0 %s failed.", file_path);
+                    //     return -1;
+                    // }
+                    // memset(cmd, 0, sizeof(cmd));
+                    // snprintf(cmd, sizeof(cmd), "curl -X POST -H \"Content-Type: application/json\" -d \"{\"lang\": \"zh_CN\",\"deviceAddress\": \"'\"%s\"'\",\"filePath\": \"'\"%s\"'\",\"base64Str\": 
+                    //             \"'\"$(base64 -w 0 %s\"'\"}\" https://ota.cktt.com.cn/ota-server/fileUpload", upload_info.dev_addr, upload_info.upload_path, file_path);
+
+                    memset(cmd, 0, sizeof(cmd));
+                    snprintf(cmd, sizeof(cmd), "base64 -w 0 %s", local_path);
+                    _system_(cmd, upload_info.base64_str, sizeof(upload_info.base64_str));
+                    if (do_file_upload(&upload_info)) {
+                        UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud failed", file_path);
+                    } else {
+                        UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud success", file_path);
+                    }
+                    // _system_(cmd, resp, sizeof(resp));
+                    // UPDATE_LOG_FMT(pInfo->log_path, "%s", resp);
+                    // if (strstr(resp, OTA_TASK_NOW) != NULL) {
+                    //     UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud success", file_path);
+                    // } else {
+                    //     UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud failed", file_path);
+                    // }
+                }
+
+                UPDATE_LOG(pInfo->log_path, "send file end");
+            }
+
+            SSHClient_Destroy(&ssh_client);
+        }
     }
 
     CustomTime t;
@@ -299,7 +291,7 @@ int fkz9_fw_update_func(void *arg)
     _system_(cmd, pInfo->resp_info.report, sizeof(pInfo->resp_info.report));
 
 
-    snprintf(cmd, sizeof(cmd), "rm -rf %s", UPGRADE_FILE_LOCAL_PATH);
+    snprintf(cmd, sizeof(cmd), "rm -rf %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
     _system_(cmd, NULL, 0);
     // spdlog_info("remote_log_path:%s, report %s", pInfo->resp_info.log_path, pInfo->resp_info.report);
 

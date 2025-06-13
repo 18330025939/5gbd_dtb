@@ -153,7 +153,7 @@ static int tcp_client_send(TcpClient* client, uint8_t* data, size_t len)
     if (client->is_connected) {
         ret = enqueue(&client->tx_queue, data, len);
 
-        // spdlog_debug("tcp_client_send data len=%d.", len);
+        spdlog_debug("tcp_client_send data len=%d.", len);
         // char *str = (char *)malloc(len * 4 + 1);
         // if (str != NULL) {
         //     str[0] = '\0';

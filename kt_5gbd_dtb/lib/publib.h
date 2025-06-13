@@ -38,5 +38,7 @@ void db_to_bcd(uint16_t value, uint16_t* bcd_value);
 int bcd_to_byte(uint8_t value);
 uint8_t byte_to_bcd(uint8_t bcd);
 int bcd_to_db(uint16_t value);
+int dir_exists(const char *path);
+int is_file_empty(const char *filename);
 #endif /* __PUB_LIB_H */
 

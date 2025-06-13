@@ -51,6 +51,17 @@ static int message_arrived_cb(void* context, char* topic, int topic_len, MQTTAsy
     return 1;
 }
 
+static void connection_lost_cb(void* context, char* cause)
+{
+    AsyncMQTTClient* client = (AsyncMQTTClient*)context;
+
+    pthread_mutex_lock(&client->lock);   
+    if (client->is_conn) {
+        client->is_conn = false;
+    }
+    pthread_mutex_unlock(&client->lock);
+}
+
 /* 连接管理 */
 int mqtt_connect(AsyncMQTTClient* client) 
 {
@@ -67,6 +78,7 @@ int mqtt_connect(AsyncMQTTClient* client)
     conn_opts.username = config->user_name;
     conn_opts.password = config->password;
     conn_opts.context = client;
+    conn_opts.automaticReconnect = 1;
     conn_opts.onSuccess = on_connect_success;
     conn_opts.onFailure = on_connect_failure;
     
@@ -191,7 +203,7 @@ AsyncMQTTClient* mqtt_client_create(AsyncClientConfig *config)
         goto err_exit;
     }
 
-    if ((rc = MQTTAsync_setCallbacks(client->handle, client, NULL, message_arrived_cb,  
+    if ((rc = MQTTAsync_setCallbacks(client->handle, client, connection_lost_cb, message_arrived_cb,  
                         NULL)) != MQTTASYNC_SUCCESS) {
         spdlog_error("Failed to set callback, return code %d.", rc);
         goto err_exit;                    
