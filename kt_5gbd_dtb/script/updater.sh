@@ -306,7 +306,9 @@ function get_dev_base_info()
     db_res=`psql -U cktt  -d fkz9 -t -A -c "set search_path=obc; select cpu_soft_ver,cpu_hard_ver,ad_soft_ver,ad_hard_ver,control_soft_ver,control_hard_ver,net_soft_ver,net_hard_ver from device_info"`
     IFS='|' read -r cpu_soft cpu_hard ad_soft ad_hard con_soft con_hard net_soft net_hard <<<"$db_res"
 
-    echo "$devaddr,$cloud_ip_addr,$cloud_port,$cpu_soft,$cpu_hard,$ad_soft,$ad_hard,$con_soft,$con_hard,$net_soft,$net_hard,"
+    up_time=`uptime -s`
+
+    echo "$devaddr,$cloud_ip_addr,$cloud_port,$cpu_soft,$cpu_hard,$ad_soft,$ad_hard,$con_soft,$con_hard,$net_soft,$net_hard,$up_time,"
 }
 
 #ota 客户端main程序，执行心跳及升级检查

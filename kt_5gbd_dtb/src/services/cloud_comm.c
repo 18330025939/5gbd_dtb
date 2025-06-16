@@ -152,6 +152,9 @@ int get_ota_heartbeat_info(void *arg)
             pHb_info->total_mem, pHb_info->used_mem,
             pHb_info->up_time, pHb_info->cur_time);
     
+    if (strstr(pHb_info->up_time, gp_cloud_comm_ctx->base_info->uptime) == NULL) {
+        strcpy(gp_cloud_comm_ctx->base_info->uptime, pHb_info->up_time);
+    }
     memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
             resp, sizeof(resp));
@@ -368,7 +371,8 @@ int do_downlaod_firmware(struct List *task_list)
     char remp_url[128] = {0};
     char cmd[64] = {0};
     struct FwUpdateInfo up_info;
-     CustomTime t;
+    CustomTime t;
+    int ret = 0;
 
     if (task_list == NULL) {
         return -1;
@@ -393,20 +397,25 @@ int do_downlaod_firmware(struct List *task_list)
                             pInfo->id, t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute); 
                 UPDATE_LOG_FMT(up_info.log_path, "%04d-%02d-%02d %02d:%02d:%02d upgrade mission %d\n", t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute, t.ucSecond, pInfo->id);
                 UPDATE_LOG_FMT(up_info.log_path, "start to download ota file %s\n", file_name);
-                int ret = ftp_download(pInfo->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
+                ret = ftp_download(pInfo->url, local_path, NULL, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
                 if (!ret) {
                     UPDATE_LOG_FMT(up_info.log_path, "download ota file %s success\n", file_name);
                 } else {
                     UPDATE_LOG_FMT(up_info.log_path, "task %d download file failed\n", pInfo->id);
                 }
+                if (strstr(pInfo->type, OTA_TASK_NEXT) != NULL) {
+                    UPDATE_LOG_FMT(MISSION_FILE_LOCAL_PATH, "%d,%s,%s,%s\n", pInfo->id, pInfo->url, pInfo->md5, pInfo->type);
+                }
+                strcpy(up_info.type, pInfo->type);
             } else {
                 snprintf(cmd, sizeof(cmd), "find %s%d/ -name \"%04d_%d*.log\"", UPGRADE_FILE_LOCAL_PATH, pInfo->id, gp_cloud_comm_ctx->base_info->dev_addr, pInfo->id);
                 _system_(cmd, up_info.log_path, sizeof(up_info.log_path));
                 get_system_time(&t);
-                UPDATE_LOG_FMT(up_info.log_path, "%04d-%02d-%02d %02d:%02d:%02d start to excute mission %d %s", t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute, t.ucSecond, pInfo->id, up_info.log_path);
+                UPDATE_LOG_FMT(up_info.log_path, "%04d-%02d-%02d %02d:%02d:%02d start to excute mission %d %s\n", t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute, t.ucSecond, pInfo->id, up_info.log_path);
+                snprintf(up_info.type, sizeof(up_info.type), "%s", OTA_TASK_REBOOTED);
             }
             //通知去执行更新    
-            strcpy(up_info.type, pInfo->type);
+            // strcpy(up_info.type, pInfo->type);
             up_info.id = pInfo->id;
             strncpy(up_info.md5, pInfo->md5, sizeof(up_info.md5));
             strncpy(up_info.path, local_path, sizeof(up_info.path));
@@ -601,37 +610,60 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
 
 void reboot_upgrade_task_cb(evutil_socket_t fd, short event, void *arg) 
 {
+    // SSHClient ssh_client;s
+    CloundCommContext *ctx = NULL;
 
     if (arg == NULL) {
         return ;
     }
 
-    CloundCommContext *ctx = (CloundCommContext *)arg;
+    ctx = (CloundCommContext *)arg;
 
     int ret = is_file_empty(MISSION_FILE_LOCAL_PATH);
-    if (!ret) {
-        struct FwDownInfo *pInfo = (struct FwDownInfo *)malloc(sizeof(struct FwDownInfo));
-        pInfo->
-        pthread_mutex_lock(&ctx->down_task.mutex);
+    if (!ret && gp_cloud_comm_ctx->base_info->is_restart != 0) {
+        // SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+        // ret = ssh_client.connect(&ssh_client);
+        // if (ret) {
+        //     SSHClient_Destroy(&ssh_client);
+        //     spdlog_error("ssh_client.connect failed.");
+        //     return ;
+        // }
 
+        // char cmd[128] = {0};
+        // char resp[256] = {0};
+        // // snprintf(cmd, sizeof(cmd), "cut -d . -f1 /proc/uptime");
+        // snprintf(cmd, sizeof(cmd), "uptime -s");
+        // ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+        // if (ret) {
+        //     SSHClient_Destroy(&ssh_client);
+        //     spdlog_error("ssh_client.execute uptime -s failed.");
+        //     return ;
+        // }
+
+        // SSHClient_Destroy(&ssh_client);
+        // CustomTime t;
+        // sscanf(resp, "%hd-%hhd-%hhd %hhd:%hhd:%hhd", &t.usYear, &t.ucMonth, &t.ucDay, &t.ucHour, &t.ucMinute, &t.ucSecond);
+        char cmd[64] = {0};
+        char resp[256] = {0};
+        snprintf(cmd, sizeof(cmd), "wc -l %s", MISSION_FILE_LOCAL_PATH);
+        _system_(cmd, resp, sizeof(resp));
+        uint8_t num = 0;
+        sscanf(resp, "%hhd", &num);
+        pthread_mutex_lock(&ctx->down_task.mutex);
+        for (int i = 0; i< num; i++) {
+            struct FwDownInfo *pInfo = (struct FwDownInfo *)malloc(sizeof(struct FwDownInfo));
+            snprintf(cmd, sizeof(cmd), "sed -n '%dp' %s", i + 1, MISSION_FILE_LOCAL_PATH);
+            _system_(cmd, resp, sizeof(resp));
+            sscanf(resp, "%hd,%[^,],%[^,],%[^,],", &pInfo->id, pInfo->url, pInfo->md5, pInfo->type);
+            pInfo->flag = 0;
+            List_Insert(&ctx->down_task.list, (void*)pInfo);
+        } 
         pthread_cond_signal(&ctx->down_task.cond);
         pthread_mutex_unlock(&ctx->down_task.mutex);
-    }
-
-    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-    int ret = ssh_client.connect(&ssh_client);
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.connect failed.");
-        return -1;
-    }
-
-    char cmd[256] = {0};
-    snprintf(cmd, sizeof(cmd), "cut -d . -f1 /proc/uptime", pInfo->path, pInfo->name);
-    ret = ssh_client.download_file(&ssh_client, file_path, pInfo->path);
-
-    SSHClient_Destroy(&ssh_client);
-
+        snprintf(cmd, sizeof(cmd), "rm -rf %s", MISSION_FILE_LOCAL_PATH);
+        _system_(cmd, NULL, 0);
+        gp_cloud_comm_ctx->base_info->is_restart = 0;
+    }    
 }
 
 int func_wave_file_resp(void *arg)

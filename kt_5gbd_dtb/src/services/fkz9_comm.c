@@ -437,7 +437,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         .password = MQTT_SERVER_PASSWORD,
         .keep_alive = KEEP_ALIVE_TIME,
         .qos = QOS,
-        .clean_session = 1
+        .clean_session = 0
     };
 
     mqtt_client = mqtt_client_create(&client_config);

@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
+#include <libgen.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <sys/stat.h>
 #include "publib.h"
 
 #if 0

@@ -13,6 +13,8 @@
 #define OTA_UPREPORT_LOCAL_PATH "/upgrade/cktt/upgradereport/"
 
 #define OTA_TASK_NOW  "AT_ONCE"
+#define OTA_TASK_NEXT "NEXT_REBOOT"
+#define OTA_TASK_REBOOTED "REBOOTED"
 
 struct FileUploadfInfo
 {   
@@ -26,7 +28,7 @@ struct UpdateRespInfo
 {
     char log_path[80];
     char time[64];
-    char report[1024];
+    char report[1024*2];
     char conf_path[80];
     // int conf_num;
     // struct ConfFileInfo *conf_info;

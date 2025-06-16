@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <sys/stat.h>
 #include <pthread.h>
-#include <libgen.h>
 #include "publib.h"
 #include "cJSON.h"
 #include "ftp_handler.h"
@@ -40,7 +39,7 @@ int create_file_upload_data(struct FileUploadfInfo *info, char *data)
     return 0;
 }
 
-int do_file_upload(struct FileUploadfInfo *info)
+int do_file_upload(struct FileUploadfInfo *info, char *post_resp)
 {
     char buf[1024*100] = {0};
     char *resp = NULL;
@@ -51,12 +50,9 @@ int do_file_upload(struct FileUploadfInfo *info)
     }
     http_post_request(OTA_FILEUPLOAD_URL, buf, &resp);
     spdlog_debug("do_file_upload %s", resp);
+
+    strncpy(post_resp, resp, strlen(resp));
     
-    if (strstr(resp, "SUCCESS") != NULL) {
-        ret = 0;
-    } else {
-        ret = -1;
-    }
     if (resp != NULL) 
         free(resp);
     // if (buf != NULL)
@@ -77,67 +73,90 @@ int fkz9_fw_trans_func(void *arg)
     }
 
     pInfo = (struct FwUpdateInfo *)arg;
-    UPDATE_LOG_FMT(pInfo->log_path, "start to check %s md5\n", pInfo->name);
-    snprintf(cmd, sizeof(cmd), "md5sum %s", pInfo->path);
-    _system_(cmd, resp, sizeof(resp));
-    if (strstr(resp, pInfo->md5) != NULL) {
-        UPDATE_LOG_FMT(pInfo->log_path, "send to check %s md5\n", pInfo->name);
-    } 
-
-    snprintf(cmd, sizeof(cmd), "tar -xzvf %s%d/%s -C %s%d/", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->name, UPGRADE_FILE_LOCAL_PATH, pInfo->id);
-    _system_(cmd, NULL, 0);
-    snprintf(cmd, sizeof(cmd), "%s%d/%s/rt-a100", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
-    if (dir_exists(cmd)) {
+    if (strstr(pInfo->type, OTA_TASK_REBOOTED) != NULL) {
+        memset(pInfo->type, 0, sizeof(pInfo->type));
+        strcpy(pInfo->type, OTA_TASK_NOW);
         return 0;
     }
 
-    SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-    int ret = ssh_client.connect(&ssh_client);
-    if (ret) {
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.connect failed.");
-        return -1;
-    }
+    snprintf(cmd, sizeof(cmd), "tar -xzf %s%d/%s -C %s%d/", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->name, UPGRADE_FILE_LOCAL_PATH, pInfo->id);
+    _system_(cmd, NULL, 0);
+    snprintf(cmd, sizeof(cmd), "%s%d/rt-a100", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
+    if (dir_exists(cmd)) {
+        //return 0;
+    } else {
+        UPDATE_LOG_FMT(pInfo->log_path, "start to check %s md5\n", pInfo->name);
+        snprintf(cmd, sizeof(cmd), "md5sum %s", pInfo->path);
+        _system_(cmd, resp, sizeof(resp));
+        if (strstr(resp, pInfo->md5) != NULL) {
+            UPDATE_LOG_FMT(pInfo->log_path, "end to check %s md5\n", pInfo->name);
+        } else {
+            UPDATE_LOG_FMT(pInfo->log_path, "md5 not match, do not excute task %d, ota failed\n", pInfo->id);
+            memset(pInfo->type, 0, sizeof(pInfo->type));
+            return 0;
+        }
 
-    memset(cmd, 0, sizeof(cmd));
-    memset(resp, 0, sizeof(resp));
-    snprintf(cmd, sizeof(cmd), "mkdir -p %s/%d", UPGRADE_FILE_REMOTE_PATH, pInfo->id);
-    ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-    if (ret) {
-        //远程路径创建失败
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.execute %s", cmd);
-        return -1;
-    }
+        SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
+        int ret = ssh_client.connect(&ssh_client);
+        if (ret) {
+            SSHClient_Destroy(&ssh_client);
+            spdlog_error("ssh_client.connect failed.");
+            return -1;
+        }
 
-    char remote_path[128] = {0};
-    snprintf(remote_path, sizeof(remote_path), "%s/%d/%s", UPGRADE_FILE_REMOTE_PATH, pInfo->id, pInfo->name);
-    ret = ssh_client.upload_file(&ssh_client, pInfo->path, remote_path);
-    if (ret) {
-        //上传失败,是否再次上传?
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.upload_file up_file:%s failed.", pInfo->path);
-        return -1;
-    }
+        memset(cmd, 0, sizeof(cmd));
+        memset(resp, 0, sizeof(resp));
+        snprintf(cmd, sizeof(cmd), "mkdir -p %s/%d", UPGRADE_FILE_REMOTE_PATH, pInfo->id);
+        ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+        if (ret) {
+            //远程路径创建失败
+            SSHClient_Destroy(&ssh_client);
+            spdlog_error("ssh_client.execute %s", cmd);
+            return -1;
+        }
 
-    memset(cmd, 0, sizeof(cmd));
-    snprintf(cmd, sizeof(cmd), "md5sum %s", remote_path);
-    memset(resp, 0, sizeof(resp));
-    ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
-    if ((ret) || (strstr(resp, pInfo->md5) == NULL)) {
-        //校验失败,是否再次上传?
-        SSHClient_Destroy(&ssh_client);
-        spdlog_error("ssh_client.execute md5 of the file,l_md5 : %s,r_md5 %s , failed.", pInfo->md5, resp);
-        return -1;
-    }
+        char remote_path[128] = {0};
+        snprintf(remote_path, sizeof(remote_path), "%s/%d/%s", UPGRADE_FILE_REMOTE_PATH, pInfo->id, pInfo->name);
+        ret = ssh_client.upload_file(&ssh_client, pInfo->path, remote_path);
+        if (ret) {
+            //上传失败,是否再次上传?
+            SSHClient_Destroy(&ssh_client);
+            spdlog_error("ssh_client.upload_file up_file:%s failed.", pInfo->path);
+            return -1;
+        }
 
-    SSHClient_Destroy(&ssh_client);
+        memset(cmd, 0, sizeof(cmd));
+        snprintf(cmd, sizeof(cmd), "md5sum %s", remote_path);
+        memset(resp, 0, sizeof(resp));
+        ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+        if ((ret) || (strstr(resp, pInfo->md5) == NULL)) {
+            //校验失败,是否再次上传?
+            SSHClient_Destroy(&ssh_client);
+            spdlog_error("ssh_client.execute md5 of the file,l_md5 : %s,r_md5 %s , failed.", pInfo->md5, resp);
+            return -1;
+        }
+
+        // if (strstr(pInfo->type, OTA_TASK_NEXT) != NULL) {
+        //     CustomTime t;
+        //     memset(cmd, 0, sizeof(cmd));
+        //     snprintf(cmd, sizeof(cmd), "uptime -s");
+        //     char uptime[30] = {0};
+        //     ret = ssh_client.execute(&ssh_client, cmd, uptime, sizeof(uptime));
+        //     if (ret) {
+        //         //校验失败,是否再次上传?
+        //         SSHClient_Destroy(&ssh_client);
+        //         spdlog_error("ssh_client.execute uptime -s failed");
+        //         return -1;
+        //     }
+        // }
+        SSHClient_Destroy(&ssh_client);
+    }
+    
 
     if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
         UPDATE_LOG(pInfo->log_path, "start the ota task now\n");
-    } else {
+    } else if (strstr(pInfo->type, OTA_TASK_NEXT) != NULL) {
         UPDATE_LOG(pInfo->log_path, "start the ota task when next reboot\n");
-
     }
 
     return 0;
@@ -156,15 +175,14 @@ int fkz9_fw_update_func(void *arg)
     }
 
     spdlog_info("fkz9_fw_update_func");
+    pInfo = (struct FwUpdateInfo *)arg;
     if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
-        pInfo = (struct FwUpdateInfo *)arg;
-        snprintf(path, sizeof(path), "%s%d/%s/rt-a100", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
+        snprintf(path, sizeof(path), "%s%d/rt-a100", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
         if (dir_exists(path)) {
-            snprintf(cmd, sizeof(cmd), "bash %s%d/%s/run.sh", UPGRADE_FILE_LOCAL_PATH, pInfo->id, pInfo->md5);
+            snprintf(cmd, sizeof(cmd), "bash %s%d/run.sh", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
             _system_(cmd, resp, sizeof(resp));
             UPDATE_LOG_FMT(pInfo->log_path, "%s\n", resp);
         } else {
-
             SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
             int ret = ssh_client.connect(&ssh_client);
             if (ret) {
@@ -255,25 +273,31 @@ int fkz9_fw_update_func(void *arg)
                     //     spdlog_error("ssh_client.execute base64 -w 0 %s failed.", file_path);
                     //     return -1;
                     // }
-                    // memset(cmd, 0, sizeof(cmd));
-                    // snprintf(cmd, sizeof(cmd), "curl -X POST -H \"Content-Type: application/json\" -d \"{\"lang\": \"zh_CN\",\"deviceAddress\": \"'\"%s\"'\",\"filePath\": \"'\"%s\"'\",\"base64Str\": 
-                    //             \"'\"$(base64 -w 0 %s\"'\"}\" https://ota.cktt.com.cn/ota-server/fileUpload", upload_info.dev_addr, upload_info.upload_path, file_path);
+                    // snprintf(up_info.base64_str, sizeof(up_info.base64_str), "{\"lang\": \"zh_CN\",\"deviceAddress\": \"'\"%s\"'\",\"filePath\": \"'\"%s\"'\",\"base64Str\": 
+                    //             \"$(base64 -w 0 %s)\"}", upload_info.dev_addr, upload_info.upload_path, file_path);
 
-                    memset(cmd, 0, sizeof(cmd));
-                    snprintf(cmd, sizeof(cmd), "base64 -w 0 %s", local_path);
-                    _system_(cmd, upload_info.base64_str, sizeof(upload_info.base64_str));
-                    if (do_file_upload(&upload_info)) {
-                        UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud failed", file_path);
-                    } else {
-                        UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud success", file_path);
-                    }
-                    // _system_(cmd, resp, sizeof(resp));
+                    // memset(cmd, 0, sizeof(cmd));
+                    // snprintf(upload_info.base64_str, sizeof(upload_info.base64_str), "curl -X POST -H \"Content-Type: application/json\" -d \"{\"lang\": \"zh_CN\",\"deviceAddress\": \"'\"%s\"'\",\"filePath\": \"'\"%s\"'\",\"base64Str\": 
+                    //             \"$(base64 -w 0 %s)\"}\" https://ota.cktt.com.cn/ota-server/fileUpload", upload_info.dev_addr, upload_info.upload_path, file_path);
+                    // _system_(upload_info.base64_str, resp, sizeof(resp));
                     // UPDATE_LOG_FMT(pInfo->log_path, "%s", resp);
-                    // if (strstr(resp, OTA_TASK_NOW) != NULL) {
+                    // if (strstr(resp, "SUCCESS") != NULL) {
                     //     UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud success", file_path);
                     // } else {
                     //     UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud failed", file_path);
                     // }
+
+
+                    memset(cmd, 0, sizeof(cmd));
+                    snprintf(cmd, sizeof(cmd), "base64 -w 0 %s", local_path);
+                    _system_(cmd, upload_info.base64_str, sizeof(upload_info.base64_str));
+                    ret = do_file_upload(&upload_info, resp); 
+                    UPDATE_LOG_FMT(pInfo->log_path, "%s\n", resp);
+                    if (ret == 0 && strstr(resp, "SUCCESS") != NULL) {
+                        UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud failed\n", file_path);
+                    } else {
+                        UPDATE_LOG_FMT(pInfo->log_path, "upload file %s to cloud success\n", file_path);
+                    }
                 }
 
                 UPDATE_LOG(pInfo->log_path, "send file end");
@@ -289,10 +313,12 @@ int fkz9_fw_update_func(void *arg)
     memset(cmd, 0, sizeof(cmd));
     snprintf(cmd, sizeof(cmd), "base64 %s | tr -d '\n\r'", pInfo->log_path);
     _system_(cmd, pInfo->resp_info.report, sizeof(pInfo->resp_info.report));
+    printf("pInfo->resp_info.report:%s\n", pInfo->resp_info.report);
 
-
-    snprintf(cmd, sizeof(cmd), "rm -rf %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
-    _system_(cmd, NULL, 0);
+    // if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
+    //     snprintf(cmd, sizeof(cmd), "rm -rf %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
+    //     _system_(cmd, NULL, 0);
+    // }
     // spdlog_info("remote_log_path:%s, report %s", pInfo->resp_info.log_path, pInfo->resp_info.report);
 
     // char report_file[64];

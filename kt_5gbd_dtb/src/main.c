@@ -56,7 +56,7 @@ int init_updater_environment(void)
                 return -1;
             }
             memset((void*)&fkz9_devBaseInfo, 0, sizeof(struct DevBaseInfo));
-            sscanf(resp, "%hd,%[^,],%d,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,", 
+            sscanf(resp, "%hd,%[^,],%d,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%hhu,%[^,],", 
                     &fkz9_devBaseInfo.dev_addr,
                     fkz9_devBaseInfo.cloud_ip,
                     &fkz9_devBaseInfo.cloud_port,
@@ -67,7 +67,8 @@ int init_updater_environment(void)
                     &fkz9_devBaseInfo.ctrl_sw,
                     &fkz9_devBaseInfo.ctrl_hw,
                     &fkz9_devBaseInfo.net_sw,
-                    &fkz9_devBaseInfo.net_hw);
+                    &fkz9_devBaseInfo.net_hw,
+                    fkz9_devBaseInfo.uptime);
             spdlog_info("dev_addr:%d, cloud_ip:%s, cloud_port:%d,", fkz9_devBaseInfo.dev_addr, fkz9_devBaseInfo.cloud_ip, fkz9_devBaseInfo.cloud_port);
 
             SSHClient_Destroy(&ssh_client);
