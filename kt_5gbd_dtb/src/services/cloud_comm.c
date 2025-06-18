@@ -612,7 +612,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
 
 void reboot_upgrade_task_cb(evutil_socket_t fd, short event, void *arg) 
 {
-    // SSHClient ssh_client;s
+    // SSHClient ssh_client;
     CloundCommContext *ctx = NULL;
     char uptime[30] = {0};
     char cmd[64] = {0};
