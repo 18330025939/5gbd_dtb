@@ -57,6 +57,7 @@ struct FileUploadReport
 // #define UPGRADE_FILE_REMOTE_PATH "/upgrade/"
 #define UPGRADE_FILE_LOCAL_PATH "/upgrade/cktt/"
 #define MISSION_FILE_LOCAL_PATH "/upgrade/cktt/ota_mission"
+#define UPTIME_FILE_LOCAL_PATH "/upgrade/cktt/uptime"
 
 struct FwUpdater
 {

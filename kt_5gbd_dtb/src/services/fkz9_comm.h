@@ -91,7 +91,7 @@ struct DevBaseInfo
     uint8_t ctrl_hw;
     uint8_t net_sw;
     uint8_t net_hw;
-    char uptime[30];
+    char up_time[30];
     uint8_t is_restart;
 } ;
 
