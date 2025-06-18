@@ -92,7 +92,6 @@ struct DevBaseInfo
     uint8_t net_sw;
     uint8_t net_hw;
     char up_time[30];
-    uint8_t is_restart;
 } ;
 
 struct Fkz9MsgFwInf {

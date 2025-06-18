@@ -215,12 +215,10 @@ void on_message_cb(const char* topic, const void* payload, size_t payload_len)
     if (pHdr->ucSign != MQTT_MSG_SIGN_HEARTBEAT_REQ) {
         spdlog_info("topic: %s, payload_len: %ld.", topic, payload_len);
         len = bswap_16(pHdr->usLen);
-        // if (pHdr->ucSign == 0x7A || pHdr->ucSign == 0x7B) {
+
         if (len != payload_len) {
             client = gp_cloud_comm_ctx->client;
             do {
-                // pHdr = (MsgFramHdr *)(payload + index);
-                // len = bswap_16(pHdr->usLen);
                 do {
                     ret = client->ops->send(client, (uint8_t *)payload + index, len);
                     if (ret) {
@@ -256,7 +254,7 @@ void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     hdr->usLen = bswap_16(len);
     hb_data = (HeartBeatDataSeg*)(hdr + 1);
     db_to_bcd(ctx->base_info->dev_addr, &hb_data->usDevAddr);
-    // hb_data->usDevAddr = bswap_16(CLIENT_DEV_ADDR);
+
     CustomTime t;
     get_system_time(&t);
     hb_data->ucYear = byte_to_bcd(t.usYear - 2000);
@@ -268,7 +266,7 @@ void heartbeat_req_task_cb(evutil_socket_t fd, short event, void *arg)
     crc = (MsgDataFramCrc*)(hb_data + 1);
     crc->usCRC = checkSum_8((uint8_t*)hdr, len - sizeof(MsgDataFramCrc));
     crc->usCRC = bswap_16(crc->usCRC);
-    // printf("MQTTAsync_setCallbacks sign=0x%x, crc=0x%x\n", hdr->ucSign, crc->usCRC);
+
     mqtt_client = ctx->mqtt_client;
     char topic[50] = {0};
     snprintf(topic, sizeof(topic), "fkz9/%04d%s", ctx->base_info->dev_addr, MQTT_HEARTBEAT_REQ_TOPIC);
@@ -389,35 +387,6 @@ void *fkz9_event_task_entry(void *arg)
     return NULL;
 }
 
-// int get_fkz9_dev_addr(uint16_t* dev_addr)
-// {
-// #if 0
-//     SSHClient ssh_client;
-
-//     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-//     int ret = ssh_client.connect(&ssh_client);
-//     if (ret) {
-//         SSHClient_Destroy(&ssh_client);
-//         spdlog_error("ssh_client.connect failed.");
-//         return -1;
-//     }
-
-//     char resp[128] = {0};
-//     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh base_info", resp, sizeof(resp));
-//     if (ret) {
-//         SSHClient_Destroy(&ssh_client);
-//         spdlog_error("ssh_client.execute updater.sh failed.");
-//         return -1;
-//     }
-//     sscanf(resp, "%hd,", dev_addr);
-
-//     SSHClient_Destroy(&ssh_client);
-// #else
-//     *dev_addr = fkz9_devBaseInfo.dev_addr;
-// #endif
-//     return 0;
-// }
-
 void fkz9_comm_init(Fkz9CommContext *ctx)
 {
     AsyncMQTTClient *mqtt_client = NULL;
@@ -427,8 +396,7 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
         return;
     }
     
-    // get_fkz9_dev_addr(&(ctx->fkz9_dev_addr));
-    spdlog_info("kfz9_dev_addr=%d", ctx->base_info->dev_addr);
+    // spdlog_info("kfz9_dev_addr=%d", ctx->base_info->dev_addr);
     snprintf(url, sizeof(url), "tcp://%s:%d", MQTT_SERVER_IP, MQTT_SERVER_PORT);
     AsyncClientConfig client_config = {
         .address = url,
@@ -449,7 +417,6 @@ void fkz9_comm_init(Fkz9CommContext *ctx)
 
     ctx->mqtt_client = mqtt_client;
     init_queue(&ctx->event_queue, MAX_MSG_SIZE);
-    // init_queue(&ctx->event_queue);
     List_Init_Thread(&ctx->ev_list);
     pthread_create(&ctx->timer_thread, NULL, fkz9_timer_task_entry, ctx);
     pthread_create(&ctx->event_thread, NULL, fkz9_event_task_entry, ctx);

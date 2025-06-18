@@ -194,7 +194,7 @@ int _system_(const char *cmd, char *pRetMsg, int msg_len)
 		return -3;
 
     if (pRetMsg != NULL) {
-	    pRetMsg[strlen(pRetMsg)-1] = '\0';
+	    pRetMsg[strlen(pRetMsg)] = '\0';
     }
 	return 0;
 }

@@ -19,10 +19,9 @@
 struct FileUploadfInfo
 {   
     char dev_addr[10];
-    char upload_path[80];
-    char base64_str[1024*100];
+    char upload_path[100];
+    char base64_str[1024*500];
 } ;
-
 
 struct UpdateRespInfo 
 {
@@ -30,6 +29,7 @@ struct UpdateRespInfo
     char time[64];
     char report[1024*2];
     char conf_path[80];
+    char down_path[80];
     // int conf_num;
     // struct ConfFileInfo *conf_info;
 } ;

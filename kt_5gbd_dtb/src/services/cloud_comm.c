@@ -294,7 +294,7 @@ int create_ota_report_data(struct FwUpdateInfo *info, char *data)
          return -1;
     }
 
-    spdlog_debug("create_ota_report_data");
+    // spdlog_debug("create_ota_report_data");
     memset(&report, 0, sizeof(OtaReport));
     int ret = get_ota_report_info(info, (void *)&report);
     if (ret != 0) {
@@ -348,7 +348,7 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 
 void do_ota_report(struct FwUpdateInfo *info)
 {
-    char buf[1024] = {0};
+    char buf[1024*2] = {0};
     char *resp = NULL;
     
     int ret = create_ota_report_data(info, buf);
@@ -358,10 +358,9 @@ void do_ota_report(struct FwUpdateInfo *info)
     http_post_request(OTA_UPREPORT_URL, buf, &resp);
     spdlog_debug("do_ota_report %s", resp);
     
-    // if (buf != NULL)
-        // free(buf);
-    if (resp != NULL) 
+    if (resp != NULL) {
         free(resp);
+    }
 }
 
 int do_downlaod_firmware(struct List *task_list)
@@ -410,7 +409,7 @@ int do_downlaod_firmware(struct List *task_list)
                 }
                 strcpy(up_info.type, pInfo->type);
             } else {
-                snprintf(cmd, sizeof(cmd), "find %s%d/ -name \"%04d_%d*.log\"", UPGRADE_FILE_LOCAL_PATH, pInfo->id, gp_cloud_comm_ctx->base_info->dev_addr, pInfo->id);
+                snprintf(cmd, sizeof(cmd), "find %s%d/ -name \"%04d_%d*.log\" | tr -d '\n\r'", UPGRADE_FILE_LOCAL_PATH, pInfo->id, gp_cloud_comm_ctx->base_info->dev_addr, pInfo->id);
                 _system_(cmd, up_info.log_path, sizeof(up_info.log_path));
                 get_system_time(&t);
                 UPDATE_LOG_FMT(up_info.log_path, "%04d-%02d-%02d %02d:%02d:%02d start to excute mission %d %s\n", t.usYear, t.ucMonth, t.ucDay, t.ucHour, t.ucMinute, t.ucSecond, pInfo->id, up_info.log_path);
@@ -612,7 +611,6 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
 
 void reboot_upgrade_task_cb(evutil_socket_t fd, short event, void *arg) 
 {
-    // SSHClient ssh_client;
     CloundCommContext *ctx = NULL;
     char uptime[30] = {0};
     char cmd[64] = {0};
@@ -633,21 +631,25 @@ void reboot_upgrade_task_cb(evutil_socket_t fd, short event, void *arg)
         sscanf(resp, "%hhd", &num);
         snprintf(cmd, sizeof(cmd), "sed -n '%dp' %s", 1, MISSION_FILE_LOCAL_PATH);
         _system_(cmd, resp, sizeof(resp));
-        sscanf(resp, "%hd,%[^,],%[^,],%[^,],", &info.id, info.url, info.md5, info.type, uptime);
-        if (strncpy(uptime, gp_cloud_comm_ctx->base_info->up_time, strlen(uptime))) {
+        sscanf(resp, "%hd,%[^,],%[^,],%[^,],%[^,],", &info.id, info.url, info.md5, info.type, uptime);
+        // spdlog_info("gp_cloud_comm_ctx->base_info->up_time: %s, %ld, uptime:%s, %ld", gp_cloud_comm_ctx->base_info->up_time, strlen(gp_cloud_comm_ctx->base_info->up_time), uptime, strlen(uptime));
+        if (strncmp(uptime, gp_cloud_comm_ctx->base_info->up_time, strlen(uptime))) {
+            spdlog_info("gp_cloud_comm_ctx->base_info->up_time: %s, %ld, uptime:%s, %ld", gp_cloud_comm_ctx->base_info->up_time, strlen(gp_cloud_comm_ctx->base_info->up_time), uptime, strlen(uptime));
             pthread_mutex_lock(&ctx->down_task.mutex);
             for (int i = 0; i < num; i++) {
                 struct FwDownInfo *pInfo = (struct FwDownInfo *)malloc(sizeof(struct FwDownInfo));
                 snprintf(cmd, sizeof(cmd), "sed -n '%dp' %s", i + 1, MISSION_FILE_LOCAL_PATH);
                 _system_(cmd, resp, sizeof(resp));
-                sscanf(resp, "%hd,%[^,],%[^,],%[^,],", &pInfo->id, pInfo->url, pInfo->md5, pInfo->type, uptime);
+                sscanf(resp, "%hd,%[^,],%[^,],%[^,],%[^,],", &pInfo->id, pInfo->url, pInfo->md5, pInfo->type, uptime);
                 pInfo->flag = 0;
                 List_Insert(&ctx->down_task.list, (void*)pInfo);
             } 
             pthread_cond_signal(&ctx->down_task.cond);
             pthread_mutex_unlock(&ctx->down_task.mutex);
+            #if 1
             snprintf(cmd, sizeof(cmd), "rm -rf %s", MISSION_FILE_LOCAL_PATH);
             _system_(cmd, NULL, 0);
+            #endif
         }
     }    
 }
@@ -690,20 +692,6 @@ int func_wave_file_resp(void *arg)
 
     client = ctx->client;
     client->ops->send(client, buf, len);
-
-    // char remote_path[128];
-    // char local_path[128];
-    // // uint16_t dev_addr = CLIENT_DEV_ADDR;
-    // snprintf(remote_path, sizeof(remote_path), "/%4d/wavefile/%4d%2d/%2d/%2d/%4d-wavedat-%4d%2d%2d%2d%2d.dat", ctx->base_info->dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, 
-    //             pResp->ucHour, ctx->base_info->dev_addr, t.usYear, pResp->ucMonth, pResp->ucDay, pResp->ucHour, pResp->ucMinute);
-    // int ret = ftp_upload(FTP_SERVER_URL, local_path, remote_path, CLOUD_SERVER_USERNAME, CLOUD_SERVER_PASSWORD);
-    // if (ret != 0) {
-    //     return -1;
-    // }
-
-    // char cmd[256];
-    // snprintf(cmd, sizeof(cmd), "rm -f %s", local_path);
-    // _system_(cmd, NULL, 0);
 
     return 0;
 }
@@ -877,53 +865,20 @@ void *cloud_timer_task_entry(void *arg)
     return NULL;
 }
 
-// int get_cloud_info(struct CluoudInfo*  pInfo)
-// {
-// #if 0
-//     SSHClient ssh_client;
-
-//     SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
-//     int ret = ssh_client.connect(&ssh_client);
-//     if (ret) {
-//         SSHClient_Destroy(&ssh_client);
-//         spdlog_error("ssh_client.connect failed.");
-//         return -1;
-//     }
-
-//     char resp[128] = {0};;
-//     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh cloud_info", resp, sizeof(resp));
-//     if (ret) {
-//         SSHClient_Destroy(&ssh_client);
-//         spdlog_error("ssh_client.execute updater.sh failed.");
-//         return -1;
-//     }
-//     sscanf(resp, "%[^,],%d,", pInfo->ip, &pInfo->port);
-//     spdlog_info("cloud_ip=%s, cloud_port=%d", pInfo->ip, pInfo->port);
-//     SSHClient_Destroy(&ssh_client);
-// #else
-//     // strcpy(pInfo->ip, fkz9_devBaseInfo.cloud_ip);
-//     // pInfo->port = fkz9_devBaseInfo.cloud_port;
-// #endif
-//     return 0;
-// }
-
 void clound_comm_init(CloundCommContext *ctx)
 {
     TcpClient *client = NULL;
 
-    // ctx->fx650 = (Fx650Ctx *)malloc(sizeof(Fx650Ctx));
     FX650_Error ret = fx650_init(&ctx->fx650);
     if (FX650_OK != ret) {
         spdlog_error("fx650_init failed. %d.", ret);
         return;
     }
-    // ctx->laneTo = (LaneToCtx*)malloc(sizeof(LaneToCtx));
+
     laneTo_init(&ctx->laneTo);
     init_queue(&ctx->event_queue, 256);
-    // init_queue(&ctx->event_queue);
     List_Init_Thread(&ctx->ev_list);
     List_Init_Thread(&ctx->down_task.list);
-    // int sta = get_cloud_info(&ctx->cloud_info);
     if (ctx->base_info == NULL) {
         client = tcp_client_create(CLOUD_SERVER_IP, CLOUD_SERVER_PORT, MAX_RECONNECT_ATTEMPTS);
     } else {

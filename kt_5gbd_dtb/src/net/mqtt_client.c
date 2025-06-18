@@ -18,7 +18,7 @@ static void on_connect_success(void* context, MQTTAsync_successData* response)
     // }
     pthread_mutex_unlock(&client->lock);
     
-    spdlog_debug("MQTT service connection successful.");
+    spdlog_info("MQTT service connection successful.");
 }
 
 /* 连接失败回调 */
@@ -44,6 +44,9 @@ static int message_arrived_cb(void* context, char* topic, int topic_len, MQTTAsy
     pthread_mutex_lock(&client->lock);
     if (client->on_message) {
         client->on_message(topic, msg->payload, msg->payloadlen);
+    }
+    if (client->is_conn == false) {
+        client->is_conn = true;
     }
     MQTTAsync_freeMessage(&msg);
     MQTTAsync_free(topic);
@@ -106,7 +109,7 @@ int mqtt_publish(AsyncMQTTClient* client, const char* topic, const void* payload
     msg.payload = (void*)payload;
     msg.payloadlen = len;
     msg.qos = config->qos;
-    msg.retained = 0;
+    msg.retained = 1;
     pub_opts.onSuccess = on_publish_success;
     pub_opts.context = client;
 
@@ -208,6 +211,7 @@ AsyncMQTTClient* mqtt_client_create(AsyncClientConfig *config)
         spdlog_error("Failed to set callback, return code %d.", rc);
         goto err_exit;                    
     }
+
     return client;
 
 err_exit:
