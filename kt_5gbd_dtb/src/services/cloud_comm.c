@@ -152,10 +152,10 @@ int get_ota_heartbeat_info(void *arg)
             pHb_info->total_mem, pHb_info->used_mem,
             pHb_info->up_time, pHb_info->cur_time);
     
-    if (strncmp(pHb_info->up_time, gp_cloud_comm_ctx->base_info->up_time, gp_cloud_comm_ctx->base_info->up_time)) {
-        memset(gp_cloud_comm_ctx->base_info->uptime, 0, sizeof(gp_cloud_comm_ctx->base_info->uptime));
+    if (strncmp(pHb_info->up_time, gp_cloud_comm_ctx->base_info->up_time, strlen(pHb_info->up_time))) {
+        memset(gp_cloud_comm_ctx->base_info->up_time, 0, sizeof(gp_cloud_comm_ctx->base_info->up_time));
         strncpy(gp_cloud_comm_ctx->base_info->up_time, pHb_info->up_time, strlen(pHb_info->up_time));
-        gp_cloud_comm_ctx->base_info->up_time[gp_cloud_comm_ctx->base_info->up_time] = '\0';
+        gp_cloud_comm_ctx->base_info->up_time[strlen(pHb_info->up_time)] = '\0';
     }
     memset(resp, 0, sizeof(resp));
     ret = ssh_client.execute(&ssh_client, "bash /home/cktt/script/updater.sh unit_info", 
@@ -633,7 +633,7 @@ void reboot_upgrade_task_cb(evutil_socket_t fd, short event, void *arg)
         sscanf(resp, "%hhd", &num);
         snprintf(cmd, sizeof(cmd), "sed -n '%dp' %s", 1, MISSION_FILE_LOCAL_PATH);
         _system_(cmd, resp, sizeof(resp));
-        sscanf(resp, "%hd,%[^,],%[^,],%[^,],", &pInfo.id, pInfo.url, pInfo.md5, pInfo.type, uptime);
+        sscanf(resp, "%hd,%[^,],%[^,],%[^,],", &info.id, info.url, info.md5, info.type, uptime);
         if (strncpy(uptime, gp_cloud_comm_ctx->base_info->up_time, strlen(uptime))) {
             pthread_mutex_lock(&ctx->down_task.mutex);
             for (int i = 0; i < num; i++) {
