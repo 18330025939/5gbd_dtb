@@ -27,7 +27,7 @@ struct UpdateRespInfo
 {
     char log_path[80];
     char time[64];
-    char report[1024*2];
+    char report[1024*10];
     char conf_path[80];
     char down_path[80];
     // int conf_num;

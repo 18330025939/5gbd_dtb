@@ -474,8 +474,9 @@ void laneTo_read_nav_data(LaneToCtx *ctx)
     if (bytes_read > 0) {
         buffer[bytes_read] = '\0';
         start = strstr(buffer, SG_MSG_ID);
-        end = strstr(buffer, PBLKEND_MSG_ID);
-        // end = strchr(start, "\n");
+        // end = strstr(buffer, PBLKEND_MSG_ID);
+        end = strstr(buffer, GNGGA_MSG_ID);
+        // printf("start :%s, end: %s, strlen: %ld\n",  start, end, end - start);
         if (start != NULL && end != NULL && end > start) {
             char *data = strndup(start, end - start);
             if (data) {

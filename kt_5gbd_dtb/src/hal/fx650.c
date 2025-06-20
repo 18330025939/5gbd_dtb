@@ -190,7 +190,6 @@ static int set_apn(Fx650Ctx* ctx, const char *apn)
         return -1;
     }
 
-    printf("ccis resp:%s", resp);
     if (strstr(resp, "OK") == NULL) {
         fprintf(stderr, "APN setting failed.\n");
         return -1;

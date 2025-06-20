@@ -348,7 +348,7 @@ int do_upgrade_firmware(struct FwUpdateInfo *pInfo)
 
 void do_ota_report(struct FwUpdateInfo *info)
 {
-    char buf[1024*2] = {0};
+    char buf[1024*10] = {0};
     char *resp = NULL;
     
     int ret = create_ota_report_data(info, buf);
