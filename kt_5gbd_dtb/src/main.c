@@ -77,8 +77,8 @@ int init_updater_environment(void)
     }
     
     char loacl_path[256];
-    _system_("pwd", resp, sizeof(resp));
-    snprintf(loacl_path, sizeof(loacl_path), "%s/kt_5gbd_dtb/script/updater.sh", resp);
+    // _system_("pwd", resp, sizeof(resp));
+    snprintf(loacl_path, sizeof(loacl_path), "/opt/updater.sh", resp);
     ret = ssh_client.upload_file(&ssh_client, loacl_path, "/home/cktt/script/updater.sh");
     if (ret) {
         SSHClient_Destroy(&ssh_client);

@@ -7,7 +7,7 @@ function ntp_config()
 {
     if [ ! -f "$ntp_config_file" ];then
         echo "ntp config file not exit."
-        return 1
+        return 1    
     fi
 
     back_file=$ntp_config_file.bak
