@@ -556,7 +556,7 @@ void nav_data_msg_task_cb(evutil_socket_t fd, short event, void *arg)
         return ;
     }
     
-    // RUN_LED_TOGGLE();
+    RUN_LED_TOGGLE();
     CloundCommContext *ctx = (CloundCommContext *)arg;
     laneTo_read_nav_data(&ctx->laneTo);
     memset(buf, 0, sizeof(buf));

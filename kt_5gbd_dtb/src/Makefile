@@ -6,7 +6,7 @@ CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 LDFLAGS += -fPIC
 
-LIBS += -lusb-1.0 -lcurl -lssh -levent -levent_pthreads -lpthread
+LIBS += -lcurl -lssh -levent -levent_pthreads -lpthread
 LIBS += -L$(KT_5GBD_DTB)/lib -lpub 
 LIBS += -L$(KT_5GBD_DTB)/third_party/mqtt/lib -lpaho-mqtt3a
 LIBS += -lstdc++ -L$(KT_5GBD_DTB)/third_party/spdlog/lib -lspdlog 

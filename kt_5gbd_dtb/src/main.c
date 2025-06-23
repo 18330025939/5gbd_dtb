@@ -78,7 +78,7 @@ int init_updater_environment(void)
     
     char loacl_path[256];
     // _system_("pwd", resp, sizeof(resp));
-    snprintf(loacl_path, sizeof(loacl_path), "/opt/updater.sh", resp);
+    snprintf(loacl_path, sizeof(loacl_path), "/opt/updater.sh");
     ret = ssh_client.upload_file(&ssh_client, loacl_path, "/home/cktt/script/updater.sh");
     if (ret) {
         SSHClient_Destroy(&ssh_client);
@@ -164,8 +164,9 @@ int main(int argc, char ** args)
 
     memset((void*)&fkz9_ctx, 0, sizeof(Fkz9CommContext));    
     fkz9_ctx.base_info = &fkz9_devBaseInfo;
-    // RUN_LED_INIT();
-    // FAULT_LED_INIT();
+
+    RUN_LED_INIT();
+    FAULT_LED_INIT();
     curl_global_init(CURL_GLOBAL_DEFAULT);
     clound_comm_init(&cloud_ctx);
     fkz9_comm_init(&fkz9_ctx);
@@ -177,8 +178,9 @@ int main(int argc, char ** args)
     fkz9_comm_uninit(&fkz9_ctx);
 
     curl_global_cleanup();
- //   FAULT_LED_ON();
-
+    
+    RUN_LED_OFF();
+    FAULT_LED_ON();
     spdlog_info("Application exiting...");
 
     exit(0);
