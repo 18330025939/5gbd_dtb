@@ -6,4 +6,5 @@ bin/
 lib/*.o
 lib/*.o.d
 lib/*.a
-5GBD_MODULE
+src/5GBD_MODULE
+src/VersionInfo.h

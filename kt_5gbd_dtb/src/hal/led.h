@@ -7,6 +7,7 @@ typedef struct {
     char *gpio_num;    // GPIO编号
     int fd_value;      // 值文件描述符
     int fd_dir;        // 方向文件描述符
+    int value;
 } GpioController;
 
 typedef struct {
@@ -41,6 +42,18 @@ LedController fault_led;
     do { \
         led_init(&fault_led, SYS_FAULT_LED_PIN_NUM); \
         led_set_high(&fault_led); \
+    } while (0)
+
+// 非初始化运行灯
+#define RUN_LED_UNINIT() \
+    do { \
+        led_destroy(&run_led); \
+    } while (0)
+
+// 非初始化故障灯
+#define FAULT_LED_UNINIT() \
+    do { \
+        led_destroy(&fault_led); \
     } while (0)
 
 // 打开运行灯

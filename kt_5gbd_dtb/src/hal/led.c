@@ -61,7 +61,7 @@ static int GpioController_SetDirection(GpioController *controller, const char *d
         return -1;
     }
 
-    if (write(controller->fd_dir, direction, strlen(direction) + 1) < 0) {
+    if (write(controller->fd_dir, direction, sizeof(direction)) < 0) {
         perror("Failed to set direction.");
         return -1;
     }
@@ -72,19 +72,20 @@ static int GpioController_SetDirection(GpioController *controller, const char *d
 /* 设置GPIO值 */
 static int GpioController_SetValue(GpioController *controller, int value) 
 {
-    char buf[2];
+    char *buf;
+
     if (controller->fd_value < 0) {
         perror("Value file not opened.");
         return -1;
     }
 
-    buf[0] = value ? '1' : '0';
-    buf[1] = '\0';
+    buf = value ? '1' : '0';
 
-    if (write(controller->fd_value, buf, sizeof(buf)) < 0) {
+    if (write(controller->fd_value, buf, 1) < 0) {
         perror("Failed to set value.");
         return -1;
     }
+    controller->value = value;
 
     return 0;
 }
@@ -133,7 +134,7 @@ static void GpioController_Cleanup(GpioController *controller)
     fd_unexport = open("/sys/class/gpio/unexport", O_WRONLY);
     if (fd_unexport >= 0) {
         snprintf(path, sizeof(path), "%s", controller->gpio_num);
-        int ret = write(fd_unexport, path, strlen(path) + 1);
+        int ret = write(fd_unexport, path, strlen(path));
         if(ret < 0) {
             perror("Failed to unexport GPIO.");
         }
@@ -172,11 +173,7 @@ int led_set_low(LedController *controller)
 /* 切换LED状态 */
 int led_toggle(LedController *controller) 
 {
-    int state;
-    if (GpioController_GetValue(&controller->gpio_controller, &state) < 0) {
-        return -1;
-    }
-    return GpioController_SetValue(&controller->gpio_controller, !state);
+    return GpioController_SetValue(&controller->gpio_controller, !controller->gpio_controller.value);
 }
 
 /* 获取LED状态 */

@@ -181,6 +181,8 @@ int main(int argc, char ** args)
     
     RUN_LED_OFF();
     FAULT_LED_ON();
+    RUN_LED_UNINIT();
+    FAULT_LED_UNINIT();
     spdlog_info("Application exiting...");
 
     exit(0);

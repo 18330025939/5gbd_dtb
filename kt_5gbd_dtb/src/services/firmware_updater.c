@@ -391,7 +391,7 @@ int fkz9_fw_update_func(void *arg)
     snprintf(cmd, sizeof(cmd), "base64 %s | tr -d '\n\r'", pInfo->log_path);
     _system_(cmd, pInfo->resp_info.report, sizeof(pInfo->resp_info.report));
     // printf("pInfo->resp_info.report:%s\n", pInfo->resp_info.report);
-#if 1
+#if 0
     if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
         snprintf(cmd, sizeof(cmd), "rm -rf %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
         _system_(cmd, NULL, 0);
