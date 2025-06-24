@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "ftp_handler.h": "c",
+        "tcp_client.h": "c",
+        "cloud_comm.h": "c",
+        "mqtt_client.h": "c",
+        "lane_to.h": "c",
+        "serial.h": "c",
+        "list.h": "c",
+        "fx650.h": "c",
+        "errno.h": "c"
+    }
+}
