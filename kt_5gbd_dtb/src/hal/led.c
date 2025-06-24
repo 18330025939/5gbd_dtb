@@ -79,7 +79,7 @@ static int GpioController_SetValue(GpioController *controller, int value)
         return -1;
     }
 
-    buf = value ? '1' : '0';
+    buf = value ? "1" : "0";
 
     if (write(controller->fd_value, buf, 1) < 0) {
         perror("Failed to set value.");
