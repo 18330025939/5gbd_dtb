@@ -184,9 +184,17 @@ int fkz9_fw_update_func(void *arg)
     if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
         snprintf(path, sizeof(path), "%s%d/rt-a100", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
         if (dir_exists(path)) {
-            snprintf(cmd, sizeof(cmd), "bash %s%d/run.sh", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
+            char cur_path[128] = {0};
+            getcwd(cur_path, sizeof(cur_path));
+
+            memset(path, 0, sizeof(path));
+            snprintf(path, sizeof(path), "%s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
+            chdir(path);
+            snprintf(cmd, sizeof(cmd), "bash run.sh");
             _system_(cmd, resp, sizeof(resp));
             UPDATE_LOG_FMT(pInfo->log_path, "%s\n", resp);
+
+            chdir(cur_path);
         } else {
             SSHClient_Init(&ssh_client, SERVER_IP, SERVER_USERNAME, SERVER_PASSWORD);
             int ret = ssh_client.connect(&ssh_client);
@@ -391,8 +399,9 @@ int fkz9_fw_update_func(void *arg)
     snprintf(cmd, sizeof(cmd), "base64 %s | tr -d '\n\r'", pInfo->log_path);
     _system_(cmd, pInfo->resp_info.report, sizeof(pInfo->resp_info.report));
     // printf("pInfo->resp_info.report:%s\n", pInfo->resp_info.report);
-#if 0
+#if 1
     if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
+        memset(cmd, 0, sizeof(cmd));
         snprintf(cmd, sizeof(cmd), "rm -rf %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
         _system_(cmd, NULL, 0);
     }
