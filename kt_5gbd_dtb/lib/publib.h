@@ -40,5 +40,6 @@ uint8_t byte_to_bcd(uint8_t bcd);
 int bcd_to_db(uint16_t value);
 int dir_exists(const char *path);
 int is_file_empty(const char *filename);
+int file_exists(const char *path);
 #endif /* __PUB_LIB_H */
 

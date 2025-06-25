@@ -59,6 +59,8 @@ struct FileUploadReport
 #define MISSION_FILE_LOCAL_PATH "/upgrade/cktt/ota_mission"
 #define UPTIME_FILE_LOCAL_PATH "/upgrade/cktt/uptime"
 
+#define SELF_UPGRADE_FILE_PATH "/opt/upgrade.sh"
+
 struct FwUpdater
 {
     const char *dev_name;

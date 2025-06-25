@@ -613,7 +613,7 @@ void reboot_upgrade_task_cb(evutil_socket_t fd, short event, void *arg)
 {
     CloundCommContext *ctx = NULL;
     char uptime[30] = {0};
-    char cmd[64] = {0};
+    char cmd[128] = {0};
     char resp[256] = {0};
     uint8_t num = 0;
     struct FwDownInfo info;
@@ -652,6 +652,14 @@ void reboot_upgrade_task_cb(evutil_socket_t fd, short event, void *arg)
             #endif
         }
     }    
+
+    ret = file_exists(SELF_UPGRADE_FILE_PATH);
+    if (ret) {
+        spdlog_info("self upgrade.....");
+        memset(cmd, 0, sizeof(cmd));
+        snprintf(cmd, sizeof(cmd), "bash %s &", SELF_UPGRADE_FILE_PATH);
+        system(cmd);
+    }
 }
 
 int func_wave_file_resp(void *arg)

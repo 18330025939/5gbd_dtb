@@ -95,6 +95,7 @@ int init_updater_environment(void)
     }
 
     SSHClient_Destroy(&ssh_client);
+
     return 0;
 }
 
@@ -158,6 +159,14 @@ int main(int argc, char ** args)
     if (init_updater_environment()) {
         exit(-1);
     }
+
+    char cmd[64] = {0};
+
+    if (file_exists(SELF_UPGRADE_FILE_PATH)) {
+        snprintf(cmd, sizeof(cmd), "rm -f %s", SELF_UPGRADE_FILE_PATH);
+        _system_(cmd, NULL, 0);
+    }
+
 
     memset((void*)&cloud_ctx, 0, sizeof(CloundCommContext));
     cloud_ctx.base_info = &fkz9_devBaseInfo;

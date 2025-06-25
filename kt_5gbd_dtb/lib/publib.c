@@ -261,3 +261,8 @@ int is_file_empty(const char *filename)
 
     return file_size == 0 ? 1 : 0;
 }
+
+int file_exists(const char *path)
+{
+	return (access(path, F_OK) == 0);
+}
