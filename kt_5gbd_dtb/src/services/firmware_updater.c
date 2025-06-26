@@ -136,6 +136,16 @@ int fkz9_fw_trans_func(void *arg)
             return -1;
         }
 
+        memset(cmd, 0, sizeof(cmd));
+        snprintf(cmd, sizeof(cmd), "chattr +i %s", remote_path);
+        memset(resp, 0, sizeof(resp));
+        ret = ssh_client.execute(&ssh_client, cmd, resp, sizeof(resp));
+        if (ret) {
+            SSHClient_Destroy(&ssh_client);
+            spdlog_error("ssh_client.execute chattr +i %s failed.", remote_path);
+            return -1;
+        }
+
         // if (strstr(pInfo->type, OTA_TASK_NEXT) != NULL) {
         //     CustomTime t;
         //     memset(cmd, 0, sizeof(cmd));
@@ -399,7 +409,7 @@ int fkz9_fw_update_func(void *arg)
     snprintf(cmd, sizeof(cmd), "base64 %s | tr -d '\n\r'", pInfo->log_path);
     _system_(cmd, pInfo->resp_info.report, sizeof(pInfo->resp_info.report));
     // printf("pInfo->resp_info.report:%s\n", pInfo->resp_info.report);
-#if 0
+#if 1
     if (strstr(pInfo->type, OTA_TASK_NOW) != NULL) {
         memset(cmd, 0, sizeof(cmd));
         snprintf(cmd, sizeof(cmd), "rm -rf %s%d", UPGRADE_FILE_LOCAL_PATH, pInfo->id);
